@@ -16,3 +16,5 @@ Thumbs.db
 .remember/
 .work/
 
+# Third-party design reference images (kept local; described in docs/design/REFERENCES.md)
+docs/design/refs/
