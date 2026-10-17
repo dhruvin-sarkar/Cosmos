@@ -1,0 +1,18 @@
+node_modules/
+dist/
+# Raw downloads from scientific archives (re-creatable via the scripts in scripts/data/)
+data-raw/
+# Screenshot / benchmark scratch output
+.shots/
+.bench/
+*.log
+.DS_Store
+Thumbs.db
+# Local secrets (only the .example templates are committed)
+.env*
+!.env*.example
+# Local tool state
+.claude/settings.local.json
+.remember/
+.work/
+
