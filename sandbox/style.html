@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Cosmos style specimen</title>
+    <script type="module">
+      import '../src/styles/index.css';
+    </script>
+    <style>
+      html, body { overflow: auto; height: auto; }
+      body { padding: 56px 64px 96px; }
+      .sp { display: grid; gap: 72px; max-width: 1680px; }
+      .sp h2.sp-h { font: 500 14px/1.3 var(--font-ui); color: var(--text-secondary); padding-bottom: 10px; border-bottom: 1px solid var(--hairline); margin-bottom: 28px; }
+      .sp-row { display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-end; }
+      .sp-voice { display: grid; gap: 10px; min-width: 300px; }
+      .sp-voice .tag { font: var(--type-label); color: var(--text-secondary); }
+      .sp-ramp { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; }
+      .sp-swatch { padding: 18px 14px 14px; min-height: 120px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; font: var(--type-label); }
+      .sp-swatch b { font: 500 15px/1.2 var(--font-ui); }
+      .sp-prov { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px; }
+      .sp-prov svg.line { width: 100%; height: 24px; color: var(--text-primary); }
+      .sp-prov p { font: var(--type-body); color: var(--text-secondary); }
+      .sp-prov .name { display: flex; align-items: center; gap: 8px; font: var(--type-value); color: var(--text-primary); }
+      .sp-ruler { position: relative; width: 260px; height: 520px; background: var(--scrim-right); }
+      .sp-ruler svg { position: absolute; inset: 0; }
+      .sp-ruler .mag { position: absolute; right: 120px; top: 205px; font: var(--type-ruler-rest); }
+      .sp-ruler .mag sup { font-size: .5em; vertical-align: .82em; line-height: 0; }
+      .sp-ruler .lbl { position: absolute; font: 450 12.5px/1 var(--font-ui); color: var(--text-secondary); transform: translateY(-50%); }
+      .sp-ruler .exp { position: absolute; font: 500 13px/1 var(--font-ui); color: var(--text-primary); transform: translateY(-55%); }
+      .sp-ruler .exp sup { font-size: .68em; vertical-align: .5em; line-height: 0; }
+      .sp-reticle { position: relative; width: 320px; height: 320px; display: grid; place-items: center; background: #000; }
+      .sp-reticle .body { width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle at 32% 30%, #c9d6e4, #4b6a8d 45%, #0b1320 72%); }
+      .sp-reticle .rt { position: absolute; inset: 50px; }
+      .sp-reticle .rt i { position: absolute; width: 14px; height: 14px; border: 0 solid var(--accent); }
+      .sp-reticle .rt i:nth-child(1) { top: 0; left: 0; border-top-width: 1.5px; border-left-width: 1.5px; }
+      .sp-reticle .rt i:nth-child(2) { top: 0; right: 0; border-top-width: 1.5px; border-right-width: 1.5px; }
+      .sp-reticle .rt i:nth-child(3) { bottom: 0; left: 0; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+      .sp-reticle .rt i:nth-child(4) { bottom: 0; right: 0; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+      .sp-lab { width: 560px; display: grid; gap: 16px; }
+      .sp-labview { position: relative; width: 640px; height: 360px; }
+      .sp-scrimtest { position: relative; width: 640px; height: 280px; background: #fff; }
+      .sp-scrimtest .col { position: absolute; inset: 0; background: var(--scrim-left); padding: 28px; --column-w: 380px; display: grid; align-content: start; gap: 8px; }
+    </style>
+  </head>
+  <body>
+    <main class="sp">
+      <section>
+        <h2 class="sp-h">Four voices</h2>
+        <div class="sp-row">
+          <div class="sp-voice">
+            <span class="tag">Atlas: Bodoni Moda, names of real objects</span>
+            <span id="atlas" style="font: var(--type-atlas-xl)">Moon</span>
+            <span style="font: var(--type-atlas-m)">α Centauri A</span>
+            <span style="font: var(--type-constellation); letter-spacing: 0.08em; color: oklch(0.93 0 0 / 0.45)">Ursa Major</span>
+          </div>
+          <div class="sp-voice" style="max-width: 420px">
+            <span class="tag">Instrument: Inter, the interface</span>
+            <span style="font: var(--type-lede)">The Moon is Earth's only natural satellite, a quarter of Earth's width.</span>
+            <span style="font: var(--type-body); color: var(--text-secondary)">Body copy at 15 px with tabular figures: 1,737.4 km.</span>
+            <span><span class="cx-fact__label" style="font: var(--type-label); color: var(--text-secondary)">Mean radius</span><br /><span style="font: var(--type-value)" class="cx-num">1,737.4<span style="color: var(--text-secondary)"> ± 0.1</span><span style="color: var(--text-secondary)">&nbsp;km</span></span></span>
+          </div>
+          <div class="sp-voice">
+            <span class="tag">Experiment: Mona Sans Expanded, lab results</span>
+            <span id="exp" style="font: var(--type-exp-xl); font-variation-settings: 'wdth' 125; color: var(--modified)">3.1<span style="font: var(--type-exp-m); font-variation-settings: 'wdth' 112; color: var(--text-secondary)">%</span></span>
+          </div>
+          <div class="sp-voice">
+            <span class="tag">Catalogue: JetBrains Mono, identifiers</span>
+            <span id="mono" class="cx-id">NORAD 25544</span>
+            <span class="cx-id">HIP 71683</span>
+            <span class="cx-id">Gaia DR3 5853498713190525696</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="sp-h">Ink ramp, brass, real and modified</h2>
+        <div class="sp-ramp">
+          <div class="sp-swatch" style="background: #000; outline: 1px solid var(--hairline)"><b>Space</b>#000</div>
+          <div class="sp-swatch" style="background: var(--faceplate)"><b>Faceplate</b>0.13 / 0.94</div>
+          <div class="sp-swatch" style="background: #000; color: var(--text-primary)"><b>Primary</b>0.93</div>
+          <div class="sp-swatch" style="background: #000; color: var(--text-secondary)"><b>Secondary</b>0.80</div>
+          <div class="sp-swatch" style="background: #000; color: var(--text-tertiary)"><b>Tertiary</b>0.70, Unknown</div>
+          <div class="sp-swatch" style="background: #000; color: var(--accent)"><b>Brass</b>attention only</div>
+          <div class="sp-swatch" style="background: #000"><b style="color: var(--real)">Real</b><b style="color: var(--modified)">Modified</b></div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="sp-h">Provenance: line texture and glyph</h2>
+        <div class="sp-prov" id="prov"></div>
+      </section>
+
+      <section>
+        <h2 class="sp-h">Cosmic Ruler, reticle, lab card</h2>
+        <div class="sp-row" style="align-items: flex-start">
+          <div class="sp-ruler" id="ruler"><span class="mag">10<sup>8</sup> <span style="font-size: .4em; color: var(--text-secondary)">m</span></span></div>
+          <div class="sp-reticle"><div class="body"></div><div class="rt"><i></i><i></i><i></i><i></i></div></div>
+          <div class="sp-lab">
+            <div class="cx-lab__banner is-modified"><span class="cx-lab__banner-swatch"></span>Scenario: you changed real values. Results below are hypothetical.</div>
+            <p class="cx-lab-result__caption">Chance of a catastrophic collision in 10 years (layout only, not data)</p>
+            <p class="cx-lab-result__value is-modified">3.1<span class="cx-lab-result__unit">%</span></p>
+            <table class="cx-lab-compare">
+              <thead><tr><th></th><th class="is-real">Real</th><th class="is-modified">Modified</th><th>Difference</th></tr></thead>
+              <tbody><tr><th scope="row">Collision chance</th><td class="is-real">1.2%</td><td class="is-modified">3.1%</td><td>+1.9 points</td></tr></tbody>
+            </table>
+            <div class="sp-labview cx-brackets"><span class="cx-brackets__b"></span><div class="cx-reseau-grid" style="position:absolute;inset:0"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="sp-h">Scrim over a pure-white background</h2>
+        <div class="sp-scrimtest">
+          <div class="col">
+            <span style="font: var(--type-label); color: var(--text-secondary)">Natural satellite of Earth</span>
+            <span style="font: 400 64px/1 var(--font-atlas)">Moon</span>
+            <span style="font: var(--type-lede); max-width: 32ch">Primary ink over white under the left scrim.</span>
+            <span style="font: var(--type-body); color: var(--text-tertiary)">Unknown</span>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script type="module">
+      const prov = [
+        ['Observed', 'Directly catalogued or measured.', '', '<circle cx="6" cy="6" r="4" fill="currentColor"/>'],
+        ['Derived', 'Calculated from measured values with a documented model.', '', '<circle cx="6" cy="6" r="4.25" fill="none" stroke="currentColor" stroke-width="1.25"/><circle cx="6" cy="6" r="1.5" fill="currentColor"/>'],
+        ['Reconstructed', 'A representation inferred from data.', '9 6', '<circle cx="6" cy="6" r="4.25" fill="none" stroke="currentColor" stroke-width="1.25" stroke-dasharray="3.1 2.2"/>'],
+        ['Illustrative', 'Generated for communication; always labelled.', '1.5 5', '<circle cx="6" cy="6" r="4.25" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="0.1 2.6" stroke-linecap="round"/>'],
+      ];
+      document.getElementById('prov').innerHTML = prov.map(([n, d, dash, glyph], i) => `
+        <div>
+          <p class="name"><svg width="12" height="12" viewBox="0 0 12 12">${glyph}</svg>${n}</p>
+          <svg class="line" viewBox="0 0 300 24" preserveAspectRatio="none"><line x1="0" y1="12" x2="300" y2="12" stroke="currentColor" stroke-width="${i === 3 ? 1.6 : 1}" ${dash ? `stroke-dasharray="${dash}"` : ''} ${i === 3 ? 'stroke-linecap="round"' : ''}/>${i === 1 ? '<circle cx="90" cy="12" r="3" fill="#000" stroke="currentColor"/><circle cx="210" cy="12" r="3" fill="#000" stroke="currentColor"/>' : ''}</svg>
+          <p>${d}</p>
+        </div>`).join('');
+      const ruler = document.getElementById('ruler');
+      const ppd = 120, cy = 260, s = 8.3, x = 190;
+      let svg = `<svg viewBox="0 0 260 520"><line x1="${x}" x2="${x}" y1="0" y2="520" stroke="oklch(1 0 0 / .26)"/>`;
+      for (let e = 5; e <= 11; e++) for (let m = 1; m <= 9; m++) {
+        const y = cy - (e + Math.log10(m) - s) * ppd; if (y < 0 || y > 520) continue;
+        const len = m === 1 ? 16 : m === 5 ? 9 : 5;
+        svg += `<line x1="${x - len}" x2="${x}" y1="${y}" y2="${y}" stroke="${m === 1 ? 'oklch(.93 0 0)' : 'oklch(1 0 0 / .42)'}"/>`;
+        if (m === 1) ruler.insertAdjacentHTML('beforeend', `<span class="exp" style="left:${x + 6}px;top:${y}px">10<sup>${e}</sup></span>`);
+      }
+      svg += `<line x1="${x - 80}" x2="${x + 50}" y1="${cy}" y2="${cy}" stroke="var(--accent)"/></svg>`;
+      ruler.insertAdjacentHTML('afterbegin', svg);
+      for (const [label, v] of [["Moon's orbit", Math.log10(2 * 384399e3)], ['Sun', Math.log10(1.3914e9)], ['Geostationary ring', Math.log10(8.43e7)]]) {
+        ruler.insertAdjacentHTML('beforeend', `<span class="lbl" style="right:${260 - x + 8}px;top:${cy - (v - s) * ppd}px">${label}</span>`);
+      }
+    </script>
+  </body>
+</html>
