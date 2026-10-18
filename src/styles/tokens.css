@@ -1,0 +1,307 @@
+/*
+ * Cosmos design tokens (dark only). Authoritative source: docs/design/VISUAL_DIRECTION.md.
+ *
+ * The universe supplies the colour: monochrome ink on true black. Brass is attention only (focus, selection reticle,
+ * ruler cursor, the one primary action). Blue / orange mean Real / Modified inside labs. Reading text sits on edge
+ * scrims; dense instruments sit on opaque faceplates. Nothing re-samples the canvas behind the HUD (no frosted glass).
+ */
+:root {
+  color-scheme: dark;
+
+  /* ── Space and the neutral ramp (chroma 0) ─────────────────────────────────────────────── */
+  --ink-space: #000;
+  --ink-50: oklch(0.1 0 0);
+  --ink-100: oklch(0.13 0 0);
+  --ink-150: oklch(0.17 0 0);
+  --ink-200: oklch(0.215 0 0);
+  --ink-300: oklch(0.285 0 0);
+  --ink-400: oklch(0.4 0 0);
+  --ink-500: oklch(0.5 0 0);
+  --ink-600: oklch(0.7 0 0);
+  --ink-700: oklch(0.8 0 0);
+  --ink-800: oklch(0.88 0 0);
+  --ink-900: oklch(0.93 0 0);
+
+  /* ── Text ──────────────────────────────────────────────────────────────────────────────── */
+  --text-primary: oklch(0.93 0 0); /* #E8E8E8 */
+  --text-secondary: oklch(0.8 0 0); /* #BEBEBE */
+  --text-tertiary: oklch(0.7 0 0); /* #9E9E9E: Unknown values, metadata */
+  --text-disabled: oklch(0.5 0 0); /* solid backgrounds only */
+  --text-on-accent: oklch(0.2 0.03 86);
+  /* Halo for type that sits on the universe without a scrim (3D labels, constellation names). */
+  --text-halo: 0 0 2px oklch(0 0 0 / 0.95), 0 0 8px oklch(0 0 0 / 0.8);
+
+  /* ── Hairlines (one device pixel, ink at 14–40 %) ──────────────────────────────────────── */
+  --hairline: oklch(1 0 0 / 0.14);
+  --hairline-strong: oklch(1 0 0 / 0.26);
+  --hairline-bold: oklch(1 0 0 / 0.4);
+  --hairline-w: 1px;
+  --border-hairline: var(--hairline);
+  --border-subtle: var(--hairline);
+  --border-strong: var(--hairline-strong);
+
+  /* ── Accent: brass (attention only) ─────────────────────────────────────────────────────── */
+  --accent: oklch(0.85 0.1 88); /* #E9CA80 */
+  --accent-hover: oklch(0.9 0.09 90);
+  --accent-pressed: oklch(0.78 0.105 84);
+  --accent-soft: oklch(0.85 0.1 88 / 0.14);
+  --accent-line: oklch(0.85 0.1 88 / 0.7);
+  --accent-text: var(--accent);
+  --focus-ring-color: var(--accent);
+
+  /* ── Real vs Modified (labs). Blue and orange stay distinct for colour-blind visitors. ─── */
+  --real: oklch(0.8 0.085 235); /* #86C7ED */
+  --modified: oklch(0.78 0.14 52); /* #FD9C5D */
+  --real-soft: oklch(0.8 0.085 235 / 0.12);
+  --modified-soft: oklch(0.78 0.14 52 / 0.14);
+  --reality: var(--real);
+  --scenario: var(--modified);
+  --scenario-line: oklch(0.78 0.14 52 / 0.55);
+  /* Hatching at −45° (5 px) marks hypothetical regions; labs only. */
+  --hatch-modified: repeating-linear-gradient(-45deg, oklch(0.78 0.14 52 / 0.28) 0 1px, transparent 1px 5px);
+  --hatch-ink: repeating-linear-gradient(-45deg, oklch(1 0 0 / 0.16) 0 1px, transparent 1px 5px);
+
+  /* ── Status (rare) ─────────────────────────────────────────────────────────────────────── */
+  --info: oklch(0.8 0.08 238);
+  --warning: oklch(0.82 0.12 75);
+  --danger: oklch(0.75 0.15 25);
+  --success: oklch(0.8 0.1 155);
+
+  /* ── Provenance hues: charts only, where several classes share one plot ───────────────── */
+  --prov-observed: oklch(0.8 0.085 235);
+  --prov-derived: oklch(0.82 0.09 170);
+  --prov-reconstructed: oklch(0.79 0.1 300);
+  --prov-illustrative: oklch(0.81 0.1 355);
+  /* Line textures (geological-map convention). */
+  --prov-observed-line: solid;
+  --prov-derived-line: solid;
+  --prov-reconstructed-line: dashed;
+  --prov-illustrative-line: dotted;
+  --prov-dash-reconstructed: 9 6;
+  --prov-dash-illustrative: 1.5 5;
+
+  /* ── Surfaces ──────────────────────────────────────────────────────────────────────────── */
+  --column-w: 440px;
+  --ruler-w: 160px;
+  --scrim-left: linear-gradient(90deg, oklch(0 0 0 / 0.88) 0, oklch(0 0 0 / 0.76) var(--column-w), oklch(0 0 0 / 0) calc(var(--column-w) + 200px));
+  --scrim-right: linear-gradient(270deg, oklch(0 0 0 / 0.88) 0, oklch(0 0 0 / 0.76) var(--ruler-w), oklch(0 0 0 / 0) calc(var(--ruler-w) + 140px));
+  --scrim-bottom: linear-gradient(0deg, oklch(0 0 0 / 0.88) 0, oklch(0 0 0 / 0.76) 72px, oklch(0 0 0 / 0) 168px);
+  --scrim-top: linear-gradient(180deg, oklch(0 0 0 / 0.86) 0, oklch(0 0 0 / 0.74) 48px, oklch(0 0 0 / 0) 120px);
+  --faceplate: oklch(0.13 0 0 / 0.94);
+  --popover: oklch(0.17 0 0 / 0.98);
+  --surface-panel: var(--faceplate);
+  --surface-sheet: var(--faceplate);
+  --surface-raised: var(--popover);
+  --surface-solid: oklch(0.13 0 0);
+  --surface-inset: oklch(0 0 0 / 0.5);
+  --surface-hover: oklch(1 0 0 / 0.07);
+  --surface-pressed: oklch(1 0 0 / 0.12);
+  --surface-active: oklch(1 0 0 / 0.14);
+  --surface-selected: oklch(0.85 0.1 88 / 0.12);
+  --scrim: oklch(0 0 0 / 0.72);
+  --panel-blur: none;
+
+  /* ── Radius hierarchy ──────────────────────────────────────────────────────────────────── */
+  --r-0: 0;
+  --r-plate: 2px; /* faceplates, cards, inputs */
+  --r-xs: 2px;
+  --r-sm: 2px;
+  --r-md: 2px;
+  --r-lg: 2px;
+  --r-pill: 999px; /* chips, segmented selectors, body-strip pill */
+  --r-round: 50%; /* circular transport buttons */
+
+  /* ── Engine DOM labels (read by the core LabelManager) ────────────────────────────────── */
+  --cosmos-font-ui: var(--font-ui);
+  --cosmos-font-mono: var(--font-mono);
+  --cosmos-font-atlas: var(--font-atlas);
+  --cosmos-label-color: oklch(0.93 0 0 / 0.95);
+  --cosmos-label-muted: oklch(0.8 0 0 / 0.85);
+  --cosmos-label-selected: var(--accent);
+  --cosmos-accent: var(--accent);
+  --cosmos-label-size: 13px;
+  --cosmos-label-halo: var(--text-halo);
+  --cosmos-label-density: 1;
+
+  /* ── Four voices ───────────────────────────────────────────────────────────────────────── */
+  --font-atlas: 'Bodoni Moda Variable', 'Bodoni Moda', Didot, 'Bodoni 72', serif;
+  --font-ui: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-experiment: 'Mona Sans Variable', 'Mona Sans', var(--font-ui);
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  /* cv05 / cv08 separate l, I and 1 in catalogue names ("TRAPPIST-1 l"). */
+  --font-features-ui: 'cv05' 1, 'cv08' 1, 'calt' 1;
+
+  /* Type scale (reference 1920 × 1080; fluid between 1280 and 3840 px). font shorthand: weight size/line family */
+  --type-atlas-xl: 400 clamp(72px, 6.2vw, 128px) / 0.95 var(--font-atlas);
+  --type-atlas-l: 400 clamp(52px, 4.2vw, 88px) / 1 var(--font-atlas);
+  --type-atlas-m: 450 36px / 1.05 var(--font-atlas);
+  --type-ruler: 400 clamp(96px, 7.5vw, 160px) / 1 var(--font-atlas);
+  --type-ruler-rest: 400 40px / 1 var(--font-atlas);
+  --type-constellation: italic 400 15px / 1 var(--font-atlas);
+  --type-exp-xl: 300 clamp(72px, 5.5vw, 112px) / 1 var(--font-experiment);
+  --type-exp-m: 450 32px / 1.1 var(--font-experiment);
+  --exp-xl-wdth: 125;
+  --exp-m-wdth: 112;
+  --type-lede: 400 19px / 1.5 var(--font-ui);
+  --type-body: 400 15px / 1.55 var(--font-ui);
+  --type-value: 500 17px / 1.25 var(--font-ui);
+  --type-label: 450 12.5px / 1.25 var(--font-ui);
+  --type-control: 500 14px / 1.2 var(--font-ui);
+  --type-3d-label: 500 13px / 1 var(--font-ui);
+  --type-mono: 400 12.5px / 1.3 var(--font-mono);
+
+  /* Legacy numeric sizes for small UI text (keep names stable). */
+  --fs-2xs: 11px;
+  --fs-xs: 12.5px;
+  --fs-sm: 13.5px;
+  --fs-md: 15px;
+  --fs-lg: 17px;
+  --fs-xl: 19px;
+  --fs-2xl: 36px;
+  --fs-3xl: 52px;
+  --fs-4xl: 72px;
+  --lh-tight: 1.2;
+  --lh-snug: 1.3;
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.55;
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-label: 450;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  /* ── Spacing (4 px grid) ───────────────────────────────────────────────────────────────── */
+  --sp-0: 2px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --hud-gutter: 24px;
+  --hud-gap: 12px;
+
+  /* ── Hit targets (≥ 44 px; 56 px in exhibition mode) ──────────────────────────────────── */
+  --hit: 44px;
+  --control-sm: 32px;
+  --control-md: 44px;
+  --control-lg: 48px;
+
+  /* ── Marks ─────────────────────────────────────────────────────────────────────────────── */
+  --bracket-arm: 14px;
+  --bracket-min-box: 28px;
+  --reseau-size: 7px;
+  --reseau-grid: 48px;
+  --reseau-ink: oklch(1 0 0 / 0.1);
+  --icon-stroke: 1.5;
+
+  /* ── Motion: the camera is the motion; UI moves only in answer to the visitor ─────────── */
+  --dur-instant: 80ms;
+  --dur-fast: 140ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --dur-roll: 160ms;
+  --dur-count: 400ms;
+  --dur-boot: 700ms;
+  --dur-needle: 120ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+  --enter-shift: 24px;
+
+  /* ── Layers ────────────────────────────────────────────────────────────────────────────── */
+  --z-viewport: 0;
+  --z-scrim: 5;
+  --z-hud: 10;
+  --z-hud-raised: 15;
+  --z-drawer: 20;
+  --z-popover: 30;
+  --z-dialog: 40;
+  --z-toast: 50;
+  --z-tooltip: 60;
+  --z-debug: 70;
+  --z-boot: 80;
+
+  /* ── Layout ────────────────────────────────────────────────────────────────────────────── */
+  --topbar-h: 48px;
+  --bottom-h: 72px;
+  --inspector-w: var(--column-w);
+  --lab-w: 520px;
+
+  /* No drop shadows: they do not read on black. Kept as no-ops for stable names. */
+  --shadow-panel: none;
+  --shadow-sheet: none;
+  --shadow-raised: none;
+  --shadow-tooltip: none;
+}
+
+/* Exhibition mode: Instrument sizes × 1.25, body never below 18 px, 56 px targets. */
+[data-exhibition='true'] {
+  --type-lede: 400 22px / 1.5 var(--font-ui);
+  --type-body: 400 18px / 1.55 var(--font-ui);
+  --type-value: 500 21px / 1.25 var(--font-ui);
+  --type-label: 450 15.5px / 1.25 var(--font-ui);
+  --type-control: 500 17px / 1.2 var(--font-ui);
+  --type-mono: 400 15.5px / 1.3 var(--font-mono);
+  --hit: 56px;
+  --control-md: 56px;
+  --cosmos-label-size: 16px;
+}
+
+@media (max-width: 1439px) {
+  :root {
+    --column-w: 380px;
+    --ruler-w: 132px;
+    --hud-gutter: 20px;
+  }
+}
+
+@media (max-width: 1199px) {
+  :root {
+    --column-w: 340px;
+    --ruler-w: 112px;
+    --hud-gutter: 16px;
+    --type-atlas-xl: 400 64px / 0.95 var(--font-atlas);
+    --type-atlas-l: 400 48px / 1 var(--font-atlas);
+    --type-ruler: 400 84px / 1 var(--font-atlas);
+  }
+}
+
+/* Reduced motion: the OS setting and the in-app setting ([data-reduced-motion]) both collapse UI motion. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-instant: 0ms;
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+    --dur-roll: 0ms;
+    --dur-count: 0ms;
+    --dur-boot: 0ms;
+    --dur-needle: 0ms;
+    --enter-shift: 0px;
+  }
+}
+
+[data-reduced-motion='true'] {
+  --dur-instant: 0ms;
+  --dur-fast: 0ms;
+  --dur-base: 0ms;
+  --dur-slow: 0ms;
+  --dur-roll: 0ms;
+  --dur-count: 0ms;
+  --dur-boot: 0ms;
+  --dur-needle: 0ms;
+  --enter-shift: 0px;
+}
+
+[data-label-density='low'] {
+  --cosmos-label-density: 0.5;
+}
+
+[data-label-density='high'] {
+  --cosmos-label-density: 1.6;
+}
