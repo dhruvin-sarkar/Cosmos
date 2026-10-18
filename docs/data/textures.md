@@ -1,0 +1,46 @@
+# Textures data domain
+
+Output: `public/textures/**`, index `public/textures/index.json`, manifest fragment `public/data/textures/manifest.part.json`.
+Rebuild (idempotent, cached raws in `data-raw/textures/`, gitignored): `build-wms.mjs`, `build-earth.mjs`, `build-sss.mjs`, `build-treks.mjs`, `build-epic.mjs`, then `finalize.mjs` (all in `scripts/data/textures/`). `FORCE=1` rebuilds. `discover.mjs`, `montage.mjs` are QA helpers.
+
+## Convention (all maps)
+Equirectangular 2:1. **x=0 is longitude -180 (180W), x increases EASTWARD, x=W/2 is 0 deg, y=0 is +90 deg latitude.**
+lon = -180 + 360*(x+0.5)/W, lat = 90 - 180*(y+0.5)/H. Planetocentric, east-positive (IAU 2015, as served by USGS/NASA; no mirroring applied for retrograde rotators). Verified visually with a 0-deg marker montage: Earth (Greenwich through Europe/Africa at W/2), Moon (maria), Mars (Hellas ~+70E, Tharsis), Io (Pele ~+105E), Ceres (Occator ~ -120E), Pluto (Tombaugh Regio at +-180 edge).
+Gas/ice giants, Venus atmosphere, Earth clouds: illustrative, no meaningful longitude reference.
+
+## index.json
+`{schemaVersion, generated, convention, bodies:{<body>:{<map>:{ultra?,high?,low?}}}, credits:{"<body>/<map>":{credit,license,source,provenanceClass,notes}}}`; paths relative to `public/`.
+Sizes: Earth ultra 8192x4096, high 4096x2048, low 2048x1024. Others: high 4096x2048 (Uranus/Neptune 2048x1024 native, not upscaled), low 1024x512.
+Maps: earth {day, night, clouds, specular, height (high/low only), normal, epic}; moon/mars/mercury/io/europa/ganymede/callisto/titan/enceladus/triton/pluto/charon/ceres/vesta/jupiter/saturn/uranus/neptune {color}; venus {surface, atmosphere}; saturn {rings}.
+Not delivered: Moon/Mars bump or normal (no elevation product ingested), Earth ultra height, glTF models (public/models), Uranus/Neptune rings. Mercury, Moon, Enceladus, Pluto, Charon, Ceres, Vesta are greyscale.
+
+## Earth maps
+| map | file(s) | encoding | source / processing |
+|---|---|---|---|
+| day | day_8k/4k/2k.jpg | sRGB JPEG q86 | NASA Blue Marble NG Dec 2004 (21600x10800), lanczos3 resize. Public domain. |
+| night | night_*.jpg | sRGB JPEG, emissive | NASA GIBS WMS `VIIRS_Black_Marble` 2016 at 8192x4096. DERIVED lights-only: GIBS base tint removed (R,G=(c-0.65B)*2.5; B=(B-0.95B)*2.5, clamped). Absolute radiance not preserved. |
+| clouds | clouds_*.jpg | 1-channel greyscale JPEG (white=cloud) | Solar System Scope 8k_earth_clouds, CC BY 4.0; static composite (illustrative); polar bands are artefacts. |
+| specular | specular_8k/4k/2k.png | 8-bit grey, linear: 255 ocean, 0 land | ETOPO 2022 z<0 = ocean (includes Caspian/Dead Sea basins), anti-aliased. |
+| height | height_4k/2k.png | 8-bit grey, linear: v=255*min(1,sqrt(max(0,elev)/6000)); elev_m = 6000*(v/255)^2 | ETOPO 2022; sea/bathymetry = 0. |
+| normal | normal_4k/2k.png, normal_8k.webp (lossless) | RGB linear, OpenGL (R=+east, G=+north, B=up) | from land elevation, ocean flat, R=6371 km, slope exaggeration x6 (normalScale ~0.17 for true slopes). |
+| epic | earth/epic/*.jpg + epic.json | JPEG 2048 | DSCOVR EPIC natural colour, 3 images of latest day (2026-10-16). |
+
+ETOPO: OPeNDAP `.dods` of `ETOPO_2022_v1_60s_N90W180_surface.nc` variable z, stride 2 (10800x5400, ~3.7 km), lat ascending in file (checked) then flipped north-up; DOI 10.25921/fd45-gt74.
+
+`earth/epic/epic.json`: `{schemaVersion, retrieved, source, credit, license, units, images:[{id, file, widthPx, heightPx, bytes, dateUtc (ISO UTC), centroidLatDeg, centroidLonDeg (sub-camera point, east-positive), dscovrJ2000Km[3], sunJ2000Km[3], moonJ2000Km[3] (geocentric J2000 equatorial, km), attitudeQuaternion[4] (q0..q3 as published), version, caption, sourceUrl}]}`.
+
+## Other bodies
+* USGS Astrogeology planetary WMS 1.1.1 GetMap EPSG:4326 4096x2048 (public domain, credit USGS Astrogeology/NASA): moon LROC_WAC (grey), mars MDIM21_color, mercury MESSENGER BDR (grey), venus MAGELLAN_color (colour is artificial), io SSI_VGR_color, europa/ganymede/callisto GALILEO_VOYAGER (grey), titan CASSINI, enceladus CASSINI, triton TRITON_VOYAGER2, pluto NEWHORIZONS_PLUTO_MOSAIC (grey), charon NEWHORIZONS_CHARON_MOSAIC (grey).
+  Unobserved regions (alpha<128 or pure black in Europa/Ganymede/Callisto) are filled with smooth pull-push interpolation (illustrative, featureless). Observed fraction: Triton 61%, Pluto 68%, Charon 66%, Europa 96%, Ganymede 97%, Callisto 96% (also in `credits[*].notes`).
+* NASA Solar System Treks WMTS level 3 (16x8 tiles): Ceres `Ceres_Dawn_FC_DLR_global_59ppd_Feb2016`, Vesta `Vesta_Dawn_HAMO_Photo_DLR_global_74ppd_IAU` (north polar night filled). Public domain, credit NASA/JPL-Caltech/UCLA/MPS/DLR/IDA.
+* Solar System Scope (CC BY 4.0, credit "Solar System Scope / INOVE"): venus atmosphere (4096), jupiter (4096), saturn (4096), uranus, neptune (2048).
+* Saturn rings `saturn/rings_8k.png` (8192x4) and `rings_2k.png` (2048x4): RGBA straight alpha; x = radial position inner(0)->outer(1); 4 identical rows. The source does not state the radial range: assumed 74,500-140,220 km, supported by the Cassini Division alpha minimum at x~0.65-0.7 (117,580 km). Map x to radius in your RingGeometry UVs.
+
+## Validation
+Contact sheets with a lon-0 marker viewed for all maps; feature positions above; no NaN (ETOPO non-finite cells: 0); output sizes asserted by `writeVariants`; every file in index.json exists (finalize). Total output ~54 MB.
+
+## Licenses / credits
+NASA, USGS, NOAA products are public domain; keep the credit lines in `index.json`. Solar System Scope textures require "Solar System Scope / INOVE" attribution (CC BY 4.0). Per-dataset records in `manifest.part.json`.
+
+## Known limitations
+Blue Marble is a single December composite; night map is stylised; clouds are not live weather; Venus/giant textures are artistic; the Moon has no normal map; ice-world far sides are interpolated; Mercury/Moon greyscale only.
