@@ -1,15 +1,14 @@
 /**
- * Camera rig — public API contract.
+ * Camera rig — public API contract (implementation in ./rigImpl.ts).
  *
- * STATUS: minimal working STUB. The camera-system implementation replaces the body of
- * `createCameraRig` (orbit / free / follow modes, input controls, Cosmic Ruler focus chain, cinematic travel,
- * up-vector blending, history) but MUST keep every exported name and signature in this file stable,
- * because src/core/engine.ts compiles against them.
+ * Orbit / free / follow modes, input controls, Cosmic Ruler focus chain, cinematic travel, up-vector blending and
+ * view history. Every exported name and signature in this file is stable: src/core/engine.ts compiles against them.
  */
 import * as THREE from 'three';
-import type { CameraController, CameraMode, CameraViewState, EngineEvents, EventBus, TravelOptions, Viewport } from '../types';
+import type { CameraController, EngineEvents, EventBus, Viewport } from '../types';
 import type { EntityRegistry } from '../entity';
 import type { CosmosStore } from '../../state/store';
+import { CosmosCameraRig } from './rigImpl';
 
 export interface CameraRigDeps {
   registry: EntityRegistry;
@@ -43,6 +42,12 @@ export interface CameraFrameState {
   anchorId: string;
   /** Human-readable active reference frame, e.g. "Geocentric · ICRS axes". */
   frameLabel: string;
+  /**
+   * Off-axis projection shift as a fraction of the viewport width (+ = the focus appears right of centre). Eases to
+   * +0.10 while the inspector is open so the focused body sits at 0.60 W (VISUAL_DIRECTION "Inspect framing").
+   * Apply with `applyProjectionShift(camera, viewport, shift)` after updating the projection.
+   */
+  projectionShiftX?: number;
 }
 
 export interface CameraRig extends CameraController {
@@ -50,67 +55,21 @@ export interface CameraRig extends CameraController {
   dispose(): void;
 }
 
-// ───────────────────────────── STUB IMPLEMENTATION BELOW ─────────────────────────────
-
 export function createCameraRig(deps: CameraRigDeps): CameraRig {
-  const state: CameraFrameState = {
-    position: new THREE.Vector3(),
-    quaternion: new THREE.Quaternion(),
-    forward: new THREE.Vector3(0, 0, -1),
-    focusDistanceM: 2.5e7,
-    scaleLog10: 7.4,
-    metersPerUnit: 2.5e4,
-    focusId: deps.initialFocusId ?? 'sol:earth',
-    anchorId: deps.initialFocusId ?? 'sol:earth',
-    frameLabel: 'Stub camera',
-  };
-  let mode: CameraMode = 'orbit';
-  const anchorPos = new THREE.Vector3();
-  const dir = new THREE.Vector3(0, -0.3, 1).normalize(); // camera sits at anchor + dir * distance
+  return new CosmosCameraRig(deps);
+}
 
-  const onWheel = (e: WheelEvent): void => {
-    e.preventDefault();
-    state.focusDistanceM *= Math.exp(e.deltaY * 0.001);
-  };
-  deps.inputElement.addEventListener('wheel', onWheel, { passive: false });
-
-  const rig: CameraRig = {
-    get mode() { return mode; },
-    get focusId() { return state.focusId; },
-    get anchorId() { return state.anchorId; },
-    get traveling() { return false; },
-    async focus(id: string, _opts?: TravelOptions) { state.focusId = id; state.anchorId = id; },
-    async travelTo(id: string, _opts?: TravelOptions) { state.focusId = id; state.anchorId = id; },
-    setScale(scaleLog10: number) {
-      state.focusDistanceM = Math.pow(10, scaleLog10) / (2 * Math.tan(deps.fovYRad / 2));
-    },
-    setMode(m: CameraMode) { mode = m; },
-    getView(): CameraViewState {
-      return {
-        anchorId: state.anchorId,
-        offset: [dir.x * state.focusDistanceM, dir.y * state.focusDistanceM, dir.z * state.focusDistanceM],
-        quaternion: [state.quaternion.x, state.quaternion.y, state.quaternion.z, state.quaternion.w],
-        mode,
-        focusId: state.focusId,
-        scaleLog10: state.scaleLog10,
-      };
-    },
-    async setView(view: CameraViewState) { state.anchorId = view.anchorId; state.focusId = view.focusId; },
-    back() { return false; },
-    cancelTravel() {},
-    update(_dt: number, timeMs: number): CameraFrameState {
-      const anchor = deps.registry.get(state.anchorId);
-      if (anchor) anchor.position(timeMs, anchorPos);
-      else anchorPos.set(0, 0, 0);
-      state.position.copy(anchorPos).addScaledVector(dir, state.focusDistanceM);
-      state.forward.copy(dir).negate();
-      const m = new THREE.Matrix4().lookAt(state.position, anchorPos, new THREE.Vector3(0, 0, 1));
-      state.quaternion.setFromRotationMatrix(m);
-      state.scaleLog10 = Math.log10(2 * state.focusDistanceM * Math.tan(deps.fovYRad / 2));
-      state.metersPerUnit = Math.max(1e-3, state.focusDistanceM / 1000);
-      return state;
-    },
-    dispose() { deps.inputElement.removeEventListener('wheel', onWheel); },
-  };
-  return rig;
+/**
+ * Apply the rig's horizontal projection shift to the render camera (camera.setViewOffset). The principal point moves
+ * by `shiftX · width` so the focus is framed off-centre without moving the camera; picking/projection through the
+ * camera's projection matrix stays consistent. Call after any change to the viewport or the camera's aspect/fov.
+ */
+export function applyProjectionShift(camera: THREE.PerspectiveCamera, viewport: Viewport, shiftX: number | undefined): void {
+  const w = Math.max(viewport.width, 1), h = Math.max(viewport.height, 1);
+  const shift = shiftX ?? 0;
+  if (Math.abs(shift) < 1e-5) {
+    if (camera.view?.enabled) camera.clearViewOffset();
+    return;
+  }
+  camera.setViewOffset(w, h, -shift * w, 0, w, h);
 }
