@@ -64,6 +64,8 @@ export interface BandDisplay {
   blackPoint: number;
   /** 0..1 blend toward a 3×3 blur at bake time (survey noise). */
   smooth?: number;
+  /** 0..1 noise-adaptive smoothing of the faint sky at bake time. */
+  denoise?: number;
   /** Luminance power after the black point (< 1 lifts faint diffuse light such as the Magellanic Clouds). */
   gamma?: number;
   /** Visible regardless of the camera's distance from the Sun (the CMB is effectively at infinity). */
@@ -77,7 +79,7 @@ export interface BandDisplay {
  * the visitor has explicitly chosen, so they are shown brighter.
  */
 export const BAND_DISPLAY: Record<string, BandDisplay> = {
-  visible: { exposure: 0.04, saturation: 0.4, starless: true, blackPoint: 0.014, smooth: 0.6, gamma: 0.78 },
+  visible: { exposure: 0.04, saturation: 0.4, starless: true, blackPoint: 0.014, smooth: 0.6, gamma: 0.78, denoise: 1 },
   halpha: { exposure: 0.4, saturation: 1, starless: true, blackPoint: 0.004 },
   uv: { exposure: 0.55, saturation: 1, starless: true, blackPoint: 0.002 },
   nir: { exposure: 0.5, saturation: 0.9, starless: true, blackPoint: 0.004 },

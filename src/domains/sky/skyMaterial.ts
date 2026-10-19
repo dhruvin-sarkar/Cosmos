@@ -27,6 +27,23 @@ uniform sampler2D uMapB;
 uniform float uWeightA;
 uniform float uWeightB;
 varying vec3 vDir;
+// The equirectangular footprint is stretched along RA by 1/cos(Dec): toward the poles a pixel covers many texels
+// in u but few in v. Hardware anisotropic filtering does not cover that reliably (radial aliasing streaks around the
+// celestial poles), so sample a row of up to 8 isotropic taps along u at the lod of the short axis.
+vec3 skySample(sampler2D t, vec2 uv, vec2 dx, vec2 dy) {
+  vec2 size = vec2(textureSize(t, 0));
+  float lu = max(abs(dx.x), abs(dy.x)) * size.x;
+  float lv = max(max(abs(dx.y), abs(dy.y)) * size.y, 1e-6);
+  float n = clamp(ceil(lu / lv), 1.0, 8.0);
+  float lod = log2(max(lv, lu / n));
+  vec3 acc = vec3(0.0);
+  for (int i = 0; i < 8; i++) {
+    if (float(i) >= n) break;
+    float off = ((float(i) + 0.5) / n - 0.5) * lu / size.x;
+    acc += textureLod(t, uv + vec2(off, 0.0), lod).rgb;
+  }
+  return acc / n;
+}
 void main() {
   vec3 d = normalize(vDir);
   float ra = atan(d.y, d.x);
@@ -38,8 +55,8 @@ void main() {
   vec2 dx = vec2(du1 < du2 ? dFdx(fract(u)) : dFdx(u), dFdx(uv.y));
   vec2 dy = vec2(du1 < du2 ? dFdy(fract(u)) : dFdy(u), dFdy(uv.y));
   vec3 c = vec3(0.0);
-  if (uWeightA > 0.0) c += textureGrad(uMapA, uv, dx, dy).rgb * uWeightA;
-  if (uWeightB > 0.0) c += textureGrad(uMapB, uv, dx, dy).rgb * uWeightB;
+  if (uWeightA > 0.0) c += skySample(uMapA, uv, dx, dy) * uWeightA;
+  if (uWeightB > 0.0) c += skySample(uMapB, uv, dx, dy) * uWeightB;
   gl_FragColor = vec4(c, 1.0);
   ${LOGDEPTH_FRAGMENT}
   ${LOGDEPTH_FRAGMENT_AT_INFINITY}

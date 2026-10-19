@@ -18,6 +18,7 @@ const params = new URLSearchParams(location.search);
 const num = (k: string, d: number): number => (params.has(k) ? Number(params.get(k)) : d);
 const timeMs = params.get('t') ? Date.parse(params.get('t')!) : Date.parse('2026-10-18T22:00:00Z');
 const sky = createSkyDomain();
+if (params.get('style')) sky.runtime.style = params.get('style') as never;
 const stars = params.get('stars') === '0' ? null : createStarsDomain();
 const grids = (params.get('grid') ?? '').split(',');
 const app = bootSandbox({

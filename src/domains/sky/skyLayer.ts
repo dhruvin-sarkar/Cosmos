@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import type { EngineServices, FrameContext, Layer, QualityProfile, SpectralBandId } from '../../core/types';
 import { PC_M } from '../../core/units';
 import { bakeSkyMap } from './bake';
+import { bakeEnhanced, ENHANCED_TUNING, STORE_SCALE } from './enhanced';
 import {
   BANDS_JSON_PATH,
   bandDisplay,
@@ -19,6 +20,15 @@ import {
   type SkyBandRecord,
   type SkyBandsFile,
 } from './bands';
+
+/**
+ * Backdrop style for the visible band: 'enhanced' = the "Enhanced colour composite" (Gaia + boosted Hα + dust glow,
+ * enhanced.ts), 'natural' = the plain visible-light map, 'auto' = enhanced in exhibition mode (enlarge-bodies on).
+ */
+export type SkyStyle = 'auto' | 'enhanced' | 'natural';
+const ENHANCED_KEY = 'visible-enhanced';
+/** Display exposure of the enhanced composite (its target stores linear × STORE_SCALE). */
+const ENHANCED_EXPOSURE = 0.06 / STORE_SCALE;
 import { SkyBackdropMaterial, makeSkyQuad } from './skyMaterial';
 
 export const SKY_BACKDROP_LAYER_ID = 'sky:backdrop';
@@ -53,6 +63,13 @@ export interface SkyRuntime {
   readonly distanceFade: number;
   /** Optional multiplier on all band exposures (tuning / UI brightness control). */
   exposureScale: number;
+  /** Visible-band style (UI "Enhanced colour composite" / "Visible light" switch). Default 'auto'. */
+  style: SkyStyle;
+  /** True while the enhanced composite is the requested visible backdrop. */
+  readonly enhancedActive: boolean;
+  /** Live tuning of the enhanced composite; call rebake() after changing it. */
+  readonly tuning: typeof ENHANCED_TUNING;
+  rebake(): void;
 }
 
 export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } {
@@ -73,6 +90,8 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
   let quality: QualityProfile['textureQuality'] = 'high';
   let distanceFade = 1;
   let lastRetryMs = 0;
+  let enhancedOn = false;
+  let enlarge = true;
 
   const runtime: SkyRuntime = {
     get bands() {
@@ -80,7 +99,28 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
     },
     caption(band) {
       const rec = resolveBand(bands, band);
-      return rec ? captionFor(band, rec, bandDisplay(rec.id).everywhere === true || distanceFade > 0.01) : null;
+      if (!rec) return null;
+      const c = captionFor(band, rec, bandDisplay(rec.id).everywhere === true || distanceFade > 0.01);
+      if (band !== 'visible' || !useEnhanced()) return c;
+      const ha = bands?.bands.find((b) => b.id === 'halpha');
+      const fir = bands?.bands.find((b) => b.id === 'fir');
+      return {
+        ...c,
+        dataId: ENHANCED_KEY,
+        label: 'Enhanced colour composite',
+        survey: [rec.survey, ha?.survey, fir?.survey].filter(Boolean).join(' + '),
+        reveals:
+          "The Milky Way as in a long-exposure photograph: integrated starlight (Gaia DR3), glowing hydrogen clouds (Hα: " +
+          "Orion, Barnard's Loop, the Gum nebula, Cygnus, Carina) and faint dust light along the galactic plane.",
+        caveats: [
+          'Composite of real all-sky surveys; the Hα emission and dust glow are boosted for visibility (the eye cannot see them this bright). Switch to "Visible light" for the natural view.',
+          'Diffuse map only: stars are drawn from the star catalogue.',
+          ...c.caveats,
+        ],
+        credit: [rec.credit, ha?.credit, fir?.credit].filter(Boolean).join(' '),
+        license: [rec.license, ha?.license, fir?.license].filter(Boolean).join(' '),
+        provenance: 'derived',
+      };
     },
     get shownBand() {
       return shownBand;
@@ -89,7 +129,22 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
       return distanceFade;
     },
     exposureScale: 1,
+    style: 'auto',
+    get enhancedActive() {
+      return enhancedOn;
+    },
+    tuning: ENHANCED_TUNING,
+    rebake() {
+      const b = cache.get(ENHANCED_KEY);
+      if (b && !loading.has(ENHANCED_KEY)) b.tier = -1;
+    },
   };
+
+  function useEnhanced(): boolean {
+    if (runtime.style === 'natural') return false;
+    if (runtime.style === 'enhanced') return true;
+    return enlarge;
+  }
 
   async function loadBandsJson(): Promise<void> {
     if (!svc) return;
@@ -114,10 +169,10 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
     }
   }
 
-  function show(band: SpectralBandId, rec: SkyBandRecord, baked: Baked): void {
-    const disp = bandDisplay(rec.id);
+  function show(band: SpectralBandId, key: string, baked: Baked): void {
+    const disp = key === ENHANCED_KEY ? { exposure: ENHANCED_EXPOSURE, everywhere: false } : bandDisplay(key);
     baked.lastUsed = performance.now();
-    if (active && active.baked.dataId === rec.id) return;
+    if (active && active.baked.dataId === key) return;
     // The map that currently dominates the screen becomes the outgoing one.
     outgoing = !outgoing || fadeT >= 0.5 ? active : outgoing;
     active = { baked, exposure: disp.exposure, everywhere: disp.everywhere === true };
@@ -142,7 +197,7 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
           tex.dispose();
           return;
         }
-        const rt = bakeSkyMap(renderer, tex, { starless: disp.starless, saturation: disp.saturation, blackPoint: disp.blackPoint, smooth: disp.smooth, gamma: disp.gamma });
+        const rt = bakeSkyMap(renderer, tex, { starless: disp.starless, saturation: disp.saturation, blackPoint: disp.blackPoint, smooth: disp.smooth, gamma: disp.gamma, denoise: disp.denoise });
         tex.dispose();
         const prev = cache.get(rec.id);
         if (prev) {
@@ -154,7 +209,7 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
         } else {
           const baked: Baked = { dataId: rec.id, rt, tier: i, lastUsed: performance.now() };
           cache.set(rec.id, baked);
-          if (desiredBand === band) show(band, rec, baked);
+          if (desiredBand === band && !enhancedOn) show(band, rec.id, baked);
           evict();
         }
       }
@@ -163,6 +218,67 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
       console.info(`[sky] band '${rec.id}' could not be loaded: ${(err as Error).message}`);
     } finally {
       loading.delete(rec.id);
+    }
+  }
+
+  /** Enhanced composite: visible tiers (low → quality tier), each baked with Hα and far-IR dust. */
+  async function loadEnhanced(rec: SkyBandRecord): Promise<void> {
+    if (!svc || loading.has(ENHANCED_KEY)) return;
+    const tiers = tiersFor(rec, quality);
+    const have = cache.get(ENHANCED_KEY);
+    const start = have ? have.tier + 1 : 0;
+    if (start >= tiers.length) return;
+    loading.add(ENHANCED_KEY);
+    const assets = svc.assets;
+    const renderer = svc.renderer;
+    const haRec = bands?.bands.find((b) => b.id === 'halpha');
+    const firRec = bands?.bands.find((b) => b.id === 'fir');
+    let ha: THREE.Texture | null = null;
+    let haTier = '';
+    let dust: THREE.Texture | null = null;
+    const tex = (path: string | undefined): Promise<THREE.Texture | null> =>
+      path ? assets.textureAsync(path, { colorSpace: 'srgb' }).catch(() => null) : Promise.resolve(null);
+    try {
+      dust = await tex(firRec?.files.low?.path ?? firRec?.files.high?.path);
+      for (let i = start; i < tiers.length && !disposed; i++) {
+        // Hα: 1K with the 1K visible map, 4K otherwise (the bake blurs it to ~1K detail anyway).
+        const wantHa = tiers[i].width <= 1024 ? 'low' : 'high';
+        if (haRec && haTier !== wantHa) {
+          const next = await tex(haRec.files[wantHa]?.path ?? haRec.files.low?.path);
+          if (next) {
+            ha?.dispose();
+            ha = next;
+            haTier = wantHa;
+          }
+        }
+        const vis = await assets.textureAsync(tiers[i].path, { colorSpace: 'srgb' });
+        if (disposed) {
+          vis.dispose();
+          return;
+        }
+        const rt = await bakeEnhanced(renderer, { vis, ha, dust }, ENHANCED_TUNING, () => disposed);
+        vis.dispose();
+        if (!rt) return;
+        const prev = cache.get(ENHANCED_KEY);
+        if (prev) {
+          const old = prev.rt;
+          prev.rt = rt;
+          prev.tier = i;
+          old.dispose();
+        } else {
+          const baked: Baked = { dataId: ENHANCED_KEY, rt, tier: i, lastUsed: performance.now() };
+          cache.set(ENHANCED_KEY, baked);
+          if (enhancedOn) show('visible', ENHANCED_KEY, baked);
+          evict();
+        }
+      }
+    } catch (err) {
+      failed.add(ENHANCED_KEY);
+      console.info(`[sky] enhanced composite could not be built: ${(err as Error).message}`);
+    } finally {
+      ha?.dispose();
+      dust?.dispose();
+      loading.delete(ENHANCED_KEY);
     }
   }
 
@@ -181,6 +297,7 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
       if (!mesh) return;
       quality = ctx.quality.textureQuality;
       desiredBand = ctx.spectralBand;
+      enlarge = ctx.overlays['enlarge-bodies'] !== false;
 
       // Distance validity (log-space smoothstep 50 → 500 pc from the Sun ≈ SSB).
       const d = ctx.cameraPosition.length();
@@ -199,10 +316,19 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
       }
 
       const rec = resolveBand(bands, desiredBand);
-      if (rec && !failed.has(rec.id)) {
+      enhancedOn = !!rec && desiredBand === 'visible' && useEnhanced() && !failed.has(ENHANCED_KEY);
+      if (rec && enhancedOn) {
+        const baked = cache.get(ENHANCED_KEY);
+        if (baked) {
+          show(desiredBand, ENHANCED_KEY, baked);
+          if (baked.tier + 1 < tiersFor(rec, quality).length) void loadEnhanced(rec);
+        } else {
+          void loadEnhanced(rec);
+        }
+      } else if (rec && !failed.has(rec.id)) {
         const baked = cache.get(rec.id);
         if (baked) {
-          show(desiredBand, rec, baked);
+          show(desiredBand, rec.id, baked);
           if (baked.tier + 1 < tiersFor(rec, quality).length && !loading.has(rec.id)) void loadBand(desiredBand, rec);
         } else if (!loading.has(rec.id)) {
           void loadBand(desiredBand, rec);

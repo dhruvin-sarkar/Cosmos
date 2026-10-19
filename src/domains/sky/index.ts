@@ -6,7 +6,7 @@ import type { Layer } from '../../core/types';
 import { createSkyBackdropLayer, type SkyRuntime } from './skyLayer';
 import { createSkyGridLayer } from './gridLayer';
 
-export { SKY_BACKDROP_LAYER_ID, SKY_FADE_END_M, SKY_FADE_START_M, type SkyRuntime } from './skyLayer';
+export { SKY_BACKDROP_LAYER_ID, SKY_FADE_END_M, SKY_FADE_START_M, type SkyRuntime, type SkyStyle } from './skyLayer';
 export { SKY_GRID_LAYER_ID } from './gridLayer';
 export { BAND_DATA_IDS, BAND_DISPLAY, type SkyBandCaption } from './bands';
 
