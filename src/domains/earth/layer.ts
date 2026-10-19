@@ -17,6 +17,9 @@ import { AtmosphereShell } from '../../render/materials/AtmosphereShell';
 import { FRAGMENT_PRELUDE, LOGDEPTH_FRAGMENT, LOGDEPTH_VERTEX, VERTEX_PRELUDE } from '../../render/glsl/logdepth';
 import { EarthSurfaceMaterial } from './earthMaterial';
 import { MoonSurfaceMaterial } from './moonMaterial';
+import { AURORA_TOP, AuroraMaterial } from './aurora';
+import { dipoleAxis, kpAt, ovalEquatorwardMlatDeg, parseStorms, type KpReading, type SpaceWeatherJson, type StormSpan } from './spaceWeather';
+import { registerScaledBody, renderTransform } from '../../core/visualScale';
 import { evaluate, icrsToBodyFixed, rotationToQuaternion } from './ephemeris';
 import { ProgressiveMap, TIER_ORDER, loadTextureTable, maxTierFor, type TextureTable, type Tier } from './textures';
 import { R_EARTH_M, R_MOON_M } from './entities';
@@ -38,9 +41,14 @@ export const LOW_LIGHT_DISPLAY_GAIN = 900;
 const UMBRA_REFRACTED_FRACTION = 6e-5;
 /** The umbra needs a stronger lift than Earthshine to read as copper-red at exhibition exposure. */
 export const UMBRA_DISPLAY_GAIN = 4000;
-/** Maximum visual enlargement under the 'enlarge-bodies' overlay (keeps the Moon clear of the Earth). */
-export const MAX_ENLARGE = 40;
-const ENLARGE_TARGET_PX = 10;
+/**
+ * Aurora display gain: emission per Earth radius of path for the strongest arcs. A bright arc (~100 kR in 557.7 nm) is
+ * comparable to city lights in ISS night photographs; this gain puts it there at Kp ~ 5 (disclosed in the fact sheet).
+ */
+const AURORA_GAIN = 6;
+/** Cloud drift: the cloud field is advected by climatological zonal winds; faded out at fast time rates. */
+const DRIFT_FADE_RATE_START = 1500;
+const DRIFT_FADE_RATE_END = 6000;
 /** Earth relief: the normal map is built with slopes ×6; 0.5 renders them ×3 for legible terminator relief. */
 const EARTH_NORMAL_STRENGTH = 0.5;
 /**
@@ -104,6 +112,14 @@ function phaseIntegral(alpha: number): number {
 function tierForPx(px: number): Tier {
   return px < 300 ? 'low' : px < 1100 ? 'high' : 'ultra';
 }
+/**
+ * Close range = camera within CLOSE_RANGE_IN radii of the centre (below ~2200 km altitude), where an 8K map (~5 km/texel)
+ * is coarser than a pixel. Only there: the 16K day map on Ultra (~700 MB VRAM) and, on the 'high' (4K) profile, the 8K
+ * day + cloud maps of the focused Earth (~+270 MB). Both are released beyond CLOSE_RANGE_OUT.
+ */
+const CLOSE_RANGE_IN = 1.35;
+const CLOSE_RANGE_OUT = 1.7;
+const BOOST_MAP_INDICES = [0, 2] as const;
 
 export interface EarthMoonLayerOptions {
   earth: Entity;
@@ -120,6 +136,20 @@ export function createEarthMoonLayer(opts: EarthMoonLayerOptions): Layer {
   const atmosphere = new AtmosphereShell({ sunIntensity: SUN_IRRADIANCE_1AU, steps: 12 });
   atmosphere.name = 'sol:earth:atmosphere';
   atmosphere.renderOrder = 1;
+  const auroraMat = new AuroraMaterial();
+  const auroraGeo = new THREE.SphereGeometry(AURORA_TOP, 192, 96).rotateX(Math.PI / 2);
+  const aurora = new THREE.Mesh(auroraGeo, auroraMat);
+  aurora.name = 'sol:earth:aurora';
+  aurora.frustumCulled = false;
+  aurora.renderOrder = 2;
+  aurora.visible = false;
+  dipoleAxis(auroraMat.uniforms.uDipole.value);
+  let storms: StormSpan[] = [];
+  const kp: KpReading = { kp: 2, basis: 'typical', stormMaxKp: null };
+  let auroraClock = 0;
+  let flowSimSec = 0;
+  let boosted = false;
+  const unregister: (() => void)[] = [];
 
   const makePoint = (name: string): { point: THREE.Points; mat: THREE.ShaderMaterial } => {
     const mat = new THREE.ShaderMaterial({
@@ -194,19 +224,39 @@ export function createEarthMoonLayer(opts: EarthMoonLayerOptions): Layer {
 
   const requestTier = (b: BodyVis): void => {
     if (!b.requested) return;
-    const byPx = tierForPx(b.pxTrue * b.enlarge);
-    const want = TIER_ORDER[Math.min(TIER_ORDER.indexOf(byPx), TIER_ORDER.indexOf(qualityMax))];
+    const px = b.pxTrue * b.enlarge;
+    const range = b.distanceM / (b.radiusM * b.enlarge);
+    // The 16K tier is the only one ever released (VRAM); lower tiers are kept once loaded.
+    if (b.requested === 'max' && (qualityMax !== 'max' || range > CLOSE_RANGE_OUT)) {
+      b.requested = 'ultra';
+      for (const map of b.maps) map.cap('ultra');
+      return;
+    }
+    const byPx = range < CLOSE_RANGE_IN ? 'max' : tierForPx(px);
+    let want = TIER_ORDER[Math.min(TIER_ORDER.indexOf(byPx), TIER_ORDER.indexOf(qualityMax))]!;
+    if (want === 'max' && (services?.renderer.capabilities.maxTextureSize ?? 0) < 16384) want = 'ultra';
     if (TIER_ORDER.indexOf(want) <= TIER_ORDER.indexOf(b.requested)) return;
     b.requested = want;
     for (const map of b.maps) map.request(want);
   };
 
+  /**
+   * Visual-scale hook: the single place a body's drawn radius factor and drawn position are decided
+   * (src/core/visualScale.ts: exhibition enlargement, Moon offset magnified around the enlarged Earth; identity in
+   * true-scale mode or without a registration). Writes the DRAWN position into `out`.
+   */
+  const visualFactor = (b: BodyVis, ctx: FrameContext, out: THREE.Vector3): number => {
+    const f = renderTransform(b.entity, ctx.timeMs, out);
+    return Number.isFinite(f) && f >= 1 ? f : 1;
+  };
+
   /** Position, scale and LOD for one body; returns true when the mesh is drawn. */
-  const placeBody = (b: BodyVis, ctx: FrameContext, world: THREE.Vector3, rot: Float64Array, sunWorld: THREE.Vector3): boolean => {
-    b.world.copy(world);
+  const placeBody = (b: BodyVis, ctx: FrameContext, trueWorld: THREE.Vector3, rot: Float64Array, sunWorld: THREE.Vector3): boolean => {
+    b.world.copy(trueWorld);
+    b.enlarge = visualFactor(b, ctx, b.world);
+    const world = b.world;
     b.distanceM = Math.max(world.distanceTo(ctx.cameraPosition), 1);
     b.pxTrue = ctx.pixelDiameter(b.radiusM, b.distanceM);
-    b.enlarge = ctx.overlays['enlarge-bodies'] ? Math.min(MAX_ENLARGE, Math.max(1, ENLARGE_TARGET_PX / Math.max(b.pxTrue, 1e-6))) : 1;
     const px = b.pxTrue * b.enlarge;
     const meshOn = px >= MESH_MIN_PX;
     b.mesh.visible = meshOn;
@@ -237,15 +287,42 @@ export function createEarthMoonLayer(opts: EarthMoonLayerOptions): Layer {
     return meshOn;
   };
 
+  /** Illustrative aurora (./aurora): on while the Earth is a real disc; Kp from the DONKI storm list at the sim time. */
+  const updateAurora = (ctx: FrameContext, px: number, camBf: THREE.Vector3, sunBf: THREE.Vector3): void => {
+    aurora.visible = px > 24;
+    if (!aurora.visible) return;
+    aurora.position.copy(earth.mesh.position);
+    aurora.scale.copy(earth.mesh.scale);
+    aurora.quaternion.copy(earth.mesh.quaternion);
+    kpAt(storms, ctx.timeMs, kp);
+    const a = auroraMat.uniforms;
+    a.uCamPos.value.copy(camBf);
+    a.uSunDir.value.copy(sunBf);
+    a.uKp.value = kp.kp;
+    a.uEqMidnight.value = ovalEquatorwardMlatDeg(kp.kp);
+    // Dayside boundary ~11 deg poleward of the nightside one (Feldstein-Starkov oval, ~77 -> 72 deg from Kp 0 to 9).
+    a.uEqNoon.value = 77 - 0.6 * Math.min(9, kp.kp);
+    // Brightness grows roughly linearly with Kp (hemispheric power ~10 GW quiet -> 100+ GW in storms).
+    a.uGain.value = AURORA_GAIN * (0.3 + 0.35 * kp.kp);
+    if (!ctx.reducedMotion) auroraClock += Math.min(ctx.dtRealSec, 0.1);
+    a.uTime.value = auroraClock % 10000;
+    auroraMat.setInside(camBf.length() < AURORA_TOP);
+    auroraMat.setSteps(ctx.quality.textureQuality === 'low' ? 12 : 24);
+  };
+
   return {
     id: 'earth-moon',
 
     init(svc: EngineServices): void {
       services = svc;
       svc.groups.main.add(earth.mesh, moon.mesh);
-      svc.groups.transparent.add(atmosphere);
+      svc.groups.transparent.add(atmosphere, aurora);
       svc.groups.far.add(earth.point, moon.point);
       atmosphere.visible = false;
+      unregister.push(registerScaledBody(opts.earth, { radiusM: R_EARTH_M }), registerScaledBody(opts.moon, { radiusM: R_MOON_M }));
+      void svc.assets.json<SpaceWeatherJson>('data/solar/space-weather.json')
+        .then(j => { storms = parseStorms(j); })
+        .catch(() => { storms = []; });
       // Progressive: resolve the texture table in the background; the layer runs immediately with fallbacks.
       void loadTextureTable(svc.assets).then(t => {
         if (!services) return;
@@ -262,20 +339,21 @@ export function createEarthMoonLayer(opts: EarthMoonLayerOptions): Layer {
 
       // ── Earth ──
       const earthOn = placeBody(earth, ctx, s.earth, s.earthRot, s.sun);
+      const moonOn = placeBody(moon, ctx, s.moon, s.moonRot, s.sun);
+      const eclipses = shadowsOn && earth.enlarge < 1.001 && moon.enlarge < 1.001;
       const sunDistE = s.sun.distanceTo(s.earth);
       const eIrr = SUN_IRRADIANCE_1AU * (AU_M / sunDistE) ** 2;
       if (earthOn) {
         const u = earthMat.uniforms;
-        v1.subVectors(s.sun, s.earth).normalize();
+        v1.subVectors(s.sun, earth.world).normalize();
         icrsToBodyFixed(s.earthRot, v1, u.uSunDir.value);
-        v2.subVectors(ctx.cameraPosition, s.earth).multiplyScalar(1 / (R_EARTH_M * earth.enlarge));
+        v2.subVectors(ctx.cameraPosition, earth.world).multiplyScalar(1 / (R_EARTH_M * earth.enlarge));
         icrsToBodyFixed(s.earthRot, v2, u.uCamPos.value);
         // Procedural close-range detail below ~3000 km altitude (camera distance in planet radii).
         u.uDetail.value = 1 - THREE.MathUtils.smoothstep(v2.length(), 1.15, 1.5);
         u.uSunIntensity.value = eIrr;
         u.uSunAngRadius.value = R_SUN_M / sunDistE;
-        const eclipses = shadowsOn && earth.enlarge === 1 && moon.enlarge === 1;
-        v3.subVectors(s.moon, s.earth).multiplyScalar(1 / R_EARTH_M);
+        v3.subVectors(moon.world, earth.world).multiplyScalar(1 / R_EARTH_M);
         icrsToBodyFixed(s.earthRot, v3, u.uMoonPos.value);
         u.uMoonRadius.value = eclipses ? R_MOON_M / R_EARTH_M : 0;
         const px = earth.pxTrue * earth.enlarge;
@@ -288,26 +366,35 @@ export function createEarthMoonLayer(opts: EarthMoonLayerOptions): Layer {
           atmosphere.sunDirectionWorld.copy(v1);
           atmosphere.material.uniforms.uSunIntensity.value = eIrr * EARTH_HAZE_SCALE;
         }
+        // Clouds drift with the climatological zonal wind (simulation time); faded out when time runs fast, where the
+        // bounded two-phase flow would visibly pulse.
+        flowSimSec += ctx.dtSimSec;
+        const period = u.uFlowPeriodS.value;
+        u.uFlowPhase.value = (((flowSimSec / period) % 1) + 1) % 1;
+        const rate = ctx.dtRealSec > 1e-4 ? Math.abs(ctx.dtSimSec / ctx.dtRealSec) : 1;
+        u.uDrift.value = 1 - THREE.MathUtils.smoothstep(rate, DRIFT_FADE_RATE_START, DRIFT_FADE_RATE_END);
+        updateAurora(ctx, px, u.uCamPos.value, u.uSunDir.value);
       } else {
         atmosphere.visible = false;
+        aurora.visible = false;
       }
 
       // ── Moon ──
-      const moonOn = placeBody(moon, ctx, s.moon, s.moonRot, s.sun);
       if (moonOn) {
         const u = moonMat.uniforms;
         const sunDistM = s.sun.distanceTo(s.moon);
-        v1.subVectors(s.sun, s.moon).normalize();
+        v1.subVectors(s.sun, moon.world).normalize();
         icrsToBodyFixed(s.moonRot, v1, u.uSunDir.value);
-        v2.subVectors(ctx.cameraPosition, s.moon).multiplyScalar(1 / (R_MOON_M * moon.enlarge));
+        v2.subVectors(ctx.cameraPosition, moon.world).multiplyScalar(1 / (R_MOON_M * moon.enlarge));
         icrsToBodyFixed(s.moonRot, v2, u.uCamPos.value);
-        v3.subVectors(s.earth, s.moon);
-        const dEM = v3.length();
+        // Earth direction from the drawn positions (eclipses are off while either body is enlarged); Earthshine from the
+        // true distance.
+        const dEM = s.earth.distanceTo(s.moon);
+        v3.subVectors(earth.world, moon.world);
         v3.multiplyScalar(1 / R_MOON_M);
         icrsToBodyFixed(s.moonRot, v3, u.uEarthPos.value);
         u.uSunIntensity.value = SUN_IRRADIANCE_1AU * (AU_M / sunDistM) ** 2;
         u.uSunAngRadius.value = R_SUN_M / sunDistM;
-        const eclipses = shadowsOn && earth.enlarge === 1 && moon.enlarge === 1;
         // Danjon: the atmosphere enlarges the Earth's shadow by ~2 %.
         u.uEarthRadius.value = eclipses ? (R_EARTH_M * 1.02) / R_MOON_M : 0;
         // Earthshine: Earth's day side seen from the Moon (Lambert sphere, Bond albedo), phase angle at the Earth.
@@ -324,6 +411,15 @@ export function createEarthMoonLayer(opts: EarthMoonLayerOptions): Layer {
       if (table) {
         requestTier(earth);
         requestTier(moon);
+        const range = earth.distanceM / (earth.radiusM * earth.enlarge);
+        const focused = ctx.focusEntityId === earth.entity.id;
+        if (!boosted && qualityMax === 'high' && focused && range < CLOSE_RANGE_IN) {
+          boosted = true;
+          for (const i of BOOST_MAP_INDICES) earth.maps[i]?.request('ultra');
+        } else if (boosted && (qualityMax !== 'high' || !focused || range > CLOSE_RANGE_OUT)) {
+          boosted = false;
+          for (const i of BOOST_MAP_INDICES) earth.maps[i]?.cap(qualityMax);
+        }
       }
     },
 
@@ -341,9 +437,17 @@ export function createEarthMoonLayer(opts: EarthMoonLayerOptions): Layer {
     },
 
     collectLabels(ctx: FrameContext, out: LabelCandidate[]): void {
+      // The Moon's label only once it clearly separates from the (drawn) Earth disc, unless it is focused or selected.
+      ctx.project(earth.world, screen);
+      const ex = screen.x, ey = screen.y, eVis = screen.visible;
+      const earthRpx = (earth.pxTrue * earth.enlarge) / 2;
       for (const b of bodies) {
         ctx.project(b.world, screen);
         if (!screen.visible) continue;
+        if (b === moon && eVis && ctx.focusEntityId !== b.entity.id && ctx.selectedId !== b.entity.id) {
+          const sep = Math.hypot(screen.x - ex, screen.y - ey) - earthRpx - (b.pxTrue * b.enlarge) / 2;
+          if (sep < 40) continue;
+        }
         out.push({
           entityId: b.entity.id,
           text: b.entity.name,
@@ -366,6 +470,10 @@ export function createEarthMoonLayer(opts: EarthMoonLayerOptions): Layer {
       }
       atmosphere.removeFromParent();
       atmosphere.dispose();
+      for (const un of unregister.splice(0)) un();
+      aurora.removeFromParent();
+      auroraMat.dispose();
+      auroraGeo.dispose();
       earthMat.dispose();
       moonMat.dispose();
       earthGeo.dispose();

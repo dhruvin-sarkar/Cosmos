@@ -10,6 +10,9 @@ import { createPlaceholderEntities, createPlaceholderBodiesLayer } from '../src/
 import { createMoonEntities } from '../src/domains/moons/entities';
 import { createMoonsLayer } from '../src/domains/moons/moonsLayer';
 import { createRegistry } from '../src/core/registry';
+import { MOON_RECORDS, moonEntityId } from '../src/domains/moons/data';
+import { moonRotation } from '../src/domains/moons/ephemeris';
+import { lonLatDir } from '../src/domains/moons/effects';
 
 const params = new URLSearchParams(location.search);
 const t = params.get('t');
@@ -36,7 +39,33 @@ void app.ready.then(async () => {
   const scale = Number(params.get('scale'));
   if (params.has('scale') && Number.isFinite(scale)) app.commands.setScale(scale, { animate: false });
   const focus = params.get('focus') ?? 'sol:io';
-  if (params.has('phase')) {
+  if (params.has('vent')) {
+    // vent=lon,lat (east-positive): put that surface point on the limb. phase = angle of the camera from the sunward side (0 front-lit, 90 side, 180 backlit).
+    const [lon, lat] = (params.get('vent') ?? '0,0').split(',').map(Number);
+    const rec = MOON_RECORDS.find((r) => moonEntityId(r.id) === focus)!;
+    const e = app.registry.get(focus)!;
+    const sunE = app.registry.get('sol:sun')!;
+    const tNow = app.store.getState().time.simTimeMs;
+    const p = e.position(tNow, new THREE.Vector3());
+    const sdir = sunE.position(tNow, new THREE.Vector3()).sub(p).normalize();
+    const r = new Float64Array(9);
+    moonRotation(rec, tNow, r);
+    const m = new THREE.Matrix4().set(r[0], r[1], r[2], 0, r[3], r[4], r[5], 0, r[6], r[7], r[8], 0, 0, 0, 0, 1);
+    const n = lonLatDir(lon, lat).applyMatrix4(m).normalize();
+    const sPerp = sdir.clone().sub(n.clone().multiplyScalar(sdir.dot(n))).normalize();
+    const c = new THREE.Vector3().crossVectors(n, sPerp).normalize();
+    const a = (Number(params.get('phase') ?? '90') * Math.PI) / 180;
+    const dir = sPerp.multiplyScalar(Math.cos(a)).addScaledVector(c, Math.sin(a)).normalize();
+    const dist = Number(params.get('dist') ?? '3') * (e.radiusM ?? 1);
+    const offset = dir.clone().multiplyScalar(dist);
+    const look = offset.clone().negate().normalize();
+    const mm = new THREE.Matrix4().lookAt(new THREE.Vector3(), look, n);
+    const q = new THREE.Quaternion().setFromRotationMatrix(mm);
+    await app.engine.services.cameraController.setView(
+      { anchorId: focus, offset: [offset.x, offset.y, offset.z], quaternion: [q.x, q.y, q.z, q.w], mode: 'orbit', focusId: focus, scaleLog10: Math.log10(dist) },
+      { instant: true },
+    );
+  } else if (params.has('phase')) {
     const e = app.registry.get(focus)!;
     const sunE = app.registry.get('sol:sun')!;
     const tNow = app.store.getState().time.simTimeMs;

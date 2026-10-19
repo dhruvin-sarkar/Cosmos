@@ -14,10 +14,12 @@ import { AtmosphereShell } from '../../render/materials/AtmosphereShell';
 import { lodBlend, type LodBlend } from '../../render/lod';
 import { createStripTexture } from '../../render/textures';
 import type { SolarEntity } from './entities';
-import { bodyOrientation, exposureState, sunPosition, SUN_SCENE_IRRADIANCE_1AU } from './ephemeris';
+import { bodyOrientation, exhibitionDisplayGain, exposureState, sunPosition, SUN_SCENE_IRRADIANCE_1AU } from './ephemeris';
 import { PlanetMaterial, type PlanetBrdf } from './planetMaterial';
 import { createRingGeometry, SolarRingMaterial } from './ringMaterial';
 import { resolveBodyTexture } from './textures';
+import { createWindTexture, VENUS_CLOUD_PERIOD_DAYS, WindClock } from './winds';
+import { registerScaledBody, renderTransform } from '../../core/visualScale';
 
 /** Venus: CO₂ Rayleigh at the ~30 mbar cloud-top level plus the upper sulfuric-acid haze (Mie, forward scattering). */
 const VENUS_HAZE: AtmosphereParams = {
@@ -135,17 +137,28 @@ interface BodyVisual {
   /** Displayed (possibly enlarged) pixel diameter. */
   shownPx: number;
   enlarge: number;
-  highRequested: boolean;
+  /** Best texture tier requested so far. */
+  tier: 'low' | 'high' | 'ultra';
+  wind: WindClock | null;
+  /** Venus: rigid cloud-deck rotation in the body frame (rad) and its rate (rad per simulation second). */
+  cloudRot: number;
+  cloudRate: number;
+  unregister: () => void;
   occluders: (Entity | null)[];
   occluderIds: string[];
   lod: LodBlend;
   index: number;
 }
 
-const MAX_ENLARGE = 4000;
-const ENLARGE_MIN_PX = 10;
+const TIER_RANK = { low: 0, high: 1, ultra: 2 } as const;
+const DEG = Math.PI / 180;
 
-export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () => EntityRegistry | null): Layer {
+/** The one place a body's drawn size and position are decided (exhibition-scale runtime; identity in true scale). */
+function displayFactor(v: BodyVisual, tMs: number): number {
+  return renderTransform(v.entity, tMs, v.world);
+}
+
+export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () => EntityRegistry | null): Layer & { advanceClouds(days: number): void } {
   const visuals: BodyVisual[] = [];
   const hiGeo = new THREE.SphereGeometry(1, 256, 128);
   const midGeo = new THREE.SphereGeometry(1, 96, 48);
@@ -189,11 +202,14 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
     const def = v.entity.def;
     const isLive = (): boolean => visuals.includes(v);
     if (def.colorMap) {
-      void resolveBodyTexture(svc.assets, svc.renderer, def.key, def.colorMap, quality, 'srgb', (t) => v.material.setMap(t), { isCancelled: () => !isLive() });
+      // HD maps from hd.json are albedo-calibrated already: they take their own (hue-only) tint.
+      void resolveBodyTexture(svc.assets, svc.renderer, def.key, def.colorMap, quality, 'srgb', (t, info) => v.material.setMap(t, info.hd && def.hdTint ? def.hdTint : def.tint), {
+        isCancelled: () => !isLive(),
+      });
     }
     if (def.surface === 'rocky' || def.surface === 'ice' || def.hasNormalMap) {
       if (def.hasNormalMap || quality !== 'low') {
-        void resolveBodyTexture(svc.assets, svc.renderer, def.key, 'normal', quality, 'linear', (t) => v.material.setNormalMap(t, def.key === 'mars' ? 0.55 : 0.8), {
+        void resolveBodyTexture(svc.assets, svc.renderer, def.key, 'normal', quality, 'linear', (t) => v.material.setNormalMap(t, def.key === 'mars' ? 0.55 : 0.5), {
           isCancelled: () => !isLive(),
         }).catch(() => undefined);
       }
@@ -211,13 +227,32 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
         const a = def.axesM[0];
         const brdf: PlanetBrdf = def.surface;
         const ringDef = def.rings?.[0] ?? null;
+        const rotSign = Math.sign(def.rotation.wDot) || 1;
+        let wind: WindClock | null = null;
+        let windTex: THREE.DataTexture | null = null;
+        if (def.winds) {
+          const w = createWindTexture(def.winds.profile, a, def.axesM[2], rotSign);
+          windTex = w.tex;
+          disposables.push(w.tex);
+          wind = new WindClock(w.maxDegPerDay, def.winds.shearBudgetDeg);
+        }
         const material = new PlanetMaterial({
           brdf,
           tint: new THREE.Color(def.tint[0], def.tint[1], def.tint[2]),
           axes: new THREE.Vector3(1, def.axesM[1] / a, def.axesM[2] / a),
           minnaertK: def.minnaertK,
           ring: ringDef ? { innerA: ringDef.innerM / a, outerA: ringDef.outerM / a } : null,
+          wind: windTex,
+          cloudRotation: def.key === 'venus',
+          palette: def.palette ?? null,
         });
+        const vx = def.winds?.vortex;
+        if (vx) material.setVortex(vx.lonDeg * DEG, vx.latDeg * DEG, vx.halfLonDeg * DEG, vx.halfLatDeg * DEG, vx.spinDegPerDay * DEG);
+        if (def.resolutionCap) {
+          const rc = def.resolutionCap;
+          material.setResolutionCap(rc.lonDeg, rc.latDeg, rc.fullDeg, rc.blurDeg);
+        }
+        if (def.mapContrast !== undefined) material.uniforms.uMapContrast.value = def.mapContrast;
         const mesh = new THREE.Mesh(midGeo, material);
         mesh.name = def.id;
         mesh.frustumCulled = false;
@@ -276,7 +311,11 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
 
         const v: BodyVisual = {
           entity, a, group, overlayGroup, mesh, material, ring, atmosphere,
-          world: new THREE.Vector3(), distM: 1, px: 0, shownPx: 0, enlarge: 1, highRequested: false,
+          world: new THREE.Vector3(), distM: 1, px: 0, shownPx: 0, enlarge: 1, tier: 'low', wind,
+          cloudRot: 0,
+          // Venus' clouds super-rotate (retrograde, like the solid body) relative to the surface frame.
+          cloudRate: def.key === 'venus' ? (rotSign * (360 / VENUS_CLOUD_PERIOD_DAYS - Math.abs(def.rotation.wDot)) * DEG) / 86_400 : 0,
+          unregister: registerScaledBody(entity),
           occluders: [], occluderIds: MOON_OCCLUDERS[def.id] ?? [], lod: { level: 'point', point: 1, sphere: 0, detail: 0, extras: 0 }, index,
         };
         visuals.push(v);
@@ -307,23 +346,24 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
         }
       }
 
-      const enlargeOn = ctx.overlays['enlarge-bodies'];
       const shadowsOn = ctx.quality.shadowQuality !== 'off';
       const inv = 1 / ctx.metersPerUnit;
       pointMat.uniforms.uPixelRatio.value = ctx.viewport.pixelRatio;
 
       for (const v of visuals) {
         const def = v.entity.def;
-        v.entity.position(ctx.timeMs, v.world);
+        // Exhibition scale (src/core/visualScale.ts): drawn position and radius factor (1 in true-scale mode).
+        v.enlarge = displayFactor(v, ctx.timeMs);
         v.distM = Math.max(v.world.distanceTo(ctx.cameraPosition), 1);
         v.px = ctx.pixelDiameter(v.a, v.distM);
-        v.enlarge = enlargeOn && v.px < ENLARGE_MIN_PX ? Math.min(ENLARGE_MIN_PX / Math.max(v.px, 1e-9), MAX_ENLARGE) : 1;
         v.shownPx = v.px * v.enlarge;
         lodBlend(v.shownPx, v.lod);
 
         const dSun = Math.max(v.world.distanceTo(sunWorld), R_SUN_M);
         const r = AU_M / dSun;
-        const E = SUN_SCENE_IRRADIANCE_1AU * r * r * exposureState.gain;
+        const E0 = SUN_SCENE_IRRADIANCE_1AU * r * r * exposureState.gain;
+        // Disc/rings/atmosphere: exhibition display gain while strongly enlarged (1 at true size); the point stays photometric.
+        const E = E0 * exhibitionDisplayGain(v.enlarge, dSun);
         sunDir.subVectors(sunWorld, v.world).normalize();
 
         // Point representation (fades out as the disc fades in).
@@ -336,7 +376,7 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
           // Physical disc radiance × area, spread over the dot; floored so planets stay findable as points.
           tmp2.subVectors(ctx.cameraPosition, v.world).normalize();
           const phase = 0.5 * (1 + tmp2.dot(sunDir));
-          const L = (def.geometricAlbedo ?? 0.3) * E / Math.PI * phase;
+          const L = (def.geometricAlbedo ?? 0.3) * E0 / Math.PI * phase;
           const areaPx = Math.PI * 0.25 * v.shownPx * v.shownPx;
           const phys = (L * areaPx) / 4.5;
           const floor = def.kind === 'planet' ? 0.5 : 0.28;
@@ -372,21 +412,39 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
         u.uSunIntensity.value = E * v.lod.sphere;
         u.uSunAngularRadius.value = Math.asin(Math.min(1, R_SUN_M / dSun));
         u.uDetail.value = v.lod.detail;
+        if (v.wind) {
+          v.wind.advance(ctx.dtSimSec, ctx.dtRealSec);
+          v.wind.phases(u.uWind.value);
+        }
+        if (v.cloudRate !== 0) {
+          // Rigid rotation: follows simulation time up to one turn per ~8 s of real time (beyond that it would strobe).
+          const cap = (2 * Math.PI) / 8 / Math.abs(v.cloudRate);
+          const dt = THREE.MathUtils.clamp(ctx.dtSimSec, -cap * ctx.dtRealSec, cap * ctx.dtRealSec);
+          v.cloudRot = (v.cloudRot + v.cloudRate * dt) % (2 * Math.PI);
+          u.uCloudRot.value = v.cloudRot;
+        }
 
         // Eclipses by registered moons (only when the disc is large enough for the shadow to show).
+        // Drawn positions and radii: an enlarged satellite system casts its shadows at the drawn scale.
         for (let k2 = 0; k2 < 4; k2++) {
           const o = u.uOccluders.value[k2];
           o.w = 0;
-          const moon = shadowsOn && v.shownPx > 40 && v.enlarge === 1 ? v.occluders[k2] : null;
+          const moon = shadowsOn && v.shownPx > 40 ? v.occluders[k2] : null;
           if (!moon || moon.radiusM === null) continue;
-          moon.position(ctx.timeMs, tmp2);
-          tmp2.sub(v.world).applyQuaternion(qInv).multiplyScalar(1 / v.a);
-          o.set(tmp2.x, tmp2.y, tmp2.z, moon.radiusM / v.a);
+          const mf = renderTransform(moon, ctx.timeMs, tmp2);
+          const k3 = 1 / (v.a * v.enlarge);
+          tmp2.sub(v.world).applyQuaternion(qInv).multiplyScalar(k3);
+          o.set(tmp2.x, tmp2.y, tmp2.z, moon.radiusM * mf * k3);
         }
 
-        if (!v.highRequested && v.shownPx > 180 && ctx.quality.textureQuality !== 'low') {
-          v.highRequested = true;
-          loadTextures(v, ctx.quality.textureQuality);
+        // Texture tier: the quality preset's tier once the disc is large; the focused body gets the best HD tier.
+        if (v.shownPx > 180 && ctx.quality.textureQuality !== 'low') {
+          const focused = ctx.focusEntityId === v.entity.id || ctx.selectedId === v.entity.id;
+          const want = focused ? 'ultra' : ctx.quality.textureQuality;
+          if (TIER_RANK[want] > TIER_RANK[v.tier]) {
+            v.tier = want;
+            loadTextures(v, want);
+          }
         }
 
         if (v.ring) {
@@ -406,6 +464,16 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
       (pointGeo.attributes.position as THREE.BufferAttribute).needsUpdate = true;
       (pointGeo.attributes.aColor as THREE.BufferAttribute).needsUpdate = true;
       (pointGeo.attributes.aSize as THREE.BufferAttribute).needsUpdate = true;
+    },
+
+    /** Move every cloud deck on by `days` of simulation time, uncapped (sandbox comparisons, tour scripting). */
+    advanceClouds(days: number): void {
+      for (const v of visuals) {
+        v.wind?.advanceDays(days);
+        v.cloudRot = (v.cloudRot + v.cloudRate * days * 86_400) % (2 * Math.PI);
+        v.material.uniforms.uCloudRot.value = v.cloudRot;
+        if (v.wind) v.wind.phases(v.material.uniforms.uWind.value);
+      }
     },
 
     pick(ctx: FrameContext, x: number, y: number, radiusPx: number): PickHit[] {
@@ -440,6 +508,7 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
 
     dispose(): void {
       for (const v of visuals) {
+        v.unregister();
         v.group.removeFromParent();
         v.overlayGroup.removeFromParent();
       }

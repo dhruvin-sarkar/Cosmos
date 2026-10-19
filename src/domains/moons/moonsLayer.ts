@@ -12,11 +12,13 @@ import type { AtmosphereParams } from '../../render/glsl/atmosphere';
 import { AtmosphereShell } from '../../render/materials/AtmosphereShell';
 import { lodBlend, type LodBlend } from '../../render/lod';
 import { OrbitLine } from '../../render/orbitBuilder';
-import { exposureState, sunPosition, SUN_SCENE_IRRADIANCE_1AU } from '../solar/ephemeris';
+import { exhibitionDisplayGain, exposureState, sunPosition, SUN_SCENE_IRRADIANCE_1AU } from '../solar/ephemeris';
 import { resolveBodyTexture } from '../solar/textures';
 import { MOON_LOOKS, MOON_RECORDS, PARENT_ENTITY, PARENT_INFO, SIDEREAL_DAYS, moonEntityId, type MoonRecord } from './data';
 import { moonOffset, moonRotation } from './ephemeris';
-import { createEllipsoidGeometry, createIrregularGeometry } from './geometry';
+import { createEllipsoidGeometry, createIrregularGeometry, parseShapeModel } from './geometry';
+import { DetachedHaze, PlumeSystem, enceladusPlumeSpec, ioPlumeSpec } from './effects';
+import { createSatelliteSystemTransform, mapSatelliteOffset, registerScaledBody, renderTransform, satelliteSystem } from '../../core/visualScale';
 import { MoonMaterial, type MoonSpecial } from './moonMaterial';
 import { meanRadiusM } from './entities';
 
@@ -71,6 +73,9 @@ void main() {
   ${LOGDEPTH_FRAGMENT}
 }`;
 
+/** Moons with a real shape model (compact binary under public/data/moons; see scripts/data/moons). */
+const SHAPE_MODELS: Record<string, string> = { phobos: 'data/moons/phobos.shape.bin' };
+
 const smooth = (e0: number, e1: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
   return t * t * (3 - 2 * t);
@@ -88,6 +93,14 @@ interface MoonVisual {
   mesh: THREE.Mesh<THREE.BufferGeometry, MoonMaterial>;
   material: MoonMaterial;
   atmosphere: AtmosphereShell | null;
+  detached: DetachedHaze | null;
+  plume: PlumeSystem | null;
+  shapeRequested: boolean;
+  orbitFactor: number;
+  /** True parent-relative orbit samples (m) of the last rebuild; mapped through the parent's satellite system. */
+  orbitTrue: Float64Array;
+  orbitN: number;
+  trueWorld: THREE.Vector3;
   orbit: OrbitLine | null;
   orbitBuiltMs: number;
   orbitPeriodMs: number;
@@ -162,6 +175,8 @@ export function createMoonsLayer(entities: Entity[]): Layer {
   const idToParent = new Map<string, string>();
   let svcRef: EngineServices | null = null;
   let rebuilds = 0;
+  const sys = createSatelliteSystemTransform();
+  const unregisters: (() => void)[] = [];
   let orbitPts: Float64Array = new Float64Array(3 * 160);
   let orbitFrac: Float64Array = new Float64Array(160);
 
@@ -199,19 +214,57 @@ export function createMoonsLayer(entities: Entity[]): Layer {
     }, { isCancelled: () => !visuals.includes(v) });
   };
 
+  const loadShape = async (v: MoonVisual): Promise<void> => {
+    const svc = svcRef;
+    const path = SHAPE_MODELS[v.rec.id];
+    if (!svc || !path) return;
+    try {
+      const url = (svc.assets as { url?: (p: string) => string }).url?.(path) ?? '/' + path;
+      const res = await fetch(url);
+      if (!res.ok || !visuals.includes(v)) return;
+      const g = parseShapeModel(await res.arrayBuffer(), v.radiusM / 1000);
+      if (!g || !visuals.includes(v)) return;
+      const old = v.mesh.geometry;
+      v.mesh.geometry = g;
+      disposables.push(g);
+      old.dispose();
+      v.material.setShapeModel();
+    } catch {
+      /* keep the illustrative shape */
+    }
+  };
+
+  /** Re-sample the TRUE orbit (parent-relative) around tMs. */
   const rebuildOrbit = (v: MoonVisual, tMs: number): void => {
     if (!v.orbit) return;
     const N = v.rec.orbit.e > 0.2 ? 144 : 96;
     const period = v.orbitPeriodMs;
     for (let k = 0; k < N; k++) {
       moonOffset(v.rec, tMs + (k * period) / N, off);
-      orbitPts[3 * k] = off.x;
-      orbitPts[3 * k + 1] = off.y;
-      orbitPts[3 * k + 2] = off.z;
+      v.orbitTrue[3 * k] = off.x;
+      v.orbitTrue[3 * k + 1] = off.y;
+      v.orbitTrue[3 * k + 2] = off.z;
+    }
+    v.orbitN = N;
+    v.orbitBuiltMs = tMs;
+    v.orbitFactor = Number.NaN;
+  };
+
+  /** Map the true samples through the parent's satellite system (exhibition scale; identity at factor 1) into the line. */
+  const mapOrbit = (v: MoonVisual, factor: number, coreM: number): void => {
+    if (!v.orbit || v.orbitN < 2) return;
+    const N = v.orbitN;
+    for (let k = 0; k < N; k++) {
+      const x = v.orbitTrue[3 * k], y = v.orbitTrue[3 * k + 1], z = v.orbitTrue[3 * k + 2];
+      const a = Math.sqrt(x * x + y * y + z * z);
+      const s = factor > 1 && a > 0 ? mapSatelliteOffset(factor, coreM, a) / a : 1;
+      orbitPts[3 * k] = x * s;
+      orbitPts[3 * k + 1] = y * s;
+      orbitPts[3 * k + 2] = z * s;
       orbitFrac[k] = k / N;
     }
     v.orbit.setPolyline(orbitPts, N, true, orbitFrac);
-    v.orbitBuiltMs = tMs;
+    v.orbitFactor = factor;
   };
 
   return {
@@ -259,6 +312,19 @@ export function createMoonsLayer(entities: Entity[]): Layer {
           overlayGroup.add(atmosphere);
           disposables.push(atmosphere);
         }
+        let detached: DetachedHaze | null = null;
+        if (special === 'titan') {
+          detached = new DetachedHaze(1.19, 1.2, 1.0);
+          overlayGroup.add(detached);
+          disposables.push(detached);
+        }
+        let plume: PlumeSystem | null = null;
+        const gravity = (rec.gm * 1e9) / (radiusM * radiusM);
+        if (rec.id === 'enceladus' || rec.id === 'io') {
+          plume = new PlumeSystem(rec.id === 'io' ? ioPlumeSpec(radiusM, gravity) : enceladusPlumeSpec(radiusM, gravity));
+          overlayGroup.add(plume);
+          disposables.push(plume);
+        }
         let orbit: OrbitLine | null = null;
         if (rec.id !== 'moon') {
           orbit = new OrbitLine({ role: 'minor', provenance: 'derived', maxVertices: 160 });
@@ -268,13 +334,15 @@ export function createMoonsLayer(entities: Entity[]): Layer {
         const c = new THREE.Color(look.color);
         const v: MoonVisual = {
           rec, entity, index, parentId: PARENT_ENTITY[rec.parent], radiusM, aOrbitM: rec.orbit.aKm * 1000,
-          group, overlayGroup, mesh, material, atmosphere, orbit, orbitBuiltMs: Number.NaN,
+          group, overlayGroup, mesh, material, atmosphere, detached, plume, shapeRequested: false, orbitFactor: Number.NaN, orbitTrue: new Float64Array(3 * 160), orbitN: 0, trueWorld: new THREE.Vector3(), orbit, orbitBuiltMs: Number.NaN,
           orbitPeriodMs: (SIDEREAL_DAYS[rec.id] ?? rec.orbit.periodDays) * 86_400_000,
           world: new THREE.Vector3(), parentWorld: new THREE.Vector3(), distM: 1, px: 0, shownPx: 0, enlarge: 1, sepPx: 1e6,
           highRequested: false, geometryBuilt: false, meanLum: 0, lod: { level: 'point', point: 1, sphere: 0, detail: 0, extras: 0 },
           dot: [c.r, c.g, c.b],
         };
         idToParent.set(entity.id, v.parentId);
+        // Exhibition scale: offset magnified around the registered parent, radius capped clear of it (src/core/visualScale.ts).
+        unregisters.push(registerScaledBody(entity, { radiusM }));
         visuals.push(v);
         loadTextures(v, 'low');
       });
@@ -282,28 +350,36 @@ export function createMoonsLayer(entities: Entity[]): Layer {
 
     update(ctx: FrameContext): void {
       sunPosition(ctx.timeMs, sunWorld);
-      const enlargeOn = ctx.overlays['enlarge-bodies'];
       const inv = 1 / ctx.metersPerUnit;
       pointMat.uniforms.uPixelRatio.value = ctx.viewport.pixelRatio;
       rebuilds = 0;
 
       for (const v of visuals) {
         const rec = v.rec;
-        v.entity.position(ctx.timeMs, v.world);
+        // Drawn position + radius factor (exhibition scale); the parent's satellite system gives its drawn centre.
+        v.enlarge = renderTransform(v.entity, ctx.timeMs, v.world);
         moonOffset(rec, ctx.timeMs, off);
-        v.parentWorld.copy(v.world).sub(off);
+        const sysOn = satelliteSystem(v.parentId, ctx.timeMs, sys);
+        if (sysOn) {
+          v.parentWorld.copy(sys.renderPosition);
+          v.trueWorld.copy(sys.truePosition).add(off);
+        } else {
+          v.entity.position(ctx.timeMs, v.trueWorld);
+          v.parentWorld.copy(v.world).sub(off);
+        }
+        const parentFactor = sysOn ? sys.factor : 1;
+        const parentCoreM = sysOn ? sys.coreRadiusM : 0;
         v.distM = Math.max(v.world.distanceTo(ctx.cameraPosition), 1);
         v.px = ctx.pixelDiameter(v.radiusM, v.distM);
         const parentDist = Math.max(v.parentWorld.distanceTo(ctx.cameraPosition), 1);
-        v.sepPx = (v.aOrbitM / parentDist) * ctx.pixelsPerRadian;
-        const maxEnlarge = Math.max(1, (0.3 * v.aOrbitM) / v.radiusM);
-        v.enlarge = enlargeOn && v.px < 10 ? Math.min(10 / Math.max(v.px, 1e-9), 4000, maxEnlarge) : 1;
+        v.sepPx = (v.world.distanceTo(v.parentWorld) / parentDist) * ctx.pixelsPerRadian;
         v.shownPx = v.px * v.enlarge;
         lodBlend(v.shownPx, v.lod);
 
         const dSun = Math.max(v.world.distanceTo(sunWorld), R_SUN_M);
         const r = AU_M / dSun;
-        const E = SUN_SCENE_IRRADIANCE_1AU * r * r * exposureState.gain;
+        const E0 = SUN_SCENE_IRRADIANCE_1AU * r * r * exposureState.gain;
+        const E = E0 * exhibitionDisplayGain(v.enlarge, dSun);
         sunDir.subVectors(sunWorld, v.world).normalize();
         const look = MOON_LOOKS[rec.id];
 
@@ -317,10 +393,13 @@ export function createMoonsLayer(entities: Entity[]): Layer {
         if (v.lod.point > 0.001 && sepFade > 0.001) {
           tmp2.subVectors(ctx.cameraPosition, v.world).normalize();
           const phase = 0.5 * (1 + tmp2.dot(sunDir));
-          const L = (look.albedo * E) / Math.PI * phase;
+          const L = (look.albedo * E0) / Math.PI * phase;
           const areaPx = Math.PI * 0.25 * v.shownPx * v.shownPx;
-          const intensity = Math.max((L * areaPx) / 4.5, 0.12) * v.lod.point * sepFade;
-          pointSize[v.index] = 3;
+          // Floor: a moon must read as a clear dot from planet-system distances (major moons brighter), like the naked-eye Galileans.
+          const imp = v.entity.importance ?? 40;
+          const floor = imp >= 70 ? 1.1 : imp >= 50 ? 0.65 : 0.3;
+          const intensity = Math.max((L * areaPx) / 4.5, floor) * v.lod.point * sepFade;
+          pointSize[v.index] = imp >= 70 ? 8 : imp >= 50 ? 6 : 4;
           pointCol[i3] = v.dot[0] * intensity;
           pointCol[i3 + 1] = v.dot[1] * intensity;
           pointCol[i3 + 2] = v.dot[2] * intensity;
@@ -331,7 +410,7 @@ export function createMoonsLayer(entities: Entity[]): Layer {
 
         // Orbit line (relative to the parent planet).
         if (v.orbit) {
-          const orbitPx = ctx.pixelDiameter(v.aOrbitM, Math.max(parentDist, v.aOrbitM));
+          const orbitPx = ctx.pixelDiameter(mapSatelliteOffset(parentFactor, parentCoreM, v.aOrbitM), Math.max(parentDist, v.aOrbitM));
           const fade = ctx.overlays.orbits ? smooth(24, 90, orbitPx) * (1 - smooth(14, 60, v.px)) : 0;
           v.orbit.visible = fade > 0.003;
           if (v.orbit.visible) {
@@ -339,6 +418,7 @@ export function createMoonsLayer(entities: Entity[]): Layer {
               rebuildOrbit(v, ctx.timeMs);
               rebuilds++;
             }
+            if (!(Math.abs(parentFactor - v.orbitFactor) <= 1e-3 * parentFactor)) mapOrbit(v, parentFactor, parentCoreM);
             const focused = ctx.focusEntityId === v.entity.id || ctx.selectedId === v.entity.id;
             const sysFocus = ctx.focusEntityId === v.parentId || (ctx.focusEntityId !== null && idToParent.get(ctx.focusEntityId) === v.parentId);
             const role = focused ? 'focused' : sysFocus ? 'planet' : 'minor';
@@ -360,6 +440,10 @@ export function createMoonsLayer(entities: Entity[]): Layer {
           const g = buildGeometry(rec, v.radiusM);
           v.mesh.geometry = g;
           disposables.push(g);
+        }
+        if (!v.shapeRequested && SHAPE_MODELS[rec.id] && v.shownPx > 24) {
+          v.shapeRequested = true;
+          void loadShape(v);
         }
 
         moonRotation(rec, ctx.timeMs, rot);
@@ -384,18 +468,18 @@ export function createMoonsLayer(entities: Entity[]): Layer {
         // Parent planet: umbra/penumbra on the moon, and planetshine (Lambert sphere, phase-dependent).
         const pinfo = PARENT_INFO[rec.parent];
         const Rp = pinfo.radiusKm * 1000;
-        tmp2.subVectors(v.parentWorld, v.world); // moon → planet
+        tmp2.copy(off).negate(); // moon → planet (TRUE geometry)
         const dMP = Math.max(tmp2.length(), Rp);
-        const shadowsOn = ctx.quality.shadowQuality !== 'off';
+        const shadowsOn = ctx.quality.shadowQuality !== 'off' && v.enlarge < 1.001 && parentFactor < 1.001;
         u.uPlanet.value.set(0, 0, 0, 0);
         tmp.copy(tmp2).applyQuaternion(qInv).multiplyScalar(unit);
         if (shadowsOn) u.uPlanet.value.set(tmp.x, tmp.y, tmp.z, Rp * unit);
         // Phase angle at the planet between the Sun and the moon: cosα = (sun − planet)·(moon − planet).
-        tmp.subVectors(sunWorld, v.parentWorld).normalize();
+        tmp.subVectors(sunWorld, v.trueWorld).sub(tmp2).normalize();
         const cosA = THREE.MathUtils.clamp(-tmp.dot(tmp2) / dMP, -1, 1);
         const alpha = Math.acos(cosA);
         const phi = (Math.sin(alpha) + (Math.PI - alpha) * cosA) / Math.PI;
-        const dPlanetSun = Math.max(v.parentWorld.distanceTo(sunWorld), R_SUN_M);
+        const dPlanetSun = Math.max(tmp.set(v.trueWorld.x + tmp2.x - sunWorld.x, v.trueWorld.y + tmp2.y - sunWorld.y, v.trueWorld.z + tmp2.z - sunWorld.z).length(), R_SUN_M);
         const Ep = SUN_SCENE_IRRADIANCE_1AU * (AU_M / dPlanetSun) ** 2 * exposureState.gain;
         const shine = Ep * pinfo.albedo * (Rp / dMP) ** 2 * phi * v.lod.sphere;
         u.uPlanetShine.value.set(pinfo.color[0] * shine, pinfo.color[1] * shine, pinfo.color[2] * shine);
@@ -403,6 +487,18 @@ export function createMoonsLayer(entities: Entity[]): Layer {
         if (!v.highRequested && v.shownPx > 180 && ctx.quality.textureQuality !== 'low') {
           v.highRequested = true;
           loadTextures(v, ctx.quality.textureQuality);
+        }
+        if (v.detached) {
+          v.detached.visible = v.lod.detail > 0.01;
+          v.detached.sunDirectionWorld.copy(sunDir);
+          v.detached.material.uniforms.uSunIntensity.value = E * v.lod.detail;
+        }
+        if (v.plume) {
+          v.plume.visible = v.lod.sphere > 0.2;
+          if (v.plume.visible) {
+            v.plume.sunDirectionWorld.copy(sunDir);
+            v.plume.step(ctx.dtRealSec, E * v.lod.sphere, scale, ctx.pixelsPerRadian, ctx.viewport.pixelRatio);
+          }
         }
         if (v.atmosphere) {
           v.atmosphere.visible = v.lod.detail > 0.01;
@@ -455,6 +551,8 @@ export function createMoonsLayer(entities: Entity[]): Layer {
     },
 
     dispose(): void {
+      for (const u of unregisters) u();
+      unregisters.length = 0;
       for (const v of visuals) {
         v.group.removeFromParent();
         v.overlayGroup.removeFromParent();

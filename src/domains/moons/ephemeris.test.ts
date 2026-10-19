@@ -65,10 +65,10 @@ describe('moons ephemeris', () => {
     }
   });
 
-  it('JPL reference values: Titan mean distance and Io/Callisto periods', () => {
+  it('reference values: Titan mean distance and Io/Callisto sidereal periods (NASA NSSDCA: 1.769138 d, 16.689018 d)', () => {
     expect(recordOf('titan').orbit.aKm).toBe(1221900);
-    expect(recordOf('io').orbit.periodDays).toBeCloseTo(1.762732, 4);
-    expect(recordOf('callisto').orbit.periodDays).toBeCloseTo(16.690440, 4);
+    expect(recordOf('io').orbit.periodDays).toBeCloseTo(1.769138, 4);
+    expect(recordOf('callisto').orbit.periodDays).toBeCloseTo(16.689018, 4);
   });
 
   it('IAU frames of the mapped moons stay locked to the planet (stable sub-planet longitude over decades)', () => {

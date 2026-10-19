@@ -135,7 +135,10 @@ async function earthSheet(timeMs: () => number): Promise<FactSheet> {
       provenance: 'observed',
       description:
         'Surface: NASA Blue Marble Next Generation (MODIS, December 2004 composite). Night lights: NASA/NOAA VIIRS Black Marble 2016 (derived, relative brightness only). ' +
-        'Relief: NOAA ETOPO 2022 normals, slopes exaggerated ×3. Clouds: a static illustrative composite (Solar System Scope, CC BY 4.0), not today’s weather. ' +
+        'Relief: NOAA ETOPO 2022 normals, slopes exaggerated ×3. Clouds: a static illustrative composite (Solar System Scope, CC BY 4.0), not today’s weather; ' +
+        'it drifts slowly with climatological zonal-mean winds (trade easterlies, mid-latitude westerlies) — real weather is not modelled. ' +
+        'Aurora: illustrative auroral ovals around the geomagnetic poles (IGRF-14 dipole), driven by the observed Kp index of NASA CCMC DONKI geomagnetic storms ' +
+        '(quiet Kp ≈ 2 between storms); curtain shapes are procedural and brightened for display, like Earthshine. ' +
         'Atmosphere: physically based single-scattering model (Rayleigh + Mie), so the blue limb and red terminator are computed, not painted. ' +
         'Orientation, day/night and Moon shadows follow the simulation time. The haze strength and ocean colour are calibrated against DSCOVR EPIC photographs ' +
         'taken from the same direction; below ~3000 km altitude, fine cloud and terrain texture beyond the maps’ ~10 km resolution is procedural (illustrative).',
@@ -145,6 +148,7 @@ async function earthSheet(timeMs: () => number): Promise<FactSheet> {
       { datasetId: 'nssdca-planetary-fact-sheets' }, { datasetId: 'textures-earth-blue-marble-ng' },
       { datasetId: 'textures-earth-black-marble-2016' }, { datasetId: 'textures-earth-etopo2022' },
       { datasetId: 'textures-earth-clouds-sss' },
+      { datasetId: 'nasa-donki-space-weather', note: 'Geomagnetic storms (Kp) driving the illustrative aurora (public/data/solar/space-weather.json)' },
       { datasetId: 'textures-earth-epic', note: 'DSCOVR EPIC natural-colour frames used as the colour/haze calibration reference' }, EPHEMERIS,
     ],
     epoch: { label: 'Simulation time', iso },

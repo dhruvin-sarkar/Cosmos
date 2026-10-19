@@ -51,6 +51,9 @@ const defaultTimes: Record<string, () => number> = {
   // Total solar eclipse of 2026-08-12 (Greenland / Iceland / Spain): the Moon's shadow on the Earth.
   shadow: () => SOLAR_ECLIPSE.peak.date.getTime(),
   far: () => Date.UTC(2026, 9, 18, 12, 0, 0),
+  // DONKI storm of 2026-10-10 (max Kp 7 at 18:00 UT): illustrative aurora.
+  aurora: () => Date.UTC(2026, 9, 10, 20, 0, 0),
+  auroraiss: () => Date.UTC(2026, 9, 10, 20, 0, 0),
 };
 const timeMs = tParam ? Date.parse(tParam) : (defaultTimes[view] ?? defaultTimes.disc)();
 
@@ -130,6 +133,22 @@ function frame(name: string): CameraViewState {
       const nrm = p.clone().normalize();
       // Aim slightly below the Sun so the limb sits in the lower third, Sun near the top of the glow.
       const fwd = sunDir.clone().addScaledVector(nrm, -0.12).normalize();
+      target.copy(eye).addScaledVector(fwd, 2e6);
+      return viewFrom('sol:earth', s.earth, eye, target, nrm);
+    }
+    case 'aurora': {
+      // High above the night-side Arctic during a Kp 7 storm: the whole northern oval.
+      const p = ecefToIcrs(t, geodeticToEcef(62, 20, 9_000_000, new THREE.Vector3()), new THREE.Vector3());
+      eye.copy(s.earth).add(p);
+      return viewFrom('sol:earth', s.earth, eye, s.earth, pole);
+    }
+    case 'auroraiss': {
+      // ISS altitude (420 km) over northern Europe at night, looking poleward along the horizon.
+      const p = ecefToIcrs(t, geodeticToEcef(52, 15, 420_000, new THREE.Vector3()), new THREE.Vector3());
+      eye.copy(s.earth).add(p);
+      const nrm = p.clone().normalize();
+      const northDir = pole.clone().addScaledVector(nrm, -pole.dot(nrm)).normalize();
+      const fwd = northDir.clone().addScaledVector(nrm, -0.3).normalize();
       target.copy(eye).addScaledVector(fwd, 2e6);
       return viewFrom('sol:earth', s.earth, eye, target, nrm);
     }

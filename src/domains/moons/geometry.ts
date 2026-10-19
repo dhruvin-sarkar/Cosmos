@@ -120,3 +120,28 @@ export function createIrregularGeometry(radii: readonly [number, number, number]
   g.computeBoundingSphere();
   return g;
 }
+
+/**
+ * Compact binary shape model (scripts/data/moons/build-phobos-shape.mjs): "SHP1" | u32 nVerts | u32 nFaces | f32 maxRadiusKm |
+ * i16[3n] (±32767 ↔ ±maxRadiusKm) | u32[3f]. Vertices are scaled to units of `meanRadiusKm`; normals are smooth vertex normals.
+ */
+export function parseShapeModel(buf: ArrayBuffer, meanRadiusKm: number): THREE.BufferGeometry | null {
+  if (buf.byteLength < 16) return null;
+  const dv = new DataView(buf);
+  if (dv.getUint32(0, true) !== 0x31504853) return null; // "SHP1"
+  const nv = dv.getUint32(4, true);
+  const nf = dv.getUint32(8, true);
+  const maxR = dv.getFloat32(12, true);
+  if (buf.byteLength < 16 + nv * 6 + nf * 12) return null;
+  const q = new Int16Array(buf.slice(16, 16 + nv * 6));
+  const pos = new Float32Array(nv * 3);
+  const k = maxR / 32767 / meanRadiusKm;
+  for (let i = 0; i < nv * 3; i++) pos[i] = q[i] * k;
+  const idx = new Uint32Array(buf.slice(16 + nv * 6, 16 + nv * 6 + nf * 12));
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setIndex(new THREE.BufferAttribute(idx, 1));
+  g.computeVertexNormals();
+  g.computeBoundingSphere();
+  return g;
+}

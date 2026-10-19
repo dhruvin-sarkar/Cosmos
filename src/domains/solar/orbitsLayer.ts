@@ -14,6 +14,10 @@ import type { SolarEntity } from './entities';
 import { bodyPosition, bodyVelocity, sunPosition } from './ephemeris';
 import { GM_SUN } from '../../core/units';
 
+/** Orbit-line brightness relative to the render-kit role styles (planet ink 30 %, minor 18 %, focused brass 70 %). */
+export const ORBIT_GAIN = 0.4;
+export const ORBIT_FOCUSED_GAIN = 0.6;
+
 interface OrbitVisual {
   entity: SolarEntity;
   line: OrbitLine;
@@ -127,7 +131,9 @@ export function createOrbitsLayer(solarBodies: SolarEntity[]): Layer {
         const focused = ctx.focusEntityId === v.entity.id || ctx.selectedId === v.entity.id;
         const role = focused ? 'focused' : v.entity.def.kind === 'planet' ? 'planet' : 'minor';
         if (v.line.material.role !== role) v.line.material.role = role;
-        v.line.material.setFade(fade);
+        // Owner direction (2026-10-18): orbits ~40 % of the VISUAL_DIRECTION role opacities, the focused one a little
+        // brighter; never brighter than the bodies.
+        v.line.material.setFade(fade * (focused ? ORBIT_FOCUSED_GAIN : ORBIT_GAIN));
         // Mean anomaly now → orbit fraction for the trail head.
         const n = Math.sqrt(v.mu / (a * a * a));
         const M = v.el.meanAnomalyRad + (n * (ctx.timeMs - v.builtAtMs)) / 1000;

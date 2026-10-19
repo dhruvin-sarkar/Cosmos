@@ -31,13 +31,20 @@ function loadIndexes(assets: AssetLoader): Promise<{ index: TextureIndex | null;
 
 /** Ordered tiers to load: [preview, best] (deduplicated). Exported for tests. */
 export async function texturePlan(assets: AssetLoader, body: string, role: string, quality: QualityProfile['textureQuality']): Promise<string[]> {
+  return (await texturePlanInfo(assets, body, role, quality)).paths;
+}
+
+/** Plan plus the set of paths that come from hd.json (albedo-calibrated HD maps). */
+export async function texturePlanInfo(assets: AssetLoader, body: string, role: string, quality: QualityProfile['textureQuality']): Promise<{ paths: string[]; hd: Set<string> }> {
   const { index, hd } = await loadIndexes(assets);
   const idx = index?.bodies?.[body]?.[role];
   const hdRole = hd?.bodies?.[body]?.[role] as TierPaths | undefined;
   const best: string[] = [];
+  const hdPaths = new Set<string>();
   if (hdRole && typeof hdRole === 'object') {
     if (quality === 'ultra' && typeof hdRole['8k'] === 'string') best.push(hdRole['8k']);
     if (quality !== 'low' && typeof hdRole['4k'] === 'string') best.push(hdRole['4k']);
+    for (const p of best) hdPaths.add(p);
   }
   const rank: Tier[] = quality === 'ultra' ? ['ultra', 'high', 'low'] : quality === 'high' ? ['high', 'low'] : ['low'];
   if (idx) for (const t of rank) if (idx[t]) best.push(idx[t]!);
@@ -51,7 +58,7 @@ export async function texturePlan(assets: AssetLoader, body: string, role: strin
   const plan: string[] = [];
   if (preview) plan.push(preview);
   if (best[0] && best[0] !== preview) plan.push(best[0]);
-  return plan;
+  return { paths: plan, hd: hdPaths };
 }
 
 /**
@@ -65,10 +72,10 @@ export async function resolveBodyTexture(
   role: string,
   quality: QualityProfile['textureQuality'],
   colorSpace: 'srgb' | 'linear',
-  apply: (tex: THREE.Texture) => void,
+  apply: (tex: THREE.Texture, info: { path: string; hd: boolean }) => void,
   opts: { strip?: boolean; isCancelled?: () => boolean } = {},
 ): Promise<boolean> {
-  const plan = await texturePlan(assets, body, role, quality);
+  const { paths: plan, hd } = await texturePlanInfo(assets, body, role, quality);
   let any = false;
   for (const path of plan) {
     try {
@@ -83,7 +90,7 @@ export async function resolveBodyTexture(
         configureEquirect(t, renderer, { colorSpace, anisotropy: 16 });
         t.flipY = flipY;
       }
-      apply(t);
+      apply(t, { path, hd: hd.has(path) });
       any = true;
     } catch {
       // Missing tier: keep the previous one.

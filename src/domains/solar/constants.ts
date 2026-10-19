@@ -6,6 +6,7 @@
  * sheets read the JSON itself. Haumea's triaxial shape is from Ortiz et al. 2017 (Nature 550, 219).
  */
 import { DEG } from '../../core/units';
+import type { WindProfileId } from './winds';
 
 export type SurfaceKind = 'rocky' | 'giant' | 'cloud' | 'ice';
 
@@ -47,6 +48,15 @@ export interface RingDef {
   albedoScale?: number;
 }
 
+/** Animated cloud motion (winds.ts). */
+export interface WindDef {
+  profile: WindProfileId;
+  /** Largest displacement of one advected map copy over its visible life, degrees (bounds shear and ghosting). */
+  shearBudgetDeg: number;
+  /** A vortex held rigid against the shear (Jupiter's Great Red Spot), in map coordinates. */
+  vortex?: { lonDeg: number; latDeg: number; halfLonDeg: number; halfLatDeg: number; spinDegPerDay: number };
+}
+
 export interface SolarBodyDef {
   id: string;
   /** Key into bodies.json / public/textures/<key>. */
@@ -68,6 +78,15 @@ export interface SolarBodyDef {
    * albedo and colour (map means measured in linear light, cos-latitude weighted); the whole albedo without a map.
    */
   tint: [number, number, number];
+  /** Tint for albedo-calibrated hd.json maps (hue only, luminance 1). Defaults to `tint`. */
+  hdTint?: [number, number, number];
+  /** Brightness-dependent colourisation of a greyscale map. */
+  palette?: 'pluto';
+  /** Data resolution: sharp within fullDeg of (lon, lat), blurred beyond blurDeg. */
+  resolutionCap?: { lonDeg: number; latDeg: number; fullDeg: number; blurDeg: number };
+  /** Contrast of the colour map about its global mean (1 = as is). */
+  mapContrast?: number;
+  winds?: WindDef;
   surface: SurfaceKind;
   /** Texture role for the colour map (Venus uses its cloud-deck map, never the radar surface). */
   colorMap: 'color' | 'atmosphere' | null;
@@ -104,7 +123,7 @@ export const SOLAR_BODIES: readonly SolarBodyDef[] = [
   {
     id: 'sol:mercury', key: 'mercury', name: 'Mercury', aliases: [], kind: 'planet', aeBody: 'Mercury',
     axesM: [km(2440.53), km(2440.53), km(2438.3)], meanRadiusM: km(2439.4), gmM3S2: GM(22031.8685514),
-    geometricAlbedo: 0.106, tint: [1.6, 1.47, 1.31], surface: 'rocky', colorMap: 'color',
+    geometricAlbedo: 0.106, tint: [1.6, 1.47, 1.31], hdTint: [1.077, 0.989, 0.882], surface: 'rocky', colorMap: 'color',
     appearance: 'observed', appearanceNote: 'MESSENGER MDIS global mosaic (USGS Astrogeology), greyscale tinted to Mercury’s measured mean colour.',
     rotation: { ra0: 281.0103, dec0: 61.4155, raRate: -0.0328, decRate: -0.0049, w0: 329.5988, wDot: 6.1385108 },
     importance: 80, tagline: 'The smallest planet and the closest to the Sun', periodDays: 87.969,
@@ -112,7 +131,7 @@ export const SOLAR_BODIES: readonly SolarBodyDef[] = [
   {
     id: 'sol:venus', key: 'venus', name: 'Venus', aliases: [], kind: 'planet', aeBody: 'Venus',
     axesM: [km(6051.8), km(6051.8), km(6051.8)], meanRadiusM: km(6051.8), gmM3S2: GM(324858.592),
-    geometricAlbedo: 0.65, tint: [0.95, 1.31, 2.34], surface: 'cloud', colorMap: 'atmosphere', atmosphere: 'venus', minnaertK: 0.75,
+    geometricAlbedo: 0.65, tint: [0.95, 1.31, 2.34], mapContrast: 0.7, surface: 'cloud', colorMap: 'atmosphere', atmosphere: 'venus', minnaertK: 0.75,
     appearance: 'reconstructed', appearanceNote: 'Cloud deck from an illustrative visible-light composite (Solar System Scope, CC BY 4.0). In visible light Venus is a near-featureless creamy haze.',
     rotation: { ra0: 272.76, dec0: 67.16, raRate: 0, decRate: 0, w0: 160.2, wDot: -1.4813688 },
     importance: 85, tagline: 'A runaway-greenhouse world wrapped in sulfuric-acid clouds', periodDays: 224.701,
@@ -120,7 +139,7 @@ export const SOLAR_BODIES: readonly SolarBodyDef[] = [
   {
     id: 'sol:mars', key: 'mars', name: 'Mars', aliases: ['the Red Planet'], kind: 'planet', aeBody: 'Mars',
     axesM: [km(3396.19), km(3396.19), km(3376.2)], meanRadiusM: km(3389.5), gmM3S2: GM(42828.37362),
-    geometricAlbedo: 0.15, tint: [1.3, 1.15, 0.64], surface: 'rocky', colorMap: 'color', hasNormalMap: true, atmosphere: 'mars',
+    geometricAlbedo: 0.15, tint: [1.875, 1.29, 0.57], hdTint: [1.02, 1.0, 0.82], surface: 'rocky', colorMap: 'color', hasNormalMap: true, atmosphere: 'mars',
     appearance: 'observed', appearanceNote: 'Viking MDIM 2.1 colour mosaic with MOLA relief (USGS Astrogeology).',
     rotation: { ra0: 317.269202, dec0: 54.432516, raRate: -0.10927547, decRate: -0.05827105, w0: 176.049863, wDot: 350.891982443297, marsTerms: true },
     importance: 92, tagline: 'A cold desert world with the largest volcanoes in the Solar System', periodDays: 686.98,
@@ -129,6 +148,9 @@ export const SOLAR_BODIES: readonly SolarBodyDef[] = [
     id: 'sol:jupiter', key: 'jupiter', name: 'Jupiter', aliases: [], kind: 'planet', aeBody: 'Jupiter',
     axesM: [km(71492), km(71492), km(66854)], meanRadiusM: km(69911), gmM3S2: GM(126686531.9),
     geometricAlbedo: 0.52, tint: [1, 1, 0.95], surface: 'giant', colorMap: 'color', minnaertK: 1.05,
+    // Great Red Spot of the map (lon −47.8°, lat −20.5°, ≈ 22° × 12°); collar spin slowed ~2.5× (real period ≈ 3 d) so
+    // the two advected copies stay coherent.
+    winds: { profile: 'jupiter', shearBudgetDeg: 25, vortex: { lonDeg: -47.8, latDeg: -20.5, halfLonDeg: 11.5, halfLatDeg: 6.5, spinDegPerDay: 45 } },
     appearance: 'reconstructed', appearanceNote: 'Cloud bands from a Cassini/Juno-based composite (Solar System Scope, CC BY 4.0); the real bands drift and the Great Red Spot’s longitude changes, so the pattern is illustrative.',
     rotation: { ra0: 268.056595, dec0: 64.495303, raRate: -0.006499, decRate: 0.002413, w0: 284.95, wDot: 870.536 },
     importance: 95, tagline: 'The largest planet: a gas giant with a storm wider than Earth', periodDays: 4332.59,
@@ -136,7 +158,8 @@ export const SOLAR_BODIES: readonly SolarBodyDef[] = [
   {
     id: 'sol:saturn', key: 'saturn', name: 'Saturn', aliases: [], kind: 'planet', aeBody: 'Saturn',
     axesM: [km(60268), km(60268), km(54364)], meanRadiusM: km(58232), gmM3S2: GM(37931206.23),
-    geometricAlbedo: 0.47, tint: [0.8, 0.83, 0.88], surface: 'giant', colorMap: 'color', minnaertK: 1.05,
+    geometricAlbedo: 0.47, tint: [0.82, 0.74, 0.56], surface: 'giant', colorMap: 'color', minnaertK: 1.05,
+    winds: { profile: 'saturn', shearBudgetDeg: 60 },
     // Strip B-ring peak ≈ 0.24 linear; ϖ ≈ 0.6 for the B ring at visible wavelengths (Cuzzi et al. 1984; Porco et al. 2008).
     rings: [{ innerM: km(74500), outerM: km(140220), strip: 'saturn', dust: 0.08, albedoScale: 2.5 }],
     appearance: 'reconstructed', appearanceNote: 'Cloud bands from a Cassini-based composite (Solar System Scope, CC BY 4.0); rings from a Cassini radial profile. Band longitudes are illustrative.',
@@ -146,7 +169,8 @@ export const SOLAR_BODIES: readonly SolarBodyDef[] = [
   {
     id: 'sol:uranus', key: 'uranus', name: 'Uranus', aliases: [], kind: 'planet', aeBody: 'Uranus',
     axesM: [km(25559), km(25559), km(24973)], meanRadiusM: km(25362), gmM3S2: GM(5793951.26),
-    geometricAlbedo: 0.51, tint: [1.1, 0.97, 0.93], surface: 'giant', colorMap: 'color', minnaertK: 1.1,
+    geometricAlbedo: 0.51, tint: [0.925, 0.975, 1.13], surface: 'giant', colorMap: 'color', minnaertK: 1.1,
+    winds: { profile: 'uranus', shearBudgetDeg: 40 },
     rings: [{ innerM: km(41837), outerM: km(51149), strip: 'uranus', dust: 0.05 }],
     appearance: 'reconstructed', appearanceNote: 'Pale cyan disc after Voyager 2 imagery (Solar System Scope, CC BY 4.0); faint cloud features are illustrative.',
     rotation: { ra0: 257.311, dec0: -15.175, raRate: 0, decRate: 0, w0: 203.81, wDot: -501.1600928 },
@@ -156,6 +180,7 @@ export const SOLAR_BODIES: readonly SolarBodyDef[] = [
     id: 'sol:neptune', key: 'neptune', name: 'Neptune', aliases: [], kind: 'planet', aeBody: 'Neptune',
     axesM: [km(24764), km(24764), km(24341)], meanRadiusM: km(24622), gmM3S2: GM(6835103.15),
     geometricAlbedo: 0.41, tint: [2, 1.6, 0.95], surface: 'giant', colorMap: 'color', minnaertK: 1.1,
+    winds: { profile: 'neptune', shearBudgetDeg: 60 },
     appearance: 'reconstructed', appearanceNote: 'Deep blue disc after Voyager 2 imagery (Solar System Scope, CC BY 4.0); storm positions are illustrative.',
     rotation: { ra0: 299.36, dec0: 43.46, raRate: 0, decRate: 0, w0: 249.978, wDot: 541.1397757, neptuneTerms: true },
     importance: 88, tagline: 'The windiest planet, deep blue and far from the Sun', periodDays: 60182,
@@ -172,8 +197,9 @@ export const SOLAR_BODIES: readonly SolarBodyDef[] = [
   {
     id: 'sol:pluto', key: 'pluto', name: 'Pluto', aliases: ['134340 Pluto'], kind: 'dwarf-planet', aeBody: 'Pluto',
     axesM: [km(1188.3), km(1188.3), km(1188.3)], meanRadiusM: km(1188.3), gmM3S2: GM(869.3009),
-    geometricAlbedo: 0.52, tint: [3.6, 3, 2.4], surface: 'ice', colorMap: 'color', hasCoverage: true, atmosphere: 'pluto',
-    appearance: 'observed', appearanceNote: 'New Horizons LORRI/MVIC global mosaic (USGS); the hemisphere New Horizons did not see in detail is shown featureless.',
+    geometricAlbedo: 0.52, tint: [3.4, 3.4, 3.4], hdTint: [3.4, 3.4, 3.4], palette: 'pluto', surface: 'ice', colorMap: 'color', hasCoverage: true, atmosphere: 'pluto',
+    resolutionCap: { lonDeg: 175, latDeg: 15, fullDeg: 80, blurDeg: 100 },
+    appearance: 'observed', appearanceNote: 'New Horizons LORRI global mosaic (USGS), coloured by brightness after MVIC colour imaging (dark maculae red-brown, bright nitrogen ice cream-white); the hemisphere New Horizons saw only coarsely is shown at that coarse resolution, the unseen south featureless.',
     rotation: { ra0: 132.993, dec0: -6.163, raRate: 0, decRate: 0, w0: 302.695, wDot: 56.3625225 },
     importance: 75, tagline: 'A dwarf planet with a nitrogen-ice heart', periodDays: 90560,
   },

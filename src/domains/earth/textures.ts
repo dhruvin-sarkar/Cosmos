@@ -10,8 +10,9 @@
 import * as THREE from 'three';
 import type { AssetLoader, QualityProfile } from '../../core/types';
 
-export type Tier = 'low' | 'high' | 'ultra';
-export const TIER_ORDER: readonly Tier[] = ['low', 'high', 'ultra'];
+/** 'max' = the 16K tier (Ultra preset only, and only while the body fills the screen at close range; ~700 MB VRAM). */
+export type Tier = 'low' | 'high' | 'ultra' | 'max';
+export const TIER_ORDER: readonly Tier[] = ['low', 'high', 'ultra', 'max'];
 
 export type MapKind = 'day' | 'night' | 'clouds' | 'specular' | 'normal' | 'height' | 'color';
 
@@ -41,7 +42,9 @@ const CONVENTION: TextureTable = {
   },
 };
 
-const HD_SIZE_TO_TIER: Record<string, Tier> = { '2k': 'low', '1k': 'low', '4k': 'high', '8k': 'ultra', '16k': 'ultra' };
+const HD_SIZE_TO_TIER: Record<string, Tier> = { '2k': 'low', '1k': 'low', '4k': 'high', '8k': 'ultra', '16k': 'max' };
+/** hd.json map names → this domain's map names, per body (hd.json calls the Earth's day map 'color'). */
+const HD_MAP_ALIAS: Record<string, Record<string, string>> = { earth: { color: 'day' } };
 
 /** Path suffix '<path>@<width>': decode the image and downscale it to <width> before upload. */
 export const DOWNSCALE_MARK = '@';
@@ -68,7 +71,7 @@ export function mergeTextureTables(index: IndexJson | null, hd: HdJson | null): 
     if (fromHd) {
       for (const [map, sizes] of Object.entries(fromHd)) {
         if (!sizes || typeof sizes !== 'object') continue;
-        const target = map === 'bump' ? 'height' : map;
+        const target = HD_MAP_ALIAS[body]?.[map] ?? (map === 'bump' ? 'height' : map);
         const slot = (out[body][target] ??= {});
         const hdTiers = new Set<Tier>();
         for (const [size, path] of Object.entries(sizes)) {
@@ -96,7 +99,7 @@ export async function loadTextureTable(assets: AssetLoader): Promise<TextureTabl
 }
 
 export function maxTierFor(quality: QualityProfile['textureQuality']): Tier {
-  return quality === 'ultra' ? 'ultra' : quality === 'high' ? 'high' : 'low';
+  return quality === 'ultra' ? 'max' : quality === 'high' ? 'high' : 'low';
 }
 
 /** Tiers available for a map, lowest first, capped at `max`. */
@@ -141,6 +144,42 @@ export class ProgressiveMap {
     void this.pump();
   }
 
+  /**
+   * Drop back to at most `max` when the current texture is above it (frees the 16K tier's VRAM once the camera leaves).
+   * The lower tier is loaded first and swapped in, so nothing ever renders with a missing map.
+   */
+  cap(max: Tier): void {
+    this.wanted = max;
+    const rank = TIER_ORDER.indexOf(max);
+    if (!this.currentTier || TIER_ORDER.indexOf(this.currentTier) <= rank || this.loading || this.disposed) return;
+    const list = tiersUpTo(this.table, this.body, this.map, max);
+    const target = list[list.length - 1];
+    if (!target) return;
+    this.loading = true;
+    void this.load(target.path)
+      .then(tex => {
+        if (this.disposed) { tex?.dispose(); return; }
+        if (!tex) return;
+        const prev = this.current;
+        this.current = tex;
+        this.currentTier = target.tier;
+        this.apply(tex, target.tier);
+        if (prev && prev !== tex) prev.dispose();
+      })
+      .finally(() => { this.loading = false; void this.pump(); });
+  }
+
+  private async load(p: string): Promise<THREE.Texture | null> {
+    try {
+      const { path, maxWidth } = parseTexturePath(p);
+      return maxWidth
+        ? await this.loadDownscaled(path, maxWidth)
+        : await this.assets.textureAsync(path, { colorSpace: this.colorSpace, anisotropy: this.anisotropy });
+    } catch {
+      return null; // keep the current tier; the loader already pushed a notice
+    }
+  }
+
   get available(): boolean {
     return (this.table[this.body]?.[this.map] ?? null) !== null;
   }
@@ -154,16 +193,8 @@ export class ProgressiveMap {
         const currentRank = this.currentTier ? TIER_ORDER.indexOf(this.currentTier) : -1;
         const next = list.find(e => TIER_ORDER.indexOf(e.tier) > currentRank);
         if (!next) break;
-        let tex: THREE.Texture | null = null;
-        try {
-          const { path, maxWidth } = parseTexturePath(next.path);
-          tex = maxWidth
-            ? await this.loadDownscaled(path, maxWidth)
-            : await this.assets.textureAsync(path, { colorSpace: this.colorSpace, anisotropy: this.anisotropy });
-        } catch {
-          tex = null; // keep the current tier; the loader already pushed a notice
-        }
-        if (this.disposed) return;
+        const tex = await this.load(next.path);
+        if (this.disposed) { tex?.dispose(); return; }
         if (!tex) {
           // Skip a failed tier but keep climbing.
           this.currentTier = next.tier;

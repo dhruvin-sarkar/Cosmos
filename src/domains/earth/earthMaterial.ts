@@ -111,12 +111,18 @@ float cloudDu(float v) {
 }
 // Two-phase flow map (bounded displacement, continuous in time): the cloud texture advected by the zonal wind.
 float cloudAt(vec2 uv, vec2 gx, vec2 gy, float du) {
-  if (uDrift < 0.001) return textureGrad(uClouds, uv, gx, gy).r;
-  float p0 = uFlowPhase;
-  float p1 = fract(uFlowPhase + 0.5);
-  float a = textureGrad(uClouds, uv - vec2(du * (p0 - 0.5), 0.0), gx, gy).r;
-  float b = textureGrad(uClouds, uv - vec2(du * (p1 - 0.5), 0.0), gx, gy).r;
-  return mix(a, b, abs(2.0 * p0 - 1.0));
+  // Single exit (ANGLE/HLSL warns X4000 on an early return here).
+  float c = 0.0;
+  if (uDrift < 0.001) {
+    c = textureGrad(uClouds, uv, gx, gy).r;
+  } else {
+    float p0 = uFlowPhase;
+    float p1 = fract(uFlowPhase + 0.5);
+    float a = textureGrad(uClouds, uv - vec2(du * (p0 - 0.5), 0.0), gx, gy).r;
+    float b = textureGrad(uClouds, uv - vec2(du * (p1 - 0.5), 0.0), gx, gy).r;
+    c = mix(a, b, abs(2.0 * p0 - 1.0));
+  }
+  return c;
 }
 float ggxD(float NdotH, float a2) {
   float d = NdotH * NdotH * (a2 - 1.0) + 1.0;
@@ -155,8 +161,12 @@ void main() {
     float fw = length(fwidth(p));
     float a1 = 1.0 - smoothstep(0.15, 0.4, fw * 1200.0);
     float a2 = 1.0 - smoothstep(0.15, 0.4, fw * 3000.0);
+    float a3 = 1.0 - smoothstep(0.15, 0.4, fw * 8000.0);
     float nc = simplexNoise3(p * 1200.0) * 0.6 * a1 + (a2 > 0.0 ? simplexNoise3(p * 3000.0) * 0.4 * a2 : 0.0);
-    cloud = clamp(cloud + nc * 1.2 * uDetail * cloud * (1.0 - cloud), 0.0, 1.0);
+    // ~5 km octave: cumulus cells along deck edges, only visible from low orbit.
+    float nc3 = a3 > 0.0 ? simplexNoise3(p * 8000.0) * a3 : 0.0;
+    float edge = cloud * (1.0 - cloud);
+    cloud = clamp(cloud + (nc * 1.6 + nc3 * 0.7) * uDetail * edge * 1.2, 0.0, 1.0);
     day *= 1.0 + 0.12 * nc * uDetail * (1.0 - ocean);
   }
 
@@ -220,7 +230,7 @@ void main() {
     float tx = 2.0 * uCloudTexel;
     float cx = cloudAt(uv + vec2(tx, 0.0), gx, gy, du) - cloudAt(uv - vec2(tx, 0.0), gx, gy, du);
     float cy = cloudAt(uv + vec2(0.0, tx * 2.0), gx, gy, du) - cloudAt(uv - vec2(0.0, tx * 2.0), gx, gy, du);
-    vec3 cn = normalize(p - 0.6 * (1.0 - 0.75 * uDetail) * (east * cx + north * cy));
+    vec3 cn = normalize(p - 0.4 * (1.0 - 0.75 * uDetail) * (east * cx + north * cy));
     // Cloud tops ~10 km up see the Sun ~3° past the ground terminator (horizon dip √(2h) ≈ 0.057 rad): wrap the
     // Lambert term by that dip so they keep catching the reddened (Chapman-transmitted) sunset light.
     float cl = max(dot(cn, L) + 0.057, 0.0) / 1.057;

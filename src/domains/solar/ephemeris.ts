@@ -211,6 +211,22 @@ export function sunAngularRadiusAt(pointIcrsM: THREE.Vector3, tMs: number): numb
  */
 export const exposureState = { gain: 1, targetGain: 1 };
 
+/**
+ * EXHIBITION-SCALE display gain for an enlarged disc (disclosed with the enlargement: 'Enlarged for visibility'). In a
+ * system overview exposed for the Sun, an outer planet's true surface brightness (∝ 1/r²) renders black; strongly
+ * enlarged discs get part of that falloff back (Neptune ≈ 1/4 of Earth's surface brightness instead of 1/900). The gain
+ * fades to exactly 1 as the body approaches true size (factor → 1), so close-ups and true-scale mode stay photometric.
+ */
+export function exhibitionDisplayGain(enlarge: number, sunDistanceM: number): number {
+  if (!(enlarge > 1.5)) return 1;
+  const r2 = (sunDistanceM / AU_M) ** 2;
+  const lost = Math.min(Math.max(r2 / Math.max(exposureState.gain, 1e-6), 1), 2500);
+  if (lost <= 1) return 1;
+  const t = Math.min(Math.max((enlarge - 1.5) / 18.5, 0), 1);
+  const w = t * t * (3 - 2 * t);
+  return Math.pow(lost, 0.8 * w);
+}
+
 /** Scene-linear sunlight irradiance at a point, including the exposure gain. Use as the Sun intensity uniform. */
 export function solarSceneIrradianceAt(pointIcrsM: THREE.Vector3, tMs: number): number {
   const d = Math.max(sunDistanceAt(pointIcrsM, tMs), 7e8);

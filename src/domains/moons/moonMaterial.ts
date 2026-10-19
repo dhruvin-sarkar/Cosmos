@@ -65,6 +65,7 @@ export class MoonMaterial extends THREE.ShaderMaterial {
     uFeat: { value: THREE.Vector4[] };
     uFeatDepth: { value: THREE.Vector2 };
     uTexel: { value: number };
+    uRealShape: { value: number };
   };
 
   constructor(opts: MoonMaterialOptions) {
@@ -101,10 +102,17 @@ export class MoonMaterial extends THREE.ShaderMaterial {
         uFeat: { value: f4 },
         uFeatDepth: { value: fd },
         uTexel: { value: 0 },
+        uRealShape: { value: 0 },
       },
       vertexShader: VERTEX_SHADER,
       fragmentShader: FRAGMENT_SHADER,
     });
+  }
+
+  /** A real shape model carries the large craters itself: drop the procedural big bowls and named features. */
+  setShapeModel(): void {
+    this.uniforms.uRealShape.value = 1;
+    this.uniforms.uFeatDepth.value.set(0, 0);
   }
 
   /** Bind a colour/greyscale mosaic. `meanLinear` is its mean linear luminance (rescales it to the geometric albedo). */
@@ -155,6 +163,7 @@ uniform float uDetail;
 uniform vec4 uFeat[2];
 uniform vec2 uFeatDepth;
 uniform float uTexel;
+uniform float uRealShape;
 varying vec3 vPos;
 varying vec3 vNor;
 
@@ -187,6 +196,8 @@ float fbm(vec3 p) {
   return s;
 }
 
+float gFloor = 0.0;   // accumulated crater-floor depth (0 outside bowls, ~1 at the deepest centre) for floor darkening
+
 // One octave of hash-grid craters on the unit sphere. Returns the surface gradient (tangent plane, d height / d arc).
 // cells = grid frequency, density = probability a cell holds a crater, fade = footprint-based amplitude.
 vec3 craterOctave(vec3 d, float cells, float density, float fade, float seed, float depthScale) {
@@ -205,7 +216,7 @@ vec3 craterOctave(vec3 d, float cells, float density, float fade, float seed, fl
     if (u > 1.7) continue;
     float depth = depthScale * (0.35 + 0.65 * h.z) * rc;   // cell units
     float dh;                                             // d(height)/d(dist)
-    if (u < 1.0) dh = depth * 2.0 * u / rc;               // bowl: h = -depth (1 - u²)
+    if (u < 1.0) { dh = depth * 2.0 * u / rc; gFloor = max(gFloor, (1.0 - u * u) * fade * (0.35 + 0.65 * h.z)); }   // bowl: h = -depth (1 - u²)
     else dh = -depth * 0.22 * 80.0 * (u - 1.08) * exp(-(u - 1.08) * (u - 1.08) * 40.0) / rc;
     vec3 dir = off / max(dist, 1e-5);
     g += dh * dir;
@@ -243,7 +254,7 @@ void main() {
     if (uCraters > 0.0) {
       float seed = uSeed * 13.7;
       float dens = clamp(0.30 * uCraters, 0.0, 0.95);
-      float amp = (uSpecial == 5 ? 1.6 : 1.0) * (uHasMap > 0.5 ? 0.14 : 0.3);
+      float amp = (uSpecial == 5 ? 1.6 : 1.0) * (uHasMap > 0.5 ? 0.14 : (uRealShape > 0.5 ? 0.13 : 0.3));
       bool mapped = uHasMap > 0.5;
       // cells per radian-ish; fade octaves whose cells are smaller than ~2.5 px
       float c0 = 5.0, c1 = 12.0, c2 = 28.0, c3 = 66.0;
@@ -251,8 +262,8 @@ void main() {
       float f1 = 1.0 - smoothstep(0.25, 0.5, pxFoot * c1 * 2.5);
       float f2 = 1.0 - smoothstep(0.25, 0.5, pxFoot * c2 * 2.5);
       float f3 = 1.0 - smoothstep(0.25, 0.5, pxFoot * c3 * 2.5);
-      if (!mapped && f0 > 0.01) grad += craterOctave(dir, c0, dens * 0.55, f0, seed, amp * 1.1);
-      if (!mapped && f1 > 0.01) grad += craterOctave(dir, c1, dens * 0.8, f1, seed + 3.0, amp);
+      if (!mapped && uRealShape < 0.5 && f0 > 0.01) grad += craterOctave(dir, c0, dens * 0.55, f0, seed, amp * 1.1);
+      if (!mapped && uRealShape < 0.5 && f1 > 0.01) grad += craterOctave(dir, c1, dens * 0.8, f1, seed + 3.0, amp);
       if (f2 > 0.01) grad += craterOctave(dir, c2, dens, f2, seed + 7.0, amp * 0.9);
       if (f3 > 0.01) grad += craterOctave(dir, c3, dens, f3, seed + 11.0, amp * 0.8);
     }
@@ -269,7 +280,7 @@ void main() {
     vec3 m = sampleEquirect(uMap, dir).rgb;
     float lum = dot(m, vec3(0.3, 0.55, 0.15));
     if (uSpecial == 3) {
-      albedo = uColor * uAlbedo * mix(1.0, lum / max(uAlbedo / max(uMapGain, 1e-4), 1e-3), 0.10);   // surface only faintly visible through the haze
+      albedo = uColor * uAlbedo * mix(1.0, lum / max(uAlbedo / max(uMapGain, 1e-4), 1e-3), 0.03);   // surface only faintly visible through the haze
     } else if (uSpecial == 4 || uSpecial == 8) {
       albedo = m * uMapGain;                                  // colour mosaics (Io, Triton)
       if (uSpecial == 8) albedo = mix(vec3(lum * uMapGain), albedo, 0.35) * vec3(1.0, 0.93, 0.85) * 0.82;   // Voyager colour is stretched: desaturate to the pale cream-pink of Triton
@@ -303,8 +314,27 @@ void main() {
   } else if (uSpecial == 9) {                              // Miranda: patchwork of bright/dark provinces
     float pm = smoothstep(0.35, 0.65, fbm(dir * 2.4 + 5.0));
     albedo *= mix(0.72, 1.25, pm);
-  } else if (uSpecial == 5) {                              // Hyperion: reddish dark floors in the pits
+  } else if (uSpecial == 5) {                              // Hyperion: reddish-brown dark material pooled on the pit floors (sponge look)
     albedo *= vec3(1.1, 0.98, 0.88);
+    albedo = mix(albedo, albedo * vec3(0.42, 0.31, 0.25), smoothstep(0.15, 0.7, gFloor));
+  } else if (uSpecial == 7 && uDetail > 0.0) {             // Europa: dark reddish-brown lineae – long, gently curved double-ridged fractures on bright ice
+    float lines = 0.0;
+    float wmin = max(0.0012, pxFoot * 1.1);
+    for (int i = 0; i < 14; i++) {
+      vec3 h = hash33(vec3(float(i) * 1.7 + uSeed, 3.1, 7.7));
+      vec3 nrm = normalize(h * 2.0 - 1.0 + vec3(0.001));
+      float c0 = (hash33(h * 91.0).x - 0.5) * 1.5;                           // small circles: offset from a great circle
+      float d = abs(dot(dir, nrm) - c0);
+      float w = wmin * (0.8 + 1.8 * h.z);
+      float arc = smoothstep(0.42, 0.58, fbm(dir * 2.6 + h * 9.0));          // each fracture only spans part of its circle
+      float ridge = 1.0 - smoothstep(w, w * 2.4, d);
+      lines += ridge * arc * (0.55 + 0.45 * h.y);
+    }
+    // fine lineae network at close range
+    vec3 q = dir * 60.0 + uSeed;
+    float fine = 1.0 - smoothstep(0.0, 0.07, abs(fbm(q) - 0.5));
+    lines += fine * 0.22 * smoothstep(0.0, 1.0, uDetail) * (1.0 - smoothstep(0.1, 0.3, pxFoot * 60.0));
+    albedo = mix(albedo, albedo * vec3(0.52, 0.36, 0.28), clamp(lines, 0.0, 0.72) * uDetail);
   }
   albedo = min(albedo, vec3(0.98));
 
