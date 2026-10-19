@@ -14,6 +14,8 @@ import type { Layer, OverlayId } from '../src/core/types';
 import { createCosmos, type CosmosApp } from '../src/app/createCosmos';
 import { installKeyboardShortcuts } from '../src/app/keyboard';
 import { createCosmosStore, DEFAULT_OVERLAYS } from '../src/state/store';
+import { installIdmSafeFetch } from '../src/core/idmSafeFetch';
+installIdmSafeFetch();
 
 export interface SandboxOptions {
   container?: HTMLElement;

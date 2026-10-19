@@ -12,7 +12,7 @@
  * A relative url is resolved against http://localhost:5173/ (e.g. "sandbox/core.html?scale=12").
  */
 import { createRequire } from 'node:module';
-import { mkdirSync, existsSync } from 'node:fs';
+import { mkdirSync, existsSync, statSync, rmSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 const require = createRequire('C:/Projects/Cosmos/package.json');
@@ -55,6 +55,23 @@ function parseArgs(argv) {
 
 const USAGE = 'usage: node tools/shot.mjs <url> <out.png> [--width 1600] [--height 900] [--wait 2500] [--eval "<js>"] [--frames 30] [--timeout 30000] [--strict] [--quiet]';
 
+
+// Machine-wide screenshot slots: many agents share one GPU (4 GB VRAM) and 16 GB RAM, so at most SHOT_SLOTS headless Chromes run at once.
+const SHOT_SLOTS = Number(process.env.SHOT_SLOTS || 2);
+const LOCK_DIR = 'C:/Projects/Cosmos/.work/shot-locks';
+async function acquireShotSlot() {
+  mkdirSync(LOCK_DIR, { recursive: true });
+  for (;;) {
+    for (let i = 0; i < SHOT_SLOTS; i++) {
+      const dir = LOCK_DIR + '/slot-' + i;
+      try { mkdirSync(dir); return dir; } catch {
+        try { if (Date.now() - statSync(dir).mtimeMs > 180000) rmSync(dir, { recursive: true, force: true }); } catch {}
+      }
+    }
+    await new Promise(r => setTimeout(r, 750));
+  }
+}
+
 async function main() {
   let opts;
   try {
@@ -74,6 +91,8 @@ async function main() {
   mkdirSync(dirname(out), { recursive: true });
 
   const executablePath = CHROME_PATHS.find(p => existsSync(p));
+  const slot = await acquireShotSlot();
+  process.on("exit", () => { try { rmSync(slot, { recursive: true, force: true }); } catch {} });
   const browser = await chromium.launch({ executablePath, headless: true, args: GPU_ARGS });
   let pageErrors = 0;
   let consoleErrors = 0;
