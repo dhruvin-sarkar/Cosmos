@@ -1,0 +1,324 @@
+/* Asteroid deflection lab (src/labs/defense). Tokens only from src/styles/tokens.css. */
+
+.cx-dfn-switch {
+  margin-bottom: var(--sp-3);
+}
+.cx-dfn-lede {
+  font: var(--type-body);
+  color: var(--text-secondary);
+  margin: 0 0 var(--sp-4);
+  max-width: 46ch;
+}
+.cx-dfn-hypo {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--hatch-modified);
+  border-left: 2px solid var(--modified);
+  color: var(--text-primary);
+}
+.cx-dfn-src {
+  font: var(--type-label);
+  font-size: 11.5px;
+  color: var(--text-tertiary, oklch(0.7 0 0));
+}
+
+/* ── Replay viewport ── */
+.cx-dfn-replay {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  padding-bottom: var(--sp-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.cx-dfn-replay__stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  background: #000;
+}
+.cx-dfn-replay__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.cx-dfn-replay__error {
+  position: absolute;
+  inset: auto var(--sp-4) var(--sp-4);
+  font: var(--type-body);
+  color: var(--text-secondary);
+}
+.cx-dfn-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+  font: var(--type-3d-label);
+  color: var(--text-primary);
+  text-shadow: 0 0 3px #000, 0 0 6px #000;
+  white-space: nowrap;
+  pointer-events: none;
+  will-change: transform;
+}
+.cx-dfn-tag--ghost {
+  color: var(--text-secondary);
+}
+.cx-dfn-hud {
+  position: absolute;
+  left: var(--sp-4);
+  top: var(--sp-3);
+  max-width: min(60ch, 70%);
+  pointer-events: none;
+  text-shadow: 0 0 4px #000;
+}
+.cx-dfn-hud p {
+  margin: 0;
+}
+.cx-dfn-hud__chapter {
+  font: var(--type-label);
+  color: var(--text-secondary);
+}
+.cx-dfn-hud__clock {
+  font: var(--type-exp-m);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  margin: 2px 0 4px !important;
+}
+.cx-dfn-hud__line {
+  font: var(--type-body);
+  color: var(--text-secondary);
+}
+.cx-dfn-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.cx-dfn-controls .cx-btn {
+  min-height: 44px;
+}
+.cx-dfn-chapters {
+  display: flex;
+  gap: var(--sp-1);
+}
+.cx-dfn-scrub {
+  flex: 1 1 160px;
+  min-width: 140px;
+  height: 44px;
+  accent-color: var(--accent);
+  background: transparent;
+}
+.cx-dfn-scrub:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+.cx-dfn-credit {
+  margin: 0;
+  font: var(--type-label);
+  font-size: 11.5px;
+  color: var(--text-tertiary, oklch(0.7 0 0));
+}
+
+/* ── Defend Earth viewport ── */
+.cx-dfn-earthviz {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  padding: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  overflow: auto;
+}
+.cx-dfn-outcome {
+  margin: 0;
+  font: 400 17px / 1.45 var(--font-ui);
+  color: var(--text-primary);
+  max-width: 70ch;
+  padding-left: var(--sp-3);
+  border-left: 2px solid var(--hairline-bold);
+}
+.cx-dfn-outcome.is-deflected,
+.cx-dfn-outcome.is-likely {
+  border-left-color: var(--real);
+}
+.cx-dfn-outcome.is-uncertain,
+.cx-dfn-outcome.is-fails {
+  border-left-color: var(--modified);
+}
+.cx-dfn-outcome-inline {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.cx-dfn-figs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--sp-4);
+  align-items: start;
+}
+.cx-dfn-fig {
+  margin: 0;
+}
+.cx-dfn-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 46vh;
+}
+.cx-dfn-figcap {
+  font: var(--type-label);
+  color: var(--text-secondary);
+  margin-top: var(--sp-2);
+  max-width: 60ch;
+}
+.cx-dfn-svg__label {
+  font: var(--type-label);
+  fill: var(--text-secondary);
+}
+.cx-dfn-svg__label--dim {
+  fill: oklch(0.7 0 0);
+}
+.cx-dfn-svg__label--mod {
+  fill: var(--modified);
+}
+.cx-dfn-svg__tick {
+  font: 450 10.5px / 1 var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  fill: oklch(0.7 0 0);
+}
+.cx-dfn-axis {
+  stroke: oklch(1 0 0 / 0.26);
+  stroke-width: 1;
+}
+.cx-dfn-grid {
+  stroke: oklch(1 0 0 / 0.08);
+  stroke-width: 1;
+}
+.cx-dfn-earth {
+  fill: oklch(0.55 0.09 235);
+  stroke: var(--real);
+  stroke-width: 1;
+}
+.cx-dfn-capture {
+  fill: oklch(0.8 0.085 235 / 0.06);
+  stroke: var(--real);
+  stroke-width: 1;
+}
+.cx-dfn-capture__mark {
+  fill: #000;
+  stroke: var(--real);
+  stroke-width: 1;
+}
+.cx-dfn-capture-line {
+  stroke: var(--real);
+  stroke-width: 1;
+}
+.cx-dfn-moon {
+  fill: none;
+  stroke: oklch(1 0 0 / 0.3);
+  stroke-width: 1;
+  stroke-dasharray: 1.5 5;
+  stroke-linecap: round;
+}
+.cx-dfn-nominal {
+  stroke: var(--text-primary);
+  stroke-width: 1.5;
+}
+.cx-dfn-hatch {
+  stroke: var(--modified);
+  stroke-width: 1.2;
+}
+.cx-dfn-band {
+  stroke: var(--scenario-line);
+  stroke-width: 1;
+}
+.cx-dfn-band__core {
+  fill: var(--modified);
+  opacity: 0.6;
+}
+.cx-dfn-median {
+  fill: var(--modified);
+  stroke: #000;
+  stroke-width: 1.5;
+}
+.cx-dfn-rug {
+  stroke: var(--modified);
+  stroke-width: 1;
+  opacity: 0.22;
+}
+.cx-dfn-scale {
+  stroke: var(--text-secondary);
+  stroke-width: 1.5;
+}
+.cx-dfn-area {
+  fill: var(--modified-soft);
+  stroke: none;
+}
+.cx-dfn-curve {
+  fill: none;
+  stroke: var(--modified);
+  stroke-width: 1.5;
+}
+.cx-dfn-now {
+  stroke: var(--accent-line);
+  stroke-width: 1;
+}
+
+/* ── Explanation and assumptions ── */
+.cx-dfn-explain p {
+  margin: 0 0 var(--sp-3);
+}
+.cx-dfn-explain .cx-eq--display {
+  display: block;
+  margin: var(--sp-2) 0 var(--sp-3);
+  overflow-x: auto;
+}
+.cx-dfn-compare {
+  margin-bottom: var(--sp-3);
+}
+.cx-dfn-note {
+  font: var(--type-label);
+  color: var(--text-secondary);
+}
+.cx-dfn-models {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+.cx-dfn-model__title {
+  font: var(--type-control);
+  color: var(--text-primary);
+  margin: var(--sp-2) 0;
+}
+.cx-dfn-model__title .cx-id {
+  color: var(--text-secondary);
+  margin-left: var(--sp-1);
+}
+.cx-dfn-list,
+.cx-dfn-refs {
+  margin: 0 0 var(--sp-2);
+  padding-left: 1.1em;
+}
+.cx-dfn-list li,
+.cx-dfn-refs li {
+  margin-bottom: 4px;
+}
+.cx-dfn-refs {
+  font: var(--type-label);
+  color: var(--text-secondary);
+}
+.cx-dfn-refs a {
+  color: var(--text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cx-dfn-tag {
+    will-change: auto;
+  }
+}
+
+/* Part 2 is hypothetical by design: the lede says so, so the shell's "you changed real values" banner would mislead. */
+.cx-dfn-shell--hypo .cx-lab__banner { display: none; }
