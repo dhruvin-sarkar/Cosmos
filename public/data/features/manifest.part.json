@@ -1,0 +1,79 @@
+{
+ "domain": "features",
+ "datasets": [
+  {
+   "id": "iau-usgs-gazetteer",
+   "name": "Gazetteer of Planetary Nomenclature (feature centre points)",
+   "organization": "IAU Working Group for Planetary System Nomenclature / USGS Astrogeology Science Center",
+   "purpose": "Names, types, sizes, centre coordinates and name origins of surface features labelled on planets, moons and minor planets",
+   "mechanism": "GIS download (KMZ per target body) -> curated selection -> compact JSON",
+   "endpoint": "https://planetarynames.wr.usgs.gov/GIS_Downloads",
+   "query": "MOON_nomenclature_center_pts.kmz, MERCURY_nomenclature_center_pts.kmz, VENUS_nomenclature_center_pts.kmz, MARS_nomenclature_center_pts.kmz, IO_nomenclature_center_pts.kmz, EUROPA_nomenclature_center_pts.kmz, GANYMEDE_nomenclature_center_pts.kmz, CALLISTO_nomenclature_center_pts.kmz, TITAN_nomenclature_center_pts.kmz, ENCELADUS_nomenclature_center_pts.kmz, MIMAS_nomenclature_center_pts.kmz, IAPETUS_nomenclature_center_pts.kmz, TETHYS_nomenclature_center_pts.kmz, DIONE_nomenclature_center_pts.kmz, RHEA_nomenclature_center_pts.kmz, MIRANDA_nomenclature_center_pts.kmz, ARIEL_nomenclature_center_pts.kmz, TITANIA_nomenclature_center_pts.kmz, TRITON_nomenclature_center_pts.kmz, PLUTO_nomenclature_center_pts.kmz, CHARON_nomenclature_center_pts.kmz, CERES_nomenclature_center_pts.kmz, VESTA_nomenclature_center_pts.kmz, PHOBOS_nomenclature_center_pts.kmz, EROS_nomenclature_center_pts.kmz",
+   "version": "live gazetteer state at retrieval",
+   "retrieved": "2026-10-19T07:28:27Z",
+   "license": "Public domain (U.S. Government work, USGS); IAU nomenclature is freely usable. Cite the Gazetteer.",
+   "licenseUrl": "https://planetarynames.wr.usgs.gov/Page/About",
+   "citation": "Gazetteer of Planetary Nomenclature, International Astronomical Union (IAU) Working Group for Planetary System Nomenclature (WGPSN), USGS Astrogeology Science Center. https://planetarynames.wr.usgs.gov",
+   "rateLimits": "Static files on Amazon S3; one sequential download per body, cached in data-raw/features.",
+   "fieldsUsed": [
+    "clean_name",
+    "type",
+    "code",
+    "center_lat",
+    "center_lon",
+    "diameter",
+    "origin",
+    "approval",
+    "approvaldt",
+    "link"
+   ],
+   "updateCadence": "continuously as the IAU approves names",
+   "cachePolicy": "versioned offline snapshot",
+   "normalization": "Longitudes converted from 0-360 east to (-180, 180] east; planetocentric latitudes kept; zero diameters stored as null (unknown); a curated subset of notable features with importance ranks and short descriptions added by the Cosmos team.",
+   "fallback": "Bundled copy in src/domains/features/features.generated.json",
+   "files": [
+    {
+     "path": "data/features/features.json",
+     "bytes": 138236,
+     "records": 293
+    }
+   ],
+   "limitations": "Centre points only (no outlines). Positions are placed on a sphere of the body's mean radius, so markers on very irregular bodies (Eros, Vesta's south pole) sit above or below the true surface.",
+   "provenanceClass": "observed"
+  },
+  {
+   "id": "features-landing-sites",
+   "name": "Mission landing sites and informal features (literature compilation)",
+   "organization": "Cosmos team compilation from LROC, NASA NSSDCA and mission papers",
+   "purpose": "Landing-site markers (Apollo, Luna, Surveyor, Chang'e, Chandrayaan-3, Viking, Mars rovers and landers, Venera, Huygens, NEAR) and informal features (South Pole-Aitken, Mordor Macula, the Great Red Spot)",
+   "mechanism": "Manual compilation of published coordinates (cited per record)",
+   "endpoint": "https://www.lroc.asu.edu/ ; https://nssdc.gsfc.nasa.gov/",
+   "query": null,
+   "version": "1",
+   "retrieved": "2026-10-19T07:38:25.532Z",
+   "license": "Facts (coordinates) from cited publications; compilation released with the project.",
+   "licenseUrl": null,
+   "citation": "Wagner, R. V. et al. (2017) Icarus 283, 92-103 (LROC coordinates of anthropogenic features); NASA NSSDCA Master Catalog; mission papers cited per record.",
+   "rateLimits": "none (static)",
+   "fieldsUsed": [
+    "lat",
+    "lon",
+    "date",
+    "agency"
+   ],
+   "updateCadence": "per new landing",
+   "cachePolicy": "static",
+   "normalization": "Planetocentric latitude, east longitude in (-180, 180].",
+   "fallback": "none",
+   "files": [
+    {
+     "path": "data/features/features.json",
+     "bytes": 138236,
+     "records": 43
+    }
+   ],
+   "limitations": "Venera and Luna 9 positions are approximate (to about a degree). The Great Red Spot's longitude is extrapolated from a published drift rate.",
+   "provenanceClass": "observed"
+  }
+ ]
+}
