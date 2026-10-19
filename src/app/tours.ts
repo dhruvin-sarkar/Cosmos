@@ -2,14 +2,19 @@
  * Guided tours / exhibition mode (docs/ARCHITECTURE.md §13): data-driven steps executed through
  * AppCommands, so a tour can do nothing a visitor could not do by hand.
  *
- * Each step runs its actions in order. Camera actions ('focus', 'travel') are awaited only when the step
- * sets `waitForTravel`; otherwise they start and the remaining actions run immediately. Going to another
- * step (next/prev/restart/exit) cancels the in-flight one: its pending actions are skipped.
+ * Each step runs the tour's `baseline` actions, then its own actions, in order. Camera actions ('focus',
+ * 'travel', 'view-*') are awaited only when the step sets `waitForTravel`; otherwise they start and the
+ * remaining actions run immediately. 'wait' always pauses. Going to another step (next/prev/restart/exit)
+ * cancels the in-flight one: its pending actions are skipped. Exiting a tour restores the visitor's visual
+ * scale and spectral band.
+ *
+ * Tour content (narration, framing) lives in src/content/tours/.
  */
-import type { LabId } from '../core/entity';
+import type { EntityRegistry, LabId } from '../core/entity';
 import * as THREE from 'three';
 import type { CameraViewState, OverlayId, SpectralBandId, TravelOptions } from '../core/types';
-import type { CosmosStore } from '../state/store';
+import type { VisualScaleMode } from '../core/visualScale';
+import { setVisualScale, type CosmosStore } from '../state/store';
 import type { AppCommands } from './commands';
 
 export type TourAction =
@@ -21,18 +26,50 @@ export type TourAction =
   | { type: 'time-rate'; rate: number }
   /** Absolute Unix ms, or 'now'. */
   | { type: 'time-jump'; ms: number | 'now' }
+  /**
+   * Jump the clock forward (within `windowHours`, default 12) to the first moment when the angle at `anchorId`
+   * between `satelliteId` and the Sun is `sunAngleDeg`: e.g. a moon on its planet's day side, so a camera behind
+   * the moon sees both sunlit with the planet looming beyond.
+   */
+  | { type: 'time-align'; anchorId: string; satelliteId: string; sunAngleDeg: number; windowHours?: number }
   | { type: 'lab'; lab: LabId | null; params?: Record<string, unknown> }
   | { type: 'select'; id: string | null }
+  /** Exhibition (enlarged for visibility) or true scale. */
+  | { type: 'visual-scale'; mode: VisualScaleMode }
+  /** Pause the step (real ms), e.g. to reveal a second view after the visitor has taken in the first. */
+  | { type: 'wait'; ms: number }
   /** Orbit-frame the anchor from above the ecliptic: elevation and azimuth (ecliptic longitude) in degrees. */
-  | { type: 'view-from'; anchorId: string; distanceM: number; elevationDeg: number; azimuthDeg: number; durationSec?: number };
+  | { type: 'view-from'; anchorId: string; distanceM: number; elevationDeg: number; azimuthDeg: number; durationSec?: number }
+  /**
+   * Orbit-frame the anchor at a Sun–body–camera phase angle (degrees, measured in the ecliptic plane, `side`
+   * picks the east (+1) or west (−1) limb) and an elevation above the body's ecliptic plane. 0° = full disc,
+   * 50–70° = the lit gibbous approach of VISUAL_DIRECTION, 150° = backlit crescent.
+   */
+  | { type: 'view-phase'; anchorId: string; distanceM: number; phaseDeg: number; elevationDeg?: number; side?: 1 | -1; durationSec?: number }
+  /**
+   * Orbit-frame the anchor from the direction of another entity (or from the opposite side with `away`, which
+   * puts `towardId` behind the anchor). `sunwardDeg` then turns that line up to this many degrees toward the Sun, so
+   * the anchor's lit side faces the camera; `azimuthOffsetDeg` / `elevationOffsetDeg` swing the camera off the result.
+   */
+  | {
+      type: 'view-toward'; anchorId: string; towardId: string; distanceM: number; away?: boolean; sunwardDeg?: number;
+      azimuthOffsetDeg?: number; elevationOffsetDeg?: number; durationSec?: number;
+    }
+  /**
+   * Orbit-frame the anchor looking down the orbit normal of `satelliteId` around it (both bodies and the
+   * satellite's orbit in view), tipped `tiltDeg` toward the Sun so the sunlit hemisphere faces the camera.
+   */
+  | { type: 'view-orbit-normal'; anchorId: string; satelliteId: string; distanceM: number; tiltDeg?: number; durationSec?: number };
 
 export interface TourStep {
   id: string;
   title: string;
-  /** One to three sentences of plain-language narration (plain text, never HTML). */
+  /** Two to four short sentences of plain-language narration (plain text, never HTML). */
   narration: string;
   /** Order of magnitude shown as the chapter index ("10⁷ m"), per VISUAL_DIRECTION; optional. */
   scaleLog10?: number;
+  /** Presenter hint in small type, e.g. "Drag to orbit Earth". */
+  hint?: string;
   actions: TourAction[];
   /** Await camera travel before running the following actions. */
   waitForTravel?: boolean;
@@ -42,6 +79,8 @@ export interface Tour {
   id: string;
   title: string;
   description: string;
+  /** Actions run at the start of every step (each step then sets what it needs on top). */
+  baseline?: TourAction[];
   steps: TourStep[];
 }
 
@@ -64,7 +103,10 @@ export interface TourRunner {
   exit(): void;
 }
 
-const OBLIQUITY_J2000_RAD = (23.439281 * Math.PI) / 180;
+const DEG = Math.PI / 180;
+const OBLIQUITY_J2000_RAD = 23.439281 * DEG;
+const COS_E = Math.cos(OBLIQUITY_J2000_RAD);
+const SIN_E = Math.sin(OBLIQUITY_J2000_RAD);
 const _x = new THREE.Vector3();
 const _y = new THREE.Vector3();
 const _z = new THREE.Vector3();
@@ -72,19 +114,34 @@ const _n = new THREE.Vector3();
 const _m = new THREE.Matrix4();
 const _q = new THREE.Quaternion();
 
-/** Camera view looking at `anchorId` from the given ecliptic elevation/azimuth (ICRS axes), ecliptic north up. */
-export function eclipticViewFrom(anchorId: string, distanceM: number, elevationDeg: number, azimuthDeg: number): CameraViewState {
-  const el = (elevationDeg * Math.PI) / 180;
-  const az = (azimuthDeg * Math.PI) / 180;
-  const ce = Math.cos(OBLIQUITY_J2000_RAD);
-  const se = Math.sin(OBLIQUITY_J2000_RAD);
+/** Unit vector (ICRS) for an ecliptic longitude/latitude in radians. */
+function eclipticToIcrs(azRad: number, elRad: number, out: THREE.Vector3): THREE.Vector3 {
+  const xe = Math.cos(elRad) * Math.cos(azRad);
+  const ye = Math.cos(elRad) * Math.sin(azRad);
+  const ze = Math.sin(elRad);
   // Ecliptic → ICRS: rotate about +X by the obliquity.
-  const xe = Math.cos(el) * Math.cos(az);
-  const ye = Math.cos(el) * Math.sin(az);
-  const ze = Math.sin(el);
-  _z.set(xe, ye * ce - ze * se, ye * se + ze * ce); // camera +Z points away from the target
-  _n.set(0, -se, ce); // ecliptic north
-  _x.crossVectors(_n, _z).normalize();
+  return out.set(xe, ye * COS_E - ze * SIN_E, ye * SIN_E + ze * COS_E);
+}
+
+/** Ecliptic longitude/latitude (radians) of an ICRS direction. */
+function icrsToEcliptic(v: THREE.Vector3): { az: number; el: number } {
+  const len = v.length() || 1;
+  const xe = v.x / len;
+  const ye = (v.y * COS_E + v.z * SIN_E) / len;
+  const ze = (-v.y * SIN_E + v.z * COS_E) / len;
+  return { az: Math.atan2(ye, xe), el: Math.asin(Math.max(-1, Math.min(1, ze))) };
+}
+
+/**
+ * Camera view looking at `anchorId` from `dir` (unit vector from the anchor toward the camera, ICRS axes),
+ * ecliptic north up on screen.
+ */
+export function viewAlong(anchorId: string, distanceM: number, dir: THREE.Vector3): CameraViewState {
+  _z.copy(dir).normalize(); // camera +Z points away from the target
+  _n.set(0, -SIN_E, COS_E); // ecliptic north
+  _x.crossVectors(_n, _z);
+  if (_x.lengthSq() < 1e-8) _x.set(1, 0, 0); // looking straight down the ecliptic pole
+  _x.normalize();
   _y.crossVectors(_z, _x);
   _q.setFromRotationMatrix(_m.makeBasis(_x, _y, _z));
   return {
@@ -97,15 +154,120 @@ export function eclipticViewFrom(anchorId: string, distanceM: number, elevationD
   };
 }
 
+/** Camera view looking at `anchorId` from the given ecliptic elevation/azimuth (ICRS axes), ecliptic north up. */
+export function eclipticViewFrom(anchorId: string, distanceM: number, elevationDeg: number, azimuthDeg: number): CameraViewState {
+  return viewAlong(anchorId, distanceM, eclipticToIcrs(azimuthDeg * DEG, elevationDeg * DEG, new THREE.Vector3()));
+}
+
+/** Resolves entity positions for the geometry-aware views. */
+export type TourPositionSource = (id: string, timeMs: number, out: THREE.Vector3) => boolean;
+
+/**
+ * Direction (unit, ICRS, from the anchor toward the camera) for a 'view-phase' / 'view-toward' /
+ * 'view-orbit-normal' action at `timeMs`, or null when a body cannot be resolved.
+ */
+export function tourViewDirection(
+  action: Extract<TourAction, { type: 'view-phase' | 'view-toward' | 'view-orbit-normal' }>,
+  timeMs: number,
+  position: TourPositionSource,
+  out: THREE.Vector3,
+): THREE.Vector3 | null {
+  const a = new THREE.Vector3();
+  const b = new THREE.Vector3();
+  if (!position(action.anchorId, timeMs, a)) return null;
+  switch (action.type) {
+    case 'view-phase': {
+      if (!position('sol:sun', timeMs, b)) b.set(0, 0, 0);
+      const toSun = icrsToEcliptic(b.sub(a));
+      const side = action.side ?? 1;
+      return eclipticToIcrs(toSun.az + side * action.phaseDeg * DEG, (action.elevationDeg ?? 0) * DEG, out);
+    }
+    case 'view-toward': {
+      if (!position(action.towardId, timeMs, b)) return null;
+      b.sub(a);
+      if (action.away) b.negate();
+      b.normalize();
+      if (action.sunwardDeg) {
+        const s = new THREE.Vector3();
+        if (!position('sol:sun', timeMs, s)) s.set(0, 0, 0);
+        s.sub(a).normalize();
+        const angle = Math.acos(Math.max(-1, Math.min(1, b.dot(s))));
+        const axis = new THREE.Vector3().crossVectors(b, s);
+        if (axis.lengthSq() > 1e-12) b.applyAxisAngle(axis.normalize(), Math.min(angle, action.sunwardDeg * DEG));
+      }
+      const d = icrsToEcliptic(b);
+      return eclipticToIcrs(d.az + (action.azimuthOffsetDeg ?? 0) * DEG, d.el + (action.elevationOffsetDeg ?? 0) * DEG, out);
+    }
+    case 'view-orbit-normal': {
+      // Orbit normal from two satellite positions ten minutes apart (relative to the anchor at each time).
+      const dtMs = 600_000;
+      const a2 = new THREE.Vector3();
+      const r1 = new THREE.Vector3();
+      const r2 = new THREE.Vector3();
+      if (!position(action.satelliteId, timeMs, r1) || !position(action.anchorId, timeMs + dtMs, a2) || !position(action.satelliteId, timeMs + dtMs, r2)) return null;
+      r1.sub(a);
+      r2.sub(a2);
+      const n = out.crossVectors(r1, r2);
+      if (n.lengthSq() === 0) return null;
+      n.normalize();
+      if (!position('sol:sun', timeMs, b)) b.set(0, 0, 0);
+      const s = b.sub(a).normalize();
+      if (n.dot(s) < 0) n.negate(); // the pole that faces the Sun
+      const perp = s.addScaledVector(n, -s.dot(n));
+      const tilt = (action.tiltDeg ?? 0) * DEG;
+      if (perp.lengthSq() > 1e-12 && tilt !== 0) n.multiplyScalar(Math.cos(tilt)).addScaledVector(perp.normalize(), Math.sin(tilt));
+      return n.normalize();
+    }
+  }
+}
+
+/**
+ * First time in [fromMs, fromMs + windowMs] (2-minute samples) when the angle at the anchor between the satellite
+ * and the Sun comes within 1.5° of `targetDeg`; else the sample closest to it. Null when a body cannot be resolved.
+ */
+export function findAlignmentTime(
+  anchorId: string, satelliteId: string, targetDeg: number, fromMs: number, windowMs: number, position: TourPositionSource,
+): number | null {
+  const a = new THREE.Vector3();
+  const s = new THREE.Vector3();
+  const sun = new THREE.Vector3();
+  let best: number | null = null;
+  let bestErr = Infinity;
+  for (let t = fromMs; t <= fromMs + windowMs; t += 120_000) {
+    if (!position(anchorId, t, a) || !position(satelliteId, t, s)) return null;
+    if (!position('sol:sun', t, sun)) sun.set(0, 0, 0);
+    const err = Math.abs(s.sub(a).angleTo(sun.sub(a)) / DEG - targetDeg);
+    if (err < 1.5) return t;
+    if (err < bestErr) { bestErr = err; best = t; }
+  }
+  return best;
+}
+
 export function createTourRunner(opts: {
   store: CosmosStore;
   commands: () => TourCommands;
   setView?: (view: CameraViewState, travel?: TravelOptions) => Promise<void>;
+  /** Entity lookup for the geometry-aware views ('view-phase', 'view-toward', 'view-orbit-normal'). */
+  registry?: Pick<EntityRegistry, 'get'>;
 }): TourRunner {
   const tours = new Map<string, Tour>();
   let active: Tour | null = null;
   let stepIndex = 0;
   let runToken = 0;
+  /** What the visitor had before the tour, restored on exit. */
+  let before: { visualScale: VisualScaleMode; band: SpectralBandId } | null = null;
+  const dir = new THREE.Vector3();
+
+  const position: TourPositionSource = (id, timeMs, out) => {
+    const e = opts.registry?.get(id);
+    if (!e) return false;
+    try {
+      e.position(timeMs, out);
+    } catch {
+      return false;
+    }
+    return Number.isFinite(out.x) && Number.isFinite(out.y) && Number.isFinite(out.z);
+  };
 
   const publish = (): void => {
     opts.store.setState({
@@ -113,21 +275,18 @@ export function createTourRunner(opts: {
     });
   };
 
+  const settle = (p: Promise<void>, wait: boolean): Promise<void> | void => {
+    if (wait) return p;
+    p.catch(() => undefined);
+  };
+
   const runAction = async (action: TourAction, wait: boolean): Promise<void> => {
     const c = opts.commands();
     switch (action.type) {
-      case 'focus': {
-        const p = c.focus(action.id, action.options);
-        if (wait) await p;
-        else p.catch(() => undefined);
-        return;
-      }
-      case 'travel': {
-        const p = c.travelTo(action.id, action.options);
-        if (wait) await p;
-        else p.catch(() => undefined);
-        return;
-      }
+      case 'focus':
+        return settle(c.focus(action.id, action.options), wait);
+      case 'travel':
+        return settle(c.travelTo(action.id, action.options), wait);
       case 'scale':
         c.setScale(action.scaleLog10, { animate: action.animate ?? true });
         return;
@@ -144,6 +303,12 @@ export function createTourRunner(opts: {
         if (action.ms === 'now') c.timeToNow();
         else c.jumpToTime(action.ms);
         return;
+      case 'time-align': {
+        const t = findAlignmentTime(action.anchorId, action.satelliteId, action.sunAngleDeg, opts.store.getState().time.simTimeMs,
+          (action.windowHours ?? 12) * 3_600_000, position);
+        if (t !== null) c.jumpToTime(t);
+        return;
+      }
       case 'lab':
         if (action.lab) c.openLab(action.lab, action.params);
         else c.closeLab();
@@ -151,12 +316,26 @@ export function createTourRunner(opts: {
       case 'select':
         c.select(action.id);
         return;
-      case 'view-from': {
-        if (!opts.setView) return;
-        const p = opts.setView(eclipticViewFrom(action.anchorId, action.distanceM, action.elevationDeg, action.azimuthDeg), { durationSec: action.durationSec });
-        if (wait) await p;
-        else p.catch(() => undefined);
+      case 'visual-scale':
+        if (opts.store.getState().visualScale !== action.mode) setVisualScale(opts.store, action.mode);
         return;
+      case 'wait':
+        await new Promise<void>(resolve => setTimeout(resolve, Math.max(0, action.ms)));
+        return;
+      case 'view-from':
+        if (!opts.setView) return;
+        return settle(opts.setView(eclipticViewFrom(action.anchorId, action.distanceM, action.elevationDeg, action.azimuthDeg), { durationSec: action.durationSec }), wait);
+      case 'view-phase':
+      case 'view-toward':
+      case 'view-orbit-normal': {
+        const t = opts.store.getState().time.simTimeMs;
+        const d = tourViewDirection(action, t, position, dir);
+        if (!d) {
+          // Geometry unavailable (entity not registered yet): fall back to the entity's own approach view.
+          return settle(c.focus(action.anchorId, { distanceM: action.distanceM, durationSec: action.durationSec }), wait);
+        }
+        if (!opts.setView) return;
+        return settle(opts.setView(viewAlong(action.anchorId, action.distanceM, d), { durationSec: action.durationSec }), wait);
       }
     }
   };
@@ -166,7 +345,8 @@ export function createTourRunner(opts: {
     const token = ++runToken;
     const step = active.steps[stepIndex];
     publish();
-    for (const action of step.actions) {
+    const actions = active.baseline ? [...active.baseline, ...step.actions] : step.actions;
+    for (const action of actions) {
       if (token !== runToken) return;
       try {
         await runAction(action, !!step.waitForTravel);
@@ -194,6 +374,10 @@ export function createTourRunner(opts: {
     start(id: string): boolean {
       const tour = tours.get(id);
       if (!tour) return false;
+      if (!active) {
+        const s = opts.store.getState();
+        before = { visualScale: s.visualScale, band: s.spectral.band };
+      }
       active = tour;
       goTo(0);
       return true;
@@ -211,205 +395,19 @@ export function createTourRunner(opts: {
     },
     exit(): void {
       runToken++;
+      const wasActive = active !== null;
       active = null;
       stepIndex = 0;
       publish();
+      if (wasActive && before) {
+        if (opts.store.getState().visualScale !== before.visualScale) setVisualScale(opts.store, before.visualScale);
+        if (opts.store.getState().spectral.band !== before.band) opts.commands().setSpectralBand(before.band);
+        opts.commands().setTimeRate(1);
+      }
+      before = null;
     },
   };
 }
 
-/**
- * TEMPORARY demo tour over the placeholder entities (sol:earth, sol:moon, sol:sun). The real golden-journey
- * content replaces it once the domains land.
- */
-export const GOLDEN_JOURNEY_PREVIEW: Tour = {
-  id: 'golden-journey-preview',
-  title: 'Golden journey preview',
-  description: 'A short preview of the route from Earth outward, using the temporary placeholder bodies.',
-  steps: [
-    {
-      id: 'earth',
-      title: 'Earth',
-      narration: 'Our home planet, lit by the Sun from its real direction at the current date.',
-      scaleLog10: 7,
-      waitForTravel: true,
-      actions: [{ type: 'time-rate', rate: 1 }, { type: 'focus', id: 'sol:earth' }],
-    },
-    {
-      id: 'moon',
-      title: 'Moon',
-      narration: 'The Moon orbits about 384,400 km away, roughly thirty Earth diameters.',
-      scaleLog10: 8.6,
-      waitForTravel: true,
-      actions: [{ type: 'focus', id: 'sol:moon' }],
-    },
-    {
-      id: 'earth-moon',
-      title: 'Earth and Moon',
-      narration: 'Zoomed out, the Earth–Moon system fits in a field about a million kilometres wide.',
-      scaleLog10: 9,
-      actions: [{ type: 'select', id: 'sol:earth' }, { type: 'scale', scaleLog10: 9.1 }],
-    },
-    {
-      id: 'sun',
-      title: 'Sun',
-      narration: 'The Sun holds 99.86 % of the Solar System’s mass. Light from it reaches Earth in about 8 minutes 20 seconds.',
-      scaleLog10: 10,
-      waitForTravel: true,
-      actions: [{ type: 'travel', id: 'sol:sun' }, { type: 'select', id: 'sol:sun' }],
-    },
-  ],
-};
-
-const SATURN_RINGS_OPEN_MS = Date.UTC(2017, 4, 1, 12); // rings near maximum tilt (~26.6°), Cassini Grand Finale year
-
-/**
- * Exhibition chapter 1–3: Earth → Moon → Sun → planets → the edge of the Solar System. True sizes and distances;
- * camera framing comes from each entity's inspect view (0.60 W, 50–70° phase).
- */
-export const SOLAR_SYSTEM_TOUR: Tour = {
-  id: 'solar-system',
-  title: 'The Solar System',
-  description: 'From the blue marble out past Pluto to Voyager 1, every body at its real size, place and lighting today.',
-  steps: [
-    {
-      id: 'earth',
-      title: 'Earth',
-      narration: 'Earth as it is right now: the Sun lights it from its true direction, and the night side glows with city lights.',
-      scaleLog10: 7,
-      waitForTravel: true,
-      actions: [
-        { type: 'time-jump', ms: 'now' },
-        { type: 'time-rate', rate: 1 },
-        { type: 'overlay', id: 'orbits', on: true },
-        { type: 'select', id: 'sol:earth' },
-        { type: 'focus', id: 'sol:earth' },
-      ],
-    },
-    {
-      id: 'moon',
-      title: 'The Moon',
-      narration: 'The Moon is a dark world, about as reflective as worn asphalt. On its night side, faint earthshine lights the ground.',
-      scaleLog10: 6.5,
-      waitForTravel: true,
-      actions: [{ type: 'select', id: 'sol:moon' }, { type: 'focus', id: 'sol:moon' }],
-    },
-    {
-      id: 'earth-moon',
-      title: 'Earth and Moon',
-      narration: 'The Moon orbits about 384,400 km away. Thirty Earths would fit in the gap.',
-      scaleLog10: 9,
-      actions: [{ type: 'select', id: 'sol:earth' }, { type: 'focus', id: 'sol:earth', options: { distanceM: 1.1e9 } }],
-      waitForTravel: true,
-    },
-    {
-      id: 'sun',
-      title: 'The Sun',
-      narration: 'The Sun holds 99.86 % of the Solar System’s mass. Its light takes 8 minutes 20 seconds to reach Earth.',
-      scaleLog10: 9.5,
-      waitForTravel: true,
-      actions: [{ type: 'select', id: 'sol:sun' }, { type: 'focus', id: 'sol:sun' }],
-    },
-    {
-      id: 'inner-system',
-      title: 'The inner planets',
-      narration: 'Mercury, Venus, Earth and Mars circle close to the Sun. Beyond them lies the main asteroid belt.',
-      scaleLog10: 11.8,
-      actions: [
-        { type: 'overlay', id: 'asteroids', on: true },
-        { type: 'select', id: 'sol:sun' },
-        { type: 'view-from', anchorId: 'sol:sun', distanceM: 6.5e11, elevationDeg: 38, azimuthDeg: 200 },
-      ],
-    },
-    {
-      id: 'mars',
-      title: 'Mars',
-      narration: 'Mars has the largest volcano in the Solar System, Olympus Mons, and a canyon, Valles Marineris, as long as the United States is wide.',
-      scaleLog10: 7,
-      waitForTravel: true,
-      actions: [{ type: 'select', id: 'sol:mars' }, { type: 'focus', id: 'sol:mars' }],
-    },
-    {
-      id: 'jupiter-system',
-      title: 'Jupiter and its moons',
-      narration: 'Io, Europa and Ganymede strung out beside Jupiter, as Galileo first saw them in 1610. Europa hides an ocean under its ice.',
-      scaleLog10: 9.3,
-      waitForTravel: true,
-      actions: [{ type: 'select', id: 'sol:jupiter' }, { type: 'focus', id: 'sol:jupiter', options: { distanceM: 2.6e9 } }],
-    },
-    {
-      id: 'jupiter',
-      title: 'Jupiter',
-      narration: 'Jupiter is eleven Earths wide. Its belts and zones are clouds of ammonia ice, and the Great Red Spot is a storm larger than Earth.',
-      scaleLog10: 8.2,
-      waitForTravel: true,
-      actions: [{ type: 'focus', id: 'sol:jupiter' }],
-    },
-    {
-      id: 'saturn',
-      title: 'Saturn in 2017',
-      narration: 'In 2017, when Cassini made its final dives, Saturn’s rings were tilted wide open. The planet casts its shadow across them.',
-      scaleLog10: 8.5,
-      waitForTravel: true,
-      actions: [
-        { type: 'time-jump', ms: SATURN_RINGS_OPEN_MS },
-        { type: 'select', id: 'sol:saturn' },
-        { type: 'focus', id: 'sol:saturn' },
-      ],
-    },
-    {
-      id: 'saturn-today',
-      title: 'Saturn today',
-      narration: 'Today the rings are nearly edge-on to the Sun and to us. They are hundreds of thousands of kilometres wide but mostly only about ten metres thick.',
-      scaleLog10: 8.5,
-      actions: [{ type: 'time-jump', ms: 'now' }],
-    },
-    {
-      id: 'titan',
-      title: 'Titan',
-      narration: 'Titan, Saturn’s largest moon, is wrapped in a thick orange haze. Beneath it lie lakes of liquid methane.',
-      scaleLog10: 6.9,
-      waitForTravel: true,
-      actions: [{ type: 'select', id: 'sol:titan' }, { type: 'focus', id: 'sol:titan' }],
-    },
-    {
-      id: 'uranus',
-      title: 'Uranus',
-      narration: 'Uranus rolls around the Sun on its side, tilted 98 degrees. Methane gas gives it a pale cyan colour.',
-      scaleLog10: 7.8,
-      waitForTravel: true,
-      actions: [{ type: 'select', id: 'sol:uranus' }, { type: 'focus', id: 'sol:uranus' }],
-    },
-    {
-      id: 'neptune',
-      title: 'Neptune',
-      narration: 'Neptune, thirty times farther from the Sun than Earth, has the fastest winds measured on any planet: up to 2,100 km/h.',
-      scaleLog10: 7.8,
-      waitForTravel: true,
-      actions: [{ type: 'select', id: 'sol:neptune' }, { type: 'focus', id: 'sol:neptune' }],
-    },
-    {
-      id: 'pluto',
-      title: 'Pluto and Charon',
-      narration: 'Pluto and its moon Charon, mapped by New Horizons in 2015. Charon is so large that the pair orbit a point in the space between them.',
-      scaleLog10: 7.6,
-      waitForTravel: true,
-      actions: [{ type: 'select', id: 'sol:pluto' }, { type: 'focus', id: 'sol:pluto', options: { distanceM: 6e7 } }],
-    },
-    {
-      id: 'voyager-1',
-      title: 'Voyager 1',
-      narration: 'Launched in 1977, Voyager 1 is now about 170 times farther from the Sun than Earth, the most distant human-made object.',
-      scaleLog10: 2,
-      waitForTravel: true,
-      actions: [{ type: 'select', id: 'sc:voyager-1' }, { type: 'focus', id: 'sc:voyager-1' }],
-    },
-    {
-      id: 'heliosphere',
-      title: 'The whole Solar System',
-      narration: 'From here the Sun is just the brightest star. Its planets fit inside Neptune’s orbit, 60 AU across.',
-      scaleLog10: 13.4,
-      actions: [{ type: 'select', id: 'sol:sun' }, { type: 'scale', scaleLog10: 13.4 }],
-    },
-  ],
-};
+export { SOLAR_SYSTEM_TOUR, GOLDEN_JOURNEY } from '../content/tours/solarSystem';
+export { QUICK_TOUR } from '../content/tours/quick';
