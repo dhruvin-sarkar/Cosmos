@@ -1,0 +1,227 @@
+{
+ "version": 1,
+ "generated": "2026-10-18T16:56:24.646Z",
+ "convention": "Equirectangular 2:1, x=0 at 180W, east-positive, y=0 at 90N (same as index.json). Colour maps sRGB; normals linear OpenGL tangent-space. Paths relative to public/.",
+ "bodies": {
+  "moon": {
+   "sources": [
+    {
+     "map": "color",
+     "name": "NASA SVS CGI Moon Kit (a004720) lroc_color_poles_8k: LRO LROC WAC normalized-reflectance mosaic + Kaguya poles; poleward of ~65 deg blended with the Solar System Scope 8k Moon (CC BY 4.0) to hide the flat polar fill",
+     "url": "https://svs.gsfc.nasa.gov/4720/",
+     "license": "public domain (NASA/GSFC/SVS); polar band CC BY 4.0 Solar System Scope",
+     "retrieved": "2026-10-18"
+    },
+    {
+     "map": "normal",
+     "name": "LRO LOLA LDEM_64 (64 px/deg, int16 x0.5 m, vs 1737.4 km sphere)",
+     "url": "https://imbrium.mit.edu/DATA/LOLA_GDR/CYLINDRICAL/IMG/LDEM_64.IMG",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-18"
+    }
+   ],
+   "color": {
+    "8k": "textures/moon/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 5991049,
+    "normal_4k": 6840941,
+    "normal_2k": 1772588
+   },
+   "albedo": {
+    "meanLinear": 0.12,
+    "note": "Map is albedo-calibrated: mean linear luminance (|lat|<60) equals this physical mean albedo; do not scale again in the material. Colour = sRGB."
+   },
+   "normal": {
+    "4k": "textures/moon/normal_hd_4k.png",
+    "2k": "textures/moon/normal_hd_2k.png"
+   },
+   "normalInfo": {
+    "convention": "OpenGL tangent space (R=+east, G=+north, B=up), linear data, PNG",
+    "exaggeration": 2.5,
+    "heightRangeM": [
+     -9114.5,
+     10757
+    ],
+    "note": "LRO LOLA (NASA/GSFC) LDEM_64, public domain. Slopes x2.5 exaggerated; box-filtered to 4096x2048 (2.7 km/px) and 2048x1024."
+   },
+   "license": "CC BY 4.0 - Solar System Scope (https://www.solarsystemscope.com/textures/), attribution required; elevation data public domain",
+   "source": "NASA SVS CGI Moon Kit (a004720) lroc_color_poles_8k: LRO LROC WAC normalized-reflectance mosaic + Kaguya poles; poleward of ~65 deg blended with the Solar System Scope 8k Moon (CC BY 4.0) to hide the flat polar fill | LRO LOLA LDEM_64 (64 px/deg, int16 x0.5 m, vs 1737.4 km sphere)"
+  },
+  "mercury": {
+   "sources": [
+    {
+     "map": "color",
+     "name": "Solar System Scope 8k Mercury (derived from MESSENGER MDIS imagery), albedo-calibrated",
+     "url": "https://www.solarsystemscope.com/textures/",
+     "license": "CC BY 4.0 Solar System Scope",
+     "retrieved": "2026-10-18"
+    },
+    {
+     "map": "normal",
+     "name": "MESSENGER USGS Global DEM 665 m v2 (64 px/deg, int16 metres)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mercury_Messenger_USGS_DEM_Global_665m_v2.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-18"
+    }
+   ],
+   "color": {
+    "8k": "textures/mercury/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 9250682,
+    "normal_4k": 6777445,
+    "normal_2k": 1819317
+   },
+   "albedo": {
+    "meanLinear": 0.11,
+    "note": "Map is albedo-calibrated: mean linear luminance (|lat|<60) equals this physical mean albedo; do not scale again in the material. Colour = sRGB."
+   },
+   "normal": {
+    "4k": "textures/mercury/normal_hd_4k.png",
+    "2k": "textures/mercury/normal_hd_2k.png"
+   },
+   "normalInfo": {
+    "convention": "OpenGL tangent space (R=+east, G=+north, B=up), linear data, PNG",
+    "exaggeration": 3,
+    "heightRangeM": [
+     -10756.1123046875,
+     8958.77734375
+    ],
+    "note": "MESSENGER USGS Global DEM 665 m v2 (USGS Astrogeology), public domain. Slopes x3 exaggerated. Source DEM has residual noise near the poles."
+   },
+   "license": "CC BY 4.0 - Solar System Scope (https://www.solarsystemscope.com/textures/), attribution required; elevation data public domain",
+   "source": "Solar System Scope 8k Mercury (derived from MESSENGER MDIS imagery), albedo-calibrated | MESSENGER USGS Global DEM 665 m v2 (64 px/deg, int16 metres)"
+  },
+  "mars": {
+   "sources": [
+    {
+     "map": "color",
+     "name": "Solar System Scope 8k Mars (derived from Viking/MGS imagery), desaturated x0.62 toward Viking/HST colour and albedo-calibrated",
+     "url": "https://www.solarsystemscope.com/textures/",
+     "license": "CC BY 4.0 Solar System Scope",
+     "retrieved": "2026-10-18"
+    },
+    {
+     "map": "normal",
+     "name": "MGS MOLA MEGDR megt90n000eb (16 px/deg, int16 metres)",
+     "url": "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg016/megt90n000eb.img",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-18"
+    }
+   ],
+   "color": {
+    "8k": "textures/mars/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 5602273,
+    "normal_4k": 6351562,
+    "normal_2k": 1549496
+   },
+   "albedo": {
+    "meanLinear": 0.18,
+    "note": "Map is albedo-calibrated: mean linear luminance (|lat|<60) equals this physical mean albedo; do not scale again in the material. Colour = sRGB."
+   },
+   "normal": {
+    "4k": "textures/mars/normal_hd_4k.png",
+    "2k": "textures/mars/normal_hd_2k.png"
+   },
+   "normalInfo": {
+    "convention": "OpenGL tangent space (R=+east, G=+north, B=up), linear data, PNG",
+    "exaggeration": 4,
+    "heightRangeM": [
+     -8177,
+     21171
+    ],
+    "note": "MGS MOLA MEGDR 16 ppd (NASA/GSFC), public domain. Slopes x4 exaggerated (Mars relief is gentle at 5 km/px)."
+   },
+   "license": "CC BY 4.0 - Solar System Scope (https://www.solarsystemscope.com/textures/), attribution required; elevation data public domain",
+   "source": "Solar System Scope 8k Mars (derived from Viking/MGS imagery), desaturated x0.62 toward Viking/HST colour and albedo-calibrated | MGS MOLA MEGDR megt90n000eb (16 px/deg, int16 metres)"
+  },
+  "venus": {
+   "sources": [
+    {
+     "map": "surface",
+     "name": "Solar System Scope 8k Venus surface (Magellan SAR-derived, colourised; illustrative, hidden beneath the cloud deck)",
+     "url": "https://www.solarsystemscope.com/textures/",
+     "license": "CC BY 4.0 Solar System Scope",
+     "retrieved": "2026-10-18"
+    }
+   ],
+   "surface": {
+    "8k": "textures/venus/surface_8k.jpg"
+   },
+   "bytes": {
+    "surface_8k": 8433261
+   },
+   "albedo": {
+    "meanLinear": 0.274,
+    "note": "Map is albedo-calibrated: mean linear luminance (|lat|<60) equals this physical mean albedo; do not scale again in the material. Colour = sRGB."
+   },
+   "license": "CC BY 4.0 - Solar System Scope (https://www.solarsystemscope.com/textures/), attribution required; elevation data public domain",
+   "source": "Solar System Scope 8k Venus surface (Magellan SAR-derived, colourised; illustrative, hidden beneath the cloud deck)"
+  },
+  "jupiter": {
+   "sources": [
+    {
+     "map": "color",
+     "name": "Solar System Scope 8k Jupiter (Cassini/Juno-derived, illustrative)",
+     "url": "https://www.solarsystemscope.com/textures/",
+     "license": "CC BY 4.0 Solar System Scope",
+     "retrieved": "2026-10-18"
+    }
+   ],
+   "color": {
+    "8k": "textures/jupiter/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 3080980
+   },
+   "license": "CC BY 4.0 - Solar System Scope (https://www.solarsystemscope.com/textures/), attribution required; elevation data public domain",
+   "source": "Solar System Scope 8k Jupiter (Cassini/Juno-derived, illustrative)"
+  },
+  "saturn": {
+   "sources": [
+    {
+     "map": "color",
+     "name": "Solar System Scope 8k Saturn (Cassini-derived, illustrative)",
+     "url": "https://www.solarsystemscope.com/textures/",
+     "license": "CC BY 4.0 Solar System Scope",
+     "retrieved": "2026-10-18"
+    }
+   ],
+   "color": {
+    "8k": "textures/saturn/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 1098204
+   },
+   "license": "CC BY 4.0 - Solar System Scope (https://www.solarsystemscope.com/textures/), attribution required; elevation data public domain",
+   "source": "Solar System Scope 8k Saturn (Cassini-derived, illustrative)"
+  },
+  "earth": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "16k",
+     "name": "NASA Earth Observatory Blue Marble: Next Generation (Stockli, Simmon et al.), December 2004 MODIS composite incl. topography+bathymetry shading, 21600x10800 (500 m/px) resampled to 16384x8192 (lanczos3, JPEG q90 4:4:4)",
+     "url": "https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74218/world.200412.3x21600x10800.jpg",
+     "license": "public domain (NASA)",
+     "retrieved": "2026-10-18"
+    }
+   ],
+   "color": {
+    "16k": "textures/earth/day_16k.jpg"
+   },
+   "bytes": {
+    "color_16k": 13564461
+   },
+   "notes": {
+    "color_16k": "Ultra preset only: 16384x8192 RGBA8 + mips is ~715 MB VRAM - do not load on the 4 GB laptop unless nothing else large is resident. December composite carries Northern-Hemisphere seasonal snow (same as day_8k); a low-snow month was not available offline."
+   },
+   "license": "public domain (NASA)",
+   "source": "NASA Earth Observatory Blue Marble: Next Generation (Stockli, Simmon et al.), December 2004 MODIS composite incl. topography+bathymetry shading, 21600x10800 (500 m/px) resampled to 16384x8192 (lanczos3, JPEG q90 4:4:4)"
+  }
+ },
+ "generated2": "2026-10-18T20:04:50.057Z"
+}
