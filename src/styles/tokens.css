@@ -83,7 +83,9 @@
   /* ── Surfaces ──────────────────────────────────────────────────────────────────────────── */
   --column-w: 440px;
   --ruler-w: 160px;
-  --scrim-left: linear-gradient(90deg, oklch(0 0 0 / 0.88) 0, oklch(0 0 0 / 0.76) var(--column-w), oklch(0 0 0 / 0) calc(var(--column-w) + 200px));
+  /* Light enough that a bright body under the open inspector keeps its colour (max 0.55, gone by 380 px); the
+     inspector's type carries its own halo (hud.css) for legibility. */
+  --scrim-left: linear-gradient(90deg, oklch(0 0 0 / 0.55) 0, oklch(0 0 0 / 0.42) 240px, oklch(0 0 0 / 0.14) 330px, oklch(0 0 0 / 0) 380px);
   --scrim-right: linear-gradient(270deg, oklch(0 0 0 / 0.88) 0, oklch(0 0 0 / 0.76) var(--ruler-w), oklch(0 0 0 / 0) calc(var(--ruler-w) + 140px));
   --scrim-bottom: linear-gradient(0deg, oklch(0 0 0 / 0.7) 0, oklch(0 0 0 / 0.56) 40px, oklch(0 0 0 / 0.34) 84px, oklch(0 0 0 / 0.15) 124px, oklch(0 0 0 / 0.04) 156px, oklch(0 0 0 / 0) 180px);
   --scrim-top: linear-gradient(180deg, oklch(0 0 0 / 0.66) 0, oklch(0 0 0 / 0.5) 30px, oklch(0 0 0 / 0.28) 62px, oklch(0 0 0 / 0.11) 94px, oklch(0 0 0 / 0.03) 118px, oklch(0 0 0 / 0) 136px);

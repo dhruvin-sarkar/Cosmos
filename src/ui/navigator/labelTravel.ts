@@ -7,6 +7,8 @@
 import { useEffect } from 'react';
 import type { AppCommands } from '../../app/commands';
 import type { EntityKind, EntityRegistry } from '../../core/entity';
+import type { CosmosStore } from '../../state/store';
+import { focusFramed } from './framing';
 
 /** Labels that only name a region of the sky or a scale marker keep select-on-click. */
 const NO_TRAVEL: ReadonlySet<EntityKind> = new Set(['constellation', 'reference', 'region', 'cosmic-structure', 'void']);
@@ -16,7 +18,7 @@ function labelId(target: EventTarget | null): string | null {
   return el?.dataset.entityId ?? null;
 }
 
-export function useLabelTravel(commands: AppCommands, registry: EntityRegistry): void {
+export function useLabelTravel(commands: AppCommands, registry: EntityRegistry, store: CosmosStore): void {
   useEffect(() => {
     const onClick = (e: MouseEvent): void => {
       if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
@@ -29,7 +31,7 @@ export function useLabelTravel(commands: AppCommands, registry: EntityRegistry):
         kind = undefined;
       }
       if (!kind || NO_TRAVEL.has(kind)) return;
-      void commands.focus(id);
+      void focusFramed(commands, registry, store, id);
     };
     const onDblClick = (e: MouseEvent): void => {
       const id = labelId(e.target);

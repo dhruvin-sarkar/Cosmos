@@ -1,7 +1,8 @@
 import { useMemo, useRef } from 'react';
 import { Vector3 } from 'three';
 import type { Entity, EntityRegistry } from '../../core/entity';
-import { useCommands, useCosmos, useRegistry, useRegistryVersion, safeGetEntity } from '../hooks';
+import { useCosmos, useRegistry, useRegistryVersion, safeGetEntity } from '../hooks';
+import { useFocusFramed } from '../navigator/framing';
 import { useUiExtensions } from '../context';
 import { cx, useElementWidth } from '../lib/dom';
 import { MoonStrip } from '../navigator/MoonStrip';
@@ -46,7 +47,7 @@ export function BodyStrip() {
   const registry = useRegistry();
   const version = useRegistryVersion();
   const ext = useUiExtensions();
-  const commands = useCommands();
+  const focus = useFocusFramed();
   const focusId = useCosmos(s => s.selection.id ?? s.camera.focusId);
   const dayMs = useCosmos(s => Math.floor(s.time.simTimeMs / DAY_MS) * DAY_MS);
   const trackRef = useRef<HTMLOListElement | null>(null);
@@ -93,7 +94,7 @@ export function BodyStrip() {
   return (
     <nav className="cx-strip" aria-label="Bodies in this system">
       <MoonStrip />
-      <button type="button" className="cx-strip__step" disabled={!prev} onClick={() => prev && void commands.focus(prev.entity.id)} aria-label={prev ? `Previous: ${prev.entity.name}` : 'No previous body'}>
+      <button type="button" className="cx-strip__step" disabled={!prev} onClick={() => prev && void focus(prev.entity.id)} aria-label={prev ? `Previous: ${prev.entity.name}` : 'No previous body'}>
         {prev ? `‹ ${prev.entity.name}` : ''}
       </button>
       <ol ref={trackRef} className="cx-strip__track">
@@ -104,14 +105,14 @@ export function BodyStrip() {
               type="button"
               className={cx('cx-strip__body', i === focusIndex && 'is-focus')}
               aria-current={i === focusIndex ? 'true' : undefined}
-              onClick={() => void commands.focus(b.entity.id)}
+              onClick={() => void focus(b.entity.id)}
             >
               {b.entity.name}
             </button>
           </li>
         ))}
       </ol>
-      <button type="button" className="cx-strip__step cx-strip__step--next" disabled={!next} onClick={() => next && void commands.focus(next.entity.id)} aria-label={next ? `Next: ${next.entity.name}` : 'No next body'}>
+      <button type="button" className="cx-strip__step cx-strip__step--next" disabled={!next} onClick={() => next && void focus(next.entity.id)} aria-label={next ? `Next: ${next.entity.name}` : 'No next body'}>
         {next ? `${next.entity.name} ›` : ''}
       </button>
     </nav>

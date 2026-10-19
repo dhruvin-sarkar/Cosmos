@@ -200,6 +200,20 @@ export function stepPlanet(tree: SystemTree, focusId: string | null, dir: 1 | -1
   return list[Math.min(list.length - 1, Math.max(0, i + dir))].entity.id;
 }
 
+const GENERIC_TAIL = /\s+(space station|space telescope|telescope|observatory|spacecraft|probe)$/i;
+
+/**
+ * Moon-strip pill label for long names: drop a generic tail ("Hubble Space Telescope" → "Hubble"), else use an
+ * acronym alias ("International Space Station" → "ISS"), else the full name (CSS ellipsis + tooltip).
+ */
+export function pillLabel(e: Pick<Entity, 'name' | 'aliases'>, longName = 16): string {
+  if (e.name.length <= longName) return e.name;
+  const trimmed = e.name.replace(GENERIC_TAIL, '');
+  if (trimmed !== e.name && trimmed.length >= 2 && trimmed.length <= longName && !/^(International|European|Chinese)$/i.test(trimmed)) return trimmed;
+  const acronym = (e.aliases ?? []).find(a => /^[A-Za-z]{2,6}$/.test(a) && (a === a.toUpperCase() || a === a.toLowerCase()));
+  return acronym ? acronym.toUpperCase() : e.name;
+}
+
 /** Classification line in plain words (sentence case). */
 export function classify(e: Entity, parent?: Entity | null): string {
   switch (e.kind) {

@@ -8,7 +8,7 @@
   padding: 2px 12px;
   margin-right: 6px;
   border-radius: var(--r-pill);
-  background: transparent;
+  background: oklch(0.13 0 0 / 0.72); /* same plate as the search trigger: labels behind never garble the disclosure */
   color: var(--text-primary);
   font: var(--type-label);
   line-height: 1.15;

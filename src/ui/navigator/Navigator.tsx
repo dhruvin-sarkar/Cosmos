@@ -7,7 +7,7 @@ import { useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent } from 'rea
 import { X } from 'lucide-react';
 import type { Entity } from '../../core/entity';
 import { useAppContext, useUiExtensions } from '../context';
-import { useCommands, useInterval } from '../hooks';
+import { useInterval } from '../hooks';
 import { cx } from '../lib/dom';
 import { formatDistance, formatDuration } from '../format';
 import { Kbd } from '../components/Kbd';
@@ -16,6 +16,7 @@ import { classify, DIGIT_TARGETS, systemBodyOf, type NavBody } from './tree';
 import { setNavigatorOpen, useNavFocusId, useNavigatorOpen, useSystemTree, useThumbnail } from './state';
 import { useNavigatorShortcuts } from './keys';
 import { useLabelTravel } from './labelTravel';
+import { useFocusFramed } from './framing';
 import './navigator.css';
 
 const C = 299_792_458;
@@ -119,7 +120,7 @@ function moveFocus(root: HTMLElement, dir: 1 | -1): void {
 
 export function NavigatorPanel() {
   const open = useNavigatorOpen();
-  const commands = useCommands();
+  const focus = useFocusFramed();
   const tree = useSystemTree();
   const focusId = useNavFocusId();
   const tick = useInterval(500, open);
@@ -145,7 +146,7 @@ export function NavigatorPanel() {
 
   const go = (id: string): void => {
     setNavigatorOpen(false);
-    void commands.focus(id);
+    void focus(id);
   };
   const onKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>): void => {
     if (e.key === 'Escape') {
@@ -232,6 +233,6 @@ export function NavigatorButton() {
 export function NavigatorHost() {
   const { store, commands, registry } = useAppContext();
   useNavigatorShortcuts(store, commands, registry);
-  useLabelTravel(commands, registry);
+  useLabelTravel(commands, registry, store);
   return <NavigatorPanel />;
 }

@@ -244,6 +244,27 @@
   gap: 2px;
   overflow-x: auto;
   scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 24px;
+}
+.cx-moonstrip li {
+  flex: none;
+  scroll-snap-align: center;
+}
+/* Fade an edge that has more pills behind it, so a clipped pill reads as "scroll for more", not a cut-off name. */
+.cx-moonstrip ol.fade-left {
+  mask-image: linear-gradient(to right, transparent 0, #000 32px);
+}
+.cx-moonstrip ol.fade-right {
+  mask-image: linear-gradient(to left, transparent 0, #000 32px);
+}
+.cx-moonstrip ol.fade-left.fade-right {
+  mask-image: linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%);
+}
+.cx-moonstrip__name {
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .cx-moonstrip li.is-primary {
   padding-right: 6px;

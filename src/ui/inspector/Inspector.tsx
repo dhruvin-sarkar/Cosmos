@@ -272,6 +272,15 @@ function SectionBody({ q, entity, sheet, shown }: { q: InspectorSectionId; entit
   return <>{blocks}</>;
 }
 
+const CRAFT_KINDS = new Set<string>(['spacecraft', 'satellite', 'space-station', 'rocket-body', 'debris']);
+
+/** Disclaimer under the name of an illustrative entity: craft get a model note; others use the sheet's own description. */
+function illustrativeNote(kind: string, description: string | undefined): string {
+  if (CRAFT_KINDS.has(kind)) return 'Illustrative model at its real, tracked position (TLE/ephemeris); not to scale in detail.';
+  if (description) return `Illustrative: ${description.replace(/^illustrative:\s*/i, '')}`;
+  return 'Illustrative: no image of this object exists. Its look is generated from measured size and temperature.';
+}
+
 /**
  * The inspector plate (left reading column on the edge scrim): classification line led by a provenance-textured
  * rule, the name in Atlas, a lede, quick facts, then five sections: What, Where, How far, How do we know,
@@ -332,7 +341,7 @@ export function Inspector() {
       {illustrative && (
         <p className="cx-insp-illus">
           <ProvenanceGlyph kind="illustrative" />
-          Illustrative: no image of this object exists. Its look is generated from measured size and temperature.
+          {illustrativeNote(entity.kind, sheet?.representation.description)}
         </p>
       )}
       {lede ? <p className="cx-insp-lede">{lede}</p> : state.status === 'loading' ? <Skeleton lines={2} /> : null}

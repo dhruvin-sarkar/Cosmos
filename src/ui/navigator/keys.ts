@@ -8,8 +8,9 @@ import type { AppCommands } from '../../app/commands';
 import type { CosmosStore } from '../../state/store';
 import type { EntityRegistry } from '../../core/entity';
 import { isTypingTarget } from '../lib/dom';
-import { buildSystemTree, candidateEntities, DIGIT_TARGETS, stepPlanet, stepSatellite, type SystemTree } from './tree';
+import { DIGIT_TARGETS, stepPlanet, stepSatellite, type SystemTree } from './tree';
 import { isNavigatorOpen, navFocusId, setNavigatorOpen } from './state';
+import { focusFramed, systemTreeNow } from './framing';
 
 export interface NavKeyInput {
   key: string;
@@ -41,15 +42,7 @@ export function navKeyAction(e: NavKeyInput, tree: SystemTree, focusId: string |
  */
 export function useNavigatorShortcuts(store: CosmosStore, commands: AppCommands, registry: EntityRegistry): void {
   useEffect(() => {
-    let cached: { version: number; day: number; tree: SystemTree } | null = null;
-    const treeNow = (): SystemTree => {
-      const version = (registry as { version?: number }).version ?? -1;
-      const day = Math.floor(store.getState().time.simTimeMs / 86_400_000);
-      if (!cached || cached.version !== version || cached.day !== day || version < 0) {
-        cached = { version, day, tree: buildSystemTree(candidateEntities(registry), day * 86_400_000) };
-      }
-      return cached.tree;
-    };
+    const treeNow = (): SystemTree => systemTreeNow(registry, store.getState().time.simTimeMs);
     const onKey = (e: KeyboardEvent): void => {
       if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || isTypingTarget(e.target)) return;
       const s = store.getState();
@@ -72,7 +65,7 @@ export function useNavigatorShortcuts(store: CosmosStore, commands: AppCommands,
       e.preventDefault();
       e.stopImmediatePropagation();
       if (action.type === 'toggle-navigator') setNavigatorOpen(!isNavigatorOpen());
-      else void commands.focus(action.id);
+      else void focusFramed(commands, registry, store, action.id);
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);

@@ -70,7 +70,7 @@
   top: 0;
   left: 0;
   bottom: 0;
-  width: calc(var(--column-w) + 200px);
+  width: 380px;
   background: var(--scrim-left);
   opacity: 0;
 }
@@ -90,7 +90,8 @@
   right: 0;
   height: var(--topbar-h);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  /* The right column never shrinks below its buttons (they would spill left over the search field); the crumbs give way. */
+  grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr);
   align-items: center;
   gap: var(--sp-4);
   padding: 0 var(--sp-3) 0 var(--hud-gutter);
@@ -461,6 +462,7 @@
   user-select: text;
   animation: cx-enter-left var(--dur-base) var(--ease-out);
   scrollbar-gutter: stable;
+  text-shadow: var(--text-halo);
 }
 /* The column scrolls; its children must not shrink (the tab bar, overflow-x: auto, would collapse under tall fact grids). */
 .cx-inspector > * {

@@ -8,14 +8,16 @@ import { Tooltip } from '../components/Tooltip';
 import { LayersPanel, LightPanel } from './ViewPanels';
 import { bandInfo } from './spectral';
 import { NavigatorButton, NavigatorHost } from '../navigator/Navigator';
+import { useFocusFramed } from '../navigator/framing';
 import { ScaleToggle } from './ScaleToggle';
+import { SkyEvents } from '../events/SkyEvents';
 
 /** Default guided tour started by the Tour button (the tours module registers it under this id). */
 export const DEFAULT_TOUR_ID = 'golden-journey';
 
 function Breadcrumb() {
   const crumbs = useCosmos(s => s.view.breadcrumb);
-  const commands = useCommands();
+  const focus = useFocusFramed();
   if (crumbs.length === 0) return <nav className="cx-crumbs" aria-label="Where you are" />;
   return (
     <nav className="cx-crumbs" aria-label="Where you are">
@@ -28,7 +30,7 @@ function Breadcrumb() {
               {last ? (
                 <span className="cx-crumbs__here" aria-current="location">{c.name}</span>
               ) : (
-                <button type="button" className="cx-crumbs__link" onClick={() => void commands.focus(c.id)}>
+                <button type="button" className="cx-crumbs__link" onClick={() => void focus(c.id)}>
                   {c.name}
                 </button>
               )}
@@ -90,6 +92,7 @@ export function TopBar({ tourId = DEFAULT_TOUR_ID }: { tourId?: string }) {
       <div className="cx-topbar__right">
         <ScaleToggle />
         <NavigatorButton />
+        <SkyEvents />
         <BarButton label="Layers" shortcut="Shift+L" expanded={menu === 'layers'} buttonRef={layersRef} onClick={() => setMenu(m => (m === 'layers' ? null : 'layers'))} />
         <BarButton label="Light" expanded={menu === 'light'} buttonRef={lightRef} onClick={() => setMenu(m => (m === 'light' ? null : 'light'))}>
           Light{band !== 'visible' && <span className="cx-bar-btn__value">{bandInfo(band).short}</span>}

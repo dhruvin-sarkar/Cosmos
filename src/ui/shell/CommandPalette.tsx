@@ -7,6 +7,7 @@ import { cx, useDebouncedValue, useFocusTrap } from '../lib/dom';
 import { kindLabel } from '../icons';
 import { formatDistance } from '../format';
 import { Kbd } from '../components/Kbd';
+import { useFocusFramed } from '../navigator/framing';
 
 const IDENTIFIER = /^(HIP|HD|HR|NGC|IC|M|NORAD|Gaia|GJ|Gliese|NAIF|TOI|KOI|Kepler|2MASS|WISE|TIC|COSPAR)\b|\d{3,}/i;
 
@@ -47,6 +48,7 @@ export function CommandPalette() {
   const registry = useRegistry();
   const version = useRegistryVersion();
   const commands = useCommands();
+  const focus = useFocusFramed();
   const ext = useUiExtensions();
   const [text, setText] = useState('');
   const [active, setActive] = useState(0);
@@ -73,7 +75,7 @@ export function CommandPalette() {
   const choose = (r: SearchResult | undefined): void => {
     if (!r) return;
     close();
-    void commands.focus(r.record.id);
+    void focus(r.record.id);
   };
 
   const onKeyDown = (e: KeyboardEvent): void => {
