@@ -175,7 +175,7 @@ async function main() {
           const a = window.__cosmos.store.getState().lab.active; window.__cosmos.commands.closeLab();
           if (a !== l) throw new Error('lab did not open'); }, arg: lab });
       }
-      for (const tour of ['solar-system', 'golden-journey-preview']) {
+      for (const tour of ['solar-system', 'golden-journey', 'quick']) {
         await stop(`tour:${tour}`, { fn: async t => {
           const c = window.__cosmos.commands; c.startTour(t); await new Promise(r => setTimeout(r, 600));
           const st = window.__cosmos.store.getState().tour;
