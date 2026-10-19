@@ -1,3 +1,5 @@
+import { installIdmSafeFetch } from './core/idmSafeFetch';
+installIdmSafeFetch();
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Vector3 } from 'three';
@@ -10,6 +12,8 @@ import { createRegistry } from './core/registry';
 import { createCosmosStore } from './state/store';
 import { CosmosApp } from './ui/App';
 import type { CosmosUiExtensions } from './ui/context';
+
+installIdmSafeFetch();
 
 const rootEl = document.getElementById('cosmos-root');
 if (!rootEl) throw new Error('Missing #cosmos-root');
