@@ -1,1 +1,485 @@
-{"retrieved":"2026-10-18T12:24:41.666Z","craft":[{"id":"voyager-1","name":"Voyager 1","naifId":-31,"centerId":"sun","frame":"ICRF","units":"km","timeScale":"TDB (JD)","startJD":2460676.5,"stepDays":5,"count":439,"coverage":{"requested":["2025-01-01","2030-12-31"],"delivered":["2025-01-01","2030-12-31"],"trimmed":false},"mission":{"agency":"NASA","launchDateUTC":"1977-09-05","status":"Operating in interstellar space (crossed the heliopause 2012)","summary":"Farthest human-made object; Grand Tour flybys of Jupiter (1979) and Saturn (1980)."},"source":"JPL Horizons API, COMMAND=-31, CENTER=500@10, EPHEM_TYPE=VECTORS, REF_SYSTEM=ICRF, REF_PLANE=FRAME","retrieved":"2026-10-18T12:24:05.591Z"},{"id":"voyager-2","name":"Voyager 2","naifId":-32,"centerId":"sun","frame":"ICRF","units":"km","timeScale":"TDB (JD)","startJD":2460676.5,"stepDays":5,"count":439,"coverage":{"requested":["2025-01-01","2030-12-31"],"delivered":["2025-01-01","2030-12-31"],"trimmed":false},"mission":{"agency":"NASA","launchDateUTC":"1977-08-20","status":"Operating in interstellar space (crossed the heliopause 2018)","summary":"Only spacecraft to visit Uranus (1986) and Neptune (1989)."},"source":"JPL Horizons API, COMMAND=-32, CENTER=500@10, EPHEM_TYPE=VECTORS, REF_SYSTEM=ICRF, REF_PLANE=FRAME","retrieved":"2026-10-18T12:24:07.793Z"},{"id":"new-horizons","name":"New Horizons","naifId":-98,"centerId":"sun","frame":"ICRF","units":"km","timeScale":"TDB (JD)","startJD":2460676.5,"stepDays":5,"count":439,"coverage":{"requested":["2025-01-01","2030-12-31"],"delivered":["2025-01-01","2030-12-31"],"trimmed":false},"mission":{"agency":"NASA","launchDateUTC":"2006-01-19","status":"Extended mission in the Kuiper Belt","summary":"Pluto flyby July 2015, Arrokoth flyby January 2019."},"source":"JPL Horizons API, COMMAND=-98, CENTER=500@10, EPHEM_TYPE=VECTORS, REF_SYSTEM=ICRF, REF_PLANE=FRAME","retrieved":"2026-10-18T12:24:09.873Z"},{"id":"parker-solar-probe","name":"Parker Solar Probe","naifId":-96,"centerId":"sun","frame":"ICRF","units":"km","timeScale":"TDB (JD)","startJD":2460676.5,"stepDays":1,"count":1825,"coverage":{"requested":["2025-01-01","2030-12-31"],"delivered":["2025-01-01","2029-12-30"],"trimmed":true},"mission":{"agency":"NASA","launchDateUTC":"2018-08-12","status":"Operating; perihelia at about 9.86 solar radii","summary":"Repeated close passes through the solar corona using Venus gravity assists."},"source":"JPL Horizons API, COMMAND=-96, CENTER=500@10, EPHEM_TYPE=VECTORS, REF_SYSTEM=ICRF, REF_PLANE=FRAME","retrieved":"2026-10-18T12:24:14.155Z"},{"id":"juno","name":"Juno","naifId":-61,"centerId":"sun","frame":"ICRF","units":"km","timeScale":"TDB (JD)","startJD":2460676.5,"stepDays":1,"count":1339,"coverage":{"requested":["2025-01-01","2030-12-31"],"delivered":["2025-01-01","2028-08-31"],"trimmed":true},"mission":{"agency":"NASA","launchDateUTC":"2011-08-05","status":"Jupiter orbiter; check ephemeris end date (extended mission was planned through September 2025)","summary":"Polar orbits of Jupiter since July 2016: gravity, magnetosphere and atmosphere."},"source":"JPL Horizons API, COMMAND=-61, CENTER=500@10, EPHEM_TYPE=VECTORS, REF_SYSTEM=ICRF, REF_PLANE=FRAME","retrieved":"2026-10-18T12:24:18.269Z"},{"id":"europa-clipper","name":"Europa Clipper","naifId":-159,"centerId":"sun","frame":"ICRF","units":"km","timeScale":"TDB (JD)","startJD":2460676.5,"stepDays":1,"count":2191,"coverage":{"requested":["2025-01-01","2030-12-31"],"delivered":["2025-01-01","2030-12-31"],"trimmed":false},"mission":{"agency":"NASA","launchDateUTC":"2024-10-14","status":"Cruise to Jupiter (Earth gravity assist Dec 2026; arrival 2030 planned)","summary":"Will make repeated flybys of Europa to assess habitability."},"source":"JPL Horizons API, COMMAND=-159, CENTER=500@10, EPHEM_TYPE=VECTORS, REF_SYSTEM=ICRF, REF_PLANE=FRAME","retrieved":"2026-10-18T12:24:20.677Z"},{"id":"psyche","name":"Psyche","naifId":-255,"centerId":"sun","frame":"ICRF","units":"km","timeScale":"TDB (JD)","startJD":2460676.5,"stepDays":1,"count":1501,"coverage":{"requested":["2025-01-01","2030-12-31"],"delivered":["2025-01-01","2029-02-09"],"trimmed":true},"mission":{"agency":"NASA","launchDateUTC":"2023-10-13","status":"Cruise to (16) Psyche (Mars gravity assist May 2025; arrival 2029 planned)","summary":"Will orbit the metal-rich asteroid (16) Psyche."},"source":"JPL Horizons API, COMMAND=-255, CENTER=500@10, EPHEM_TYPE=VECTORS, REF_SYSTEM=ICRF, REF_PLANE=FRAME","retrieved":"2026-10-18T12:24:24.618Z"},{"id":"lucy","name":"Lucy","naifId":-49,"centerId":"sun","frame":"ICRF","units":"km","timeScale":"TDB (JD)","startJD":2460676.5,"stepDays":1,"count":2191,"coverage":{"requested":["2025-01-01","2030-12-31"],"delivered":["2025-01-01","2030-12-31"],"trimmed":false},"mission":{"agency":"NASA","launchDateUTC":"2021-10-16","status":"Cruise to the Jupiter Trojans (Donaldjohanson flyby Apr 2025; Trojan flybys from 2027)","summary":"First mission to multiple Jupiter Trojan asteroids."},"source":"JPL Horizons API, COMMAND=-49, CENTER=500@10, EPHEM_TYPE=VECTORS, REF_SYSTEM=ICRF, REF_PLANE=FRAME","retrieved":"2026-10-18T12:24:27.503Z"},{"id":"hera","name":"Hera","naifId":-91,"centerId":"sun","frame":"ICRF","units":"km","timeScale":"TDB (JD)","startJD":2460676.5,"stepDays":1,"count":671,"coverage":{"requested":["2025-01-01","2030-12-31"],"delivered":["2025-01-01","2026-11-02"],"trimmed":true},"mission":{"agency":"ESA","launchDateUTC":"2024-10-07","status":"Cruise to Didymos; arrival planned November 2026 (ESA, announced Oct 2025)","summary":"Will survey the DART impact outcome at Dimorphos and measure its mass."},"source":"JPL Horizons API, COMMAND=-91, CENTER=500@10, EPHEM_TYPE=VECTORS, REF_SYSTEM=ICRF, REF_PLANE=FRAME","retrieved":"2026-10-18T12:24:31.432Z"},{"id":"juice","name":"JUICE","naifId":-28,"centerId":"sun","frame":"ICRF","units":"km","timeScale":"TDB (JD)","startJD":2460676.5,"stepDays":1,"count":2191,"coverage":{"requested":["2025-01-01","2030-12-31"],"delivered":["2025-01-01","2030-12-31"],"trimmed":false},"mission":{"agency":"ESA","launchDateUTC":"2023-04-14","status":"Cruise to Jupiter (arrival 2031 planned)","summary":"Will study Ganymede, Europa and Callisto."},"source":"JPL Horizons API, COMMAND=-28, CENTER=500@10, EPHEM_TYPE=VECTORS, REF_SYSTEM=ICRF, REF_PLANE=FRAME","retrieved":"2026-10-18T12:24:34.285Z"},{"id":"bepicolombo","name":"BepiColombo","naifId":-121,"centerId":"sun","frame":"ICRF","units":"km","timeScale":"TDB (JD)","startJD":2460676.5,"stepDays":1,"count":829,"coverage":{"requested":["2025-01-01","2030-12-31"],"delivered":["2025-01-01","2027-04-09"],"trimmed":true},"mission":{"agency":"ESA/JAXA","launchDateUTC":"2018-10-20","status":"Cruise to Mercury; orbit insertion planned November 2026","summary":"Two orbiters (MPO and Mio) to study Mercury."},"source":"JPL Horizons API, COMMAND=-121, CENTER=500@10, EPHEM_TYPE=VECTORS, REF_SYSTEM=ICRF, REF_PLANE=FRAME","retrieved":"2026-10-18T12:24:38.424Z"},{"id":"jwst","name":"James Webb Space Telescope","naifId":-170,"centerId":"earth","frame":"ICRF","units":"km","timeScale":"TDB (JD)","startJD":2460676.5,"stepDays":1,"count":2191,"coverage":{"requested":["2025-01-01","2030-12-31"],"delivered":["2025-01-01","2030-12-31"],"trimmed":false},"mission":{"agency":"NASA/ESA/CSA","launchDateUTC":"2021-12-25","status":"Operating on a halo orbit around Sun-Earth L2","summary":"Infrared space observatory; track is geocentric."},"source":"JPL Horizons API, COMMAND=-170, CENTER=500@399, EPHEM_TYPE=VECTORS, REF_SYSTEM=ICRF, REF_PLANE=FRAME","retrieved":"2026-10-18T12:24:41.666Z"}]}
+{
+ "retrieved": "2026-10-19T09:47:41.369Z",
+ "craft": [
+  {
+   "id": "voyager-1",
+   "name": "Voyager 1",
+   "naifId": -31,
+   "centerId": "sun",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2443392.5,
+   "endJD": 2462866.5,
+   "samples": 414,
+   "historic": false,
+   "coverage": {
+    "requested": [
+     "1977-09-06",
+     "2030-12-31"
+    ],
+    "delivered": [
+     "1977-09-06 00:00",
+     "2030-12-31 00:00"
+    ],
+    "trimmed": false
+   },
+   "mission": {
+    "agency": "NASA / JPL",
+    "launchDateUTC": "1977-09-05",
+    "status": "Operating in interstellar space (crossed the heliopause 2012)",
+    "summary": "Farthest human-made object; flybys of Jupiter (March 1979) and Saturn and Titan (November 1980)."
+   },
+   "source": "JPL Horizons API, COMMAND=-31, CENTER=500@10, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:42:26.020Z"
+  },
+  {
+   "id": "voyager-2",
+   "name": "Voyager 2",
+   "naifId": -32,
+   "centerId": "sun",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2443376.5,
+   "endJD": 2462866.5,
+   "samples": 494,
+   "historic": false,
+   "coverage": {
+    "requested": [
+     "1977-08-21",
+     "2030-12-31"
+    ],
+    "delivered": [
+     "1977-08-21 00:00",
+     "2030-12-31 00:00"
+    ],
+    "trimmed": false
+   },
+   "mission": {
+    "agency": "NASA / JPL",
+    "launchDateUTC": "1977-08-20",
+    "status": "Operating in interstellar space (crossed the heliopause 2018)",
+    "summary": "The only spacecraft to visit all four giant planets: Jupiter 1979, Saturn 1981, Uranus 1986, Neptune 1989."
+   },
+   "source": "JPL Horizons API, COMMAND=-32, CENTER=500@10, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:43:03.954Z"
+  },
+  {
+   "id": "new-horizons",
+   "name": "New Horizons",
+   "naifId": -98,
+   "centerId": "sun",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2453755.5,
+   "endJD": 2462866.5,
+   "samples": 257,
+   "historic": false,
+   "coverage": {
+    "requested": [
+     "2006-01-20",
+     "2030-12-31"
+    ],
+    "delivered": [
+     "2006-01-20 00:00",
+     "2030-12-31 00:00"
+    ],
+    "trimmed": false
+   },
+   "mission": {
+    "agency": "NASA / JHU-APL",
+    "launchDateUTC": "2006-01-19",
+    "status": "Extended mission in the Kuiper Belt",
+    "summary": "First flyby of Pluto and Charon (14 July 2015) and of the Kuiper-belt object Arrokoth (1 January 2019)."
+   },
+   "source": "JPL Horizons API, COMMAND=-98, CENTER=500@10, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:43:20.359Z"
+  },
+  {
+   "id": "parker-solar-probe",
+   "name": "Parker Solar Probe",
+   "naifId": -96,
+   "centerId": "sun",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2458343.5,
+   "endJD": 2462502.499999667,
+   "samples": 4415,
+   "historic": false,
+   "coverage": {
+    "requested": [
+     "2018-08-13",
+     "2030-12-31"
+    ],
+    "delivered": [
+     "2018-08-13 00:00",
+     "2029-12-31 23:59"
+    ],
+    "trimmed": true
+   },
+   "mission": {
+    "agency": "NASA / JHU-APL",
+    "launchDateUTC": "2018-08-12",
+    "status": "Operating; perihelia at about 9.86 solar radii",
+    "summary": "Flies through the Sun’s outer corona; the fastest human-made object (~190 km/s at perihelion)."
+   },
+   "source": "JPL Horizons API, COMMAND=-96, CENTER=500@10, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:43:36.905Z"
+  },
+  {
+   "id": "juno",
+   "name": "Juno",
+   "naifId": -61,
+   "centerId": "jupiter",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2455779.5,
+   "endJD": 2462016.5,
+   "samples": 12558,
+   "historic": false,
+   "coverage": {
+    "requested": [
+     "2011-08-06",
+     "2030-12-31"
+    ],
+    "delivered": [
+     "2011-08-06 00:00",
+     "2028-09-02 00:00"
+    ],
+    "trimmed": true
+   },
+   "mission": {
+    "agency": "NASA / JPL",
+    "launchDateUTC": "2011-08-05",
+    "status": "Jupiter polar orbiter (extended mission)",
+    "summary": "Solar-powered polar orbiter of Jupiter since 4 July 2016, mapping its gravity, magnetic field, aurorae and deep atmosphere; close flybys of Ganymede, Europa and Io."
+   },
+   "source": "JPL Horizons API, COMMAND=-61, CENTER=500@599, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:37:45.630Z"
+  },
+  {
+   "id": "europa-clipper",
+   "name": "Europa Clipper",
+   "naifId": -159,
+   "centerId": "sun",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2460598.5,
+   "endJD": 2462866.5,
+   "samples": 372,
+   "historic": false,
+   "coverage": {
+    "requested": [
+     "2024-10-15",
+     "2030-12-31"
+    ],
+    "delivered": [
+     "2024-10-15 00:00",
+     "2030-12-31 00:00"
+    ],
+    "trimmed": false
+   },
+   "mission": {
+    "agency": "NASA / JPL",
+    "launchDateUTC": "2024-10-14",
+    "status": "Cruise to Jupiter (Mars flyby March 2025, Earth flyby December 2026; arrival April 2030)",
+    "summary": "Will make about 50 close flybys of Jupiter’s moon Europa to assess whether its ocean could support life."
+   },
+   "source": "JPL Horizons API, COMMAND=-159, CENTER=500@10, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:44:02.601Z"
+  },
+  {
+   "id": "psyche",
+   "name": "Psyche",
+   "naifId": -255,
+   "centerId": "sun",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2460231.5,
+   "endJD": 2462179,
+   "samples": 347,
+   "historic": false,
+   "coverage": {
+    "requested": [
+     "2023-10-14",
+     "2030-12-31"
+    ],
+    "delivered": [
+     "2023-10-14 00:00",
+     "2029-02-11 12:00"
+    ],
+    "trimmed": true
+   },
+   "mission": {
+    "agency": "NASA / JPL",
+    "launchDateUTC": "2023-10-13",
+    "status": "Cruise to (16) Psyche (Mars gravity assist May 2026; arrival 2029)",
+    "summary": "First mission to a metal-rich asteroid, using solar-electric Hall-effect thrusters."
+   },
+   "source": "JPL Horizons API, COMMAND=-255, CENTER=500@10, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:44:07.120Z"
+  },
+  {
+   "id": "lucy",
+   "name": "Lucy",
+   "naifId": -49,
+   "centerId": "sun",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2459504.5,
+   "endJD": 2462866.5,
+   "samples": 416,
+   "historic": false,
+   "coverage": {
+    "requested": [
+     "2021-10-17",
+     "2030-12-31"
+    ],
+    "delivered": [
+     "2021-10-17 00:00",
+     "2030-12-31 00:00"
+    ],
+    "trimmed": false
+   },
+   "mission": {
+    "agency": "NASA / SwRI",
+    "launchDateUTC": "2021-10-16",
+    "status": "Cruise to the Jupiter Trojans (Donaldjohanson flyby April 2025)",
+    "summary": "Twelve-year tour of eight asteroids, most of them Jupiter Trojans."
+   },
+   "source": "JPL Horizons API, COMMAND=-49, CENTER=500@10, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:44:19.424Z"
+  },
+  {
+   "id": "hera",
+   "name": "Hera",
+   "naifId": -91,
+   "centerId": "sun",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2460591.5,
+   "endJD": 2461348.5,
+   "samples": 125,
+   "historic": false,
+   "coverage": {
+    "requested": [
+     "2024-10-08",
+     "2030-12-31"
+    ],
+    "delivered": [
+     "2024-10-08 00:00",
+     "2026-11-04 00:00"
+    ],
+    "trimmed": true
+   },
+   "mission": {
+    "agency": "ESA",
+    "launchDateUTC": "2024-10-07",
+    "status": "Arriving at Didymos (planned late 2026)",
+    "summary": "Planetary-defence follow-up to DART: measures Dimorphos’ mass and the crater DART left."
+   },
+   "source": "JPL Horizons API, COMMAND=-91, CENTER=500@10, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:44:23.100Z"
+  },
+  {
+   "id": "juice",
+   "name": "JUICE",
+   "naifId": -28,
+   "centerId": "sun",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2460049.5,
+   "endJD": 2462866.5,
+   "samples": 547,
+   "historic": false,
+   "coverage": {
+    "requested": [
+     "2023-04-15",
+     "2030-12-31"
+    ],
+    "delivered": [
+     "2023-04-15 00:00",
+     "2030-12-31 00:00"
+    ],
+    "trimmed": false
+   },
+   "mission": {
+    "agency": "ESA",
+    "launchDateUTC": "2023-04-14",
+    "status": "Cruise to Jupiter (arrival July 2031)",
+    "summary": "JUpiter ICy moons Explorer: Europa, Callisto and Ganymede flybys, then orbit Ganymede."
+   },
+   "source": "JPL Horizons API, COMMAND=-28, CENTER=500@10, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:44:33.444Z"
+  },
+  {
+   "id": "bepicolombo",
+   "name": "BepiColombo",
+   "naifId": -121,
+   "centerId": "sun",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2458412.5,
+   "endJD": 2461506.5,
+   "samples": 6801,
+   "historic": false,
+   "coverage": {
+    "requested": [
+     "2018-10-21",
+     "2030-12-31"
+    ],
+    "delivered": [
+     "2018-10-21 00:00",
+     "2027-04-11 00:00"
+    ],
+    "trimmed": true
+   },
+   "mission": {
+    "agency": "ESA / JAXA",
+    "launchDateUTC": "2018-10-20",
+    "status": "Arriving at Mercury (orbit insertion planned November 2026)",
+    "summary": "Two orbiters (ESA’s MPO and JAXA’s Mio) travelling together on the Mercury Transfer Module."
+   },
+   "source": "JPL Horizons API, COMMAND=-121, CENTER=500@10, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:47:41.369Z"
+  },
+  {
+   "id": "solar-orbiter",
+   "name": "Solar Orbiter",
+   "naifId": -144,
+   "centerId": "sun",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2458890.5,
+   "endJD": 2462825.5,
+   "samples": 2013,
+   "historic": false,
+   "coverage": {
+    "requested": [
+     "2020-02-11",
+     "2030-12-31"
+    ],
+    "delivered": [
+     "2020-02-11 00:00",
+     "2030-11-20 00:00"
+    ],
+    "trimmed": true
+   },
+   "mission": {
+    "agency": "ESA / NASA",
+    "launchDateUTC": "2020-02-10",
+    "status": "Operating; Venus flybys tilt its orbit to view the Sun’s poles",
+    "summary": "Close-up images of the Sun from as near as 0.28 au and the first views of its polar regions."
+   },
+   "source": "JPL Horizons API, COMMAND=-144, CENTER=500@10, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:45:31.097Z"
+  },
+  {
+   "id": "jwst",
+   "name": "James Webb Space Telescope",
+   "naifId": -170,
+   "centerId": "earth",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2459574.5,
+   "endJD": 2462866.5,
+   "samples": 1326,
+   "historic": false,
+   "coverage": {
+    "requested": [
+     "2021-12-26",
+     "2030-12-31"
+    ],
+    "delivered": [
+     "2021-12-26 00:00",
+     "2030-12-31 00:00"
+    ],
+    "trimmed": false
+   },
+   "mission": {
+    "agency": "NASA / ESA / CSA",
+    "launchDateUTC": "2021-12-25",
+    "status": "Operating on a halo orbit around Sun–Earth L2",
+    "summary": "The largest infrared space telescope: a 6.5 m segmented gold-coated beryllium mirror behind a five-layer sunshield."
+   },
+   "source": "JPL Horizons API, COMMAND=-170, CENTER=500@399, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:38:31.079Z"
+  },
+  {
+   "id": "cassini",
+   "name": "Cassini",
+   "naifId": -82,
+   "centerId": "saturn",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2450737.5,
+   "endJD": 2458011.937499889,
+   "samples": 16138,
+   "historic": true,
+   "coverage": {
+    "requested": [
+     "1997-10-16",
+     "2017-09-15 10:30"
+    ],
+    "delivered": [
+     "1997-10-16 00:00",
+     "2017-09-15 10:29"
+    ],
+    "trimmed": false
+   },
+   "mission": {
+    "agency": "NASA / ESA / ASI",
+    "launchDateUTC": "1997-10-15",
+    "status": "Mission ended 15 September 2017 (deliberate plunge into Saturn)",
+    "summary": "Thirteen years in orbit around Saturn (2004–2017); released ESA’s Huygens probe, which landed on Titan in January 2005."
+   },
+   "source": "JPL Horizons API, COMMAND=-82, CENTER=500@699, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:41:52.790Z"
+  },
+  {
+   "id": "dart",
+   "name": "DART",
+   "naifId": -135,
+   "centerId": "didymos",
+   "frame": "ICRF",
+   "units": "km",
+   "timeScale": "TDB (JD)",
+   "startJD": 2459542.833333,
+   "endJD": 2459849.469131889,
+   "samples": 660,
+   "historic": true,
+   "coverage": {
+    "requested": [
+     "2021-11-24 08:00",
+     "2022-09-26 23:15:33"
+    ],
+    "delivered": [
+     "2021-11-24 07:59",
+     "2022-09-26 23:15"
+    ],
+    "trimmed": false
+   },
+   "mission": {
+    "agency": "NASA / JHU-APL",
+    "launchDateUTC": "2021-11-24",
+    "status": "Mission ended 26 September 2022 23:14 UTC (impact on Dimorphos)",
+    "summary": "The first planetary-defence test: a 580 kg spacecraft struck Dimorphos at 6.1 km/s and shortened its orbit around Didymos by 33 minutes."
+   },
+   "source": "JPL Horizons API, COMMAND=-135, CENTER=500@20065803, EPHEM_TYPE=VECTORS, VEC_TABLE=2, REF_SYSTEM=ICRF, REF_PLANE=FRAME",
+   "retrieved": "2026-10-19T09:41:55.026Z"
+  }
+ ]
+}

@@ -8,7 +8,9 @@
  *    L_ion = 0.9 au · size · f;
  *  - dust tail: broader, pale yellow-white (reflected sunlight), 0.45 · L_ion long, curved away from the Sun and bent toward
  *    the trailing side of the orbit (radiation pressure vs. the comet's orbital velocity: synchrone-like bend);
- *  - coma: an HDR-limited glow whose radius scales with size · f (up to ~6·10⁴ km).
+ *  - coma: an HDR-limited glow whose radius scales with size · f (up to ~6·10⁴ km);
+ *  - near the nucleus (within a few thousand nucleus radii, where the tails and the big coma vanish): an inner dust coma a
+ *    few tens of radii across and faint dayside dust jets (sunward cones, as in Rosetta/Deep Impact images; directions illustrative).
  * Particles are billboard Gaussian puffs on the GPU: positions are computed in the vertex shader from per-particle
  * parameters, so a tail costs one draw call and no CPU work.
  */
@@ -140,7 +142,19 @@ export interface CometState {
   opacity: number;
   /** Camera distance to the nucleus, m (fades the coma when the camera is inside it). */
   cameraDistM: number;
+  /** Nucleus mean radius, m (sizes the inner coma and jets). */
+  nucleusRadiusM: number;
 }
+
+/** Dayside jet directions in the (sunward, bend, normal) frame — illustrative. */
+const JETS: [number, number, number, number][] = [
+  // sunward weight, bend weight, normal weight, relative strength
+  [1.0, 0.55, 0.2, 1.0],
+  [1.0, -0.35, 0.65, 0.7],
+  [1.0, 0.1, -0.75, 0.85],
+  [1.0, -0.7, -0.25, 0.55],
+  [0.6, 0.9, 0.7, 0.4],
+];
 
 export class CometSystem {
   readonly group = new THREE.Group();
@@ -152,6 +166,10 @@ export class CometSystem {
   private readonly dustMat: THREE.ShaderMaterial;
   private readonly bend = new THREE.Vector3();
   private readonly tmp = new THREE.Vector3();
+  private readonly normal = new THREE.Vector3();
+  private readonly inner: GlowSprite;
+  private readonly jets: THREE.Mesh[] = [];
+  private readonly jetMats: THREE.ShaderMaterial[] = [];
 
   constructor(seed: number) {
     this.group.name = 'comet-system';
@@ -162,9 +180,18 @@ export class CometSystem {
     this.dust = new THREE.Mesh(makeRibbon(), this.dustMat);
     this.ion.frustumCulled = false;
     this.dust.frustumCulled = false;
-    this.coma = new GlowSprite({ color: new THREE.Color(0.55, 0.78, 1.0), intensity: 0.45, coreFraction: 0.1, minRadiusPx: 0 });
-    this.core = new GlowSprite({ color: new THREE.Color(1.0, 0.97, 0.9), intensity: 1.1, coreFraction: 0.05, minRadiusPx: 0 });
-    this.group.add(this.dust, this.ion, this.coma, this.core);
+    this.coma = new GlowSprite({ color: new THREE.Color(0.55, 0.78, 1.0), intensity: 0.45, coreFraction: 0.1, minRadiusPx: 7 });
+    this.core = new GlowSprite({ color: new THREE.Color(1.0, 0.97, 0.9), intensity: 1.1, coreFraction: 0.05, minRadiusPx: 2.5 });
+    this.inner = new GlowSprite({ color: new THREE.Color(1.0, 0.93, 0.8), intensity: 0.5, coreFraction: 0.18, minRadiusPx: 0 });
+    this.group.add(this.dust, this.ion, this.coma, this.core, this.inner);
+    for (let j = 0; j < JETS.length; j++) {
+      const m = makeMaterial([1.0, 0.94, 0.84], [0.035, 0.32], 0.0, 2.6, 5, sd + 7.7 * (j + 1));
+      const mesh = new THREE.Mesh(makeRibbon(), m);
+      mesh.frustumCulled = false;
+      this.jetMats.push(m);
+      this.jets.push(mesh);
+      this.group.add(mesh);
+    }
     this.group.visible = false;
   }
 
@@ -208,7 +235,30 @@ export class CometSystem {
     this.core.material.setRadius(comaR * 0.16);
     this.core.material.setViewportHeight(viewportHeightPx);
     this.core.material.uniforms.uOpacity.value = s.opacity * comaFade * Math.min(1, 0.3 + f);
-    void this.tmp;
+    // Near field: inner dust coma + dayside jets, fading in as the big coma/tails fade out.
+    const R = s.nucleusRadiusM;
+    const near = 1 - THREE.MathUtils.smoothstep(s.cameraDistM, 400 * R, 4000 * R);
+    const nearVis = near * Math.min(1, f * 3) * Math.min(1.6, 0.4 + 0.6 * bright);
+    this.inner.visible = nearVis > 0.004;
+    if (this.inner.visible) {
+      this.inner.material.setRadius(26 * R * inv);
+      this.inner.material.setViewportHeight(viewportHeightPx);
+      // Far fainter than the sunlit nucleus (NAVCAM: jets only show against the black sky).
+      this.inner.material.uniforms.uOpacity.value = 0.035 * nearVis * THREE.MathUtils.smoothstep(s.cameraDistM, 8 * R, 60 * R);
+    }
+    this.normal.crossVectors(s.antiSun, this.bend).normalize();
+    for (let j = 0; j < this.jets.length; j++) {
+      const mesh = this.jets[j];
+      mesh.visible = nearVis > 0.004;
+      if (!mesh.visible) continue;
+      const [a, b, c, k] = JETS[j];
+      const ju = this.jetMats[j].uniforms;
+      this.tmp.copy(s.antiSun).multiplyScalar(-a).addScaledVector(this.bend, b).addScaledVector(this.normal, c).normalize();
+      ju.uDir.value.copy(this.tmp);
+      ju.uLen.value = (7 + 4 * k) * R * inv;
+      ju.uBrightness.value = 0.09 * k;
+      ju.uOpacity.value = nearVis;
+    }
     return true;
   }
 
@@ -219,6 +269,9 @@ export class CometSystem {
     this.dustMat.dispose();
     this.coma.dispose();
     this.core.dispose();
+    this.inner.dispose();
+    for (const j of this.jets) j.geometry.dispose();
+    for (const m of this.jetMats) m.dispose();
     this.group.removeFromParent();
   }
 }

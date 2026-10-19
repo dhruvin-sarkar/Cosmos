@@ -136,7 +136,7 @@ export const EDITORIAL: Record<string, Editorial> = {
   },
   itokawa: {
     name: '25143 Itokawa', aliases: ['Itokawa', '(25143) Itokawa'], tagline: 'Peanut-shaped asteroid; first asteroid sample returned (Hayabusa)',
-    summary: 'Itokawa is a 535 m-long contact-binary rubble pile. JAXA\'s Hayabusa brought back thousands of grains in 2010.',
+    summary: 'Itokawa is a 535 m-long contact-binary rubble pile. JAXA\'s Hayabusa brought back more than 1,500 grains in 2010.',
     shape: 'peanut', surface: 'S', axesPublished: true, importance: 52,
     paragraphs: [], refs: [{ label: 'Fujiwara et al. 2006', note: 'Science 312:1330 — Itokawa shape' }],
   },
@@ -204,7 +204,14 @@ export const EDITORIAL: Record<string, Editorial> = {
     name: 'C/1995 O1 (Hale–Bopp)', aliases: ['Hale-Bopp', 'Comet Hale-Bopp', 'C/1995 O1'], tagline: 'The Great Comet of 1997, visible to the naked eye for 18 months',
     summary: 'Hale–Bopp has an unusually large nucleus (~60 km). It reached perihelion at 0.91 au in April 1997 and will not return for more than two thousand years.',
     shape: 'ellipsoid', surface: 'comet', axesPublished: false, activity: 1.0, viewDistanceM: 8e9, importance: 70,
-    paragraphs: ['Set the clock to April 1997 to see it at perihelion. Today it is ~400 au out.'], refs: [],
+    paragraphs: ['Set the clock to April 1997 to see it at perihelion. Today it is ~50 au out.'], refs: [],
+  },
+  'tsuchinshan-atlas': {
+    name: 'C/2023 A3 (Tsuchinshan–ATLAS)', aliases: ['Tsuchinshan-ATLAS', 'Tsuchinshan ATLAS', 'C/2023 A3', 'Comet A3'], tagline: 'The bright naked-eye comet of October 2024',
+    summary: 'Found independently by Purple Mountain Observatory (Tsuchinshan) and ATLAS in early 2023, this Oort-cloud comet passed perihelion at 0.39 au on 27 September 2024 and was a naked-eye sight in October 2024, with a long dust tail and a striking anti-tail.',
+    shape: 'ellipsoid', surface: 'comet', axesKm: [2.6, 2.4, 2.2], axesPublished: false, activity: 0.9, viewDistanceM: 6e9, importance: 74,
+    paragraphs: ['Set the clock to 27 September – 15 October 2024 to see it near perihelion and closest to Earth (0.47 au on 12 October 2024). The nucleus size is not measured; the ~5 km size shown is an illustrative estimate from its brightness. Its osculating orbit is very slightly hyperbolic (e ≈ 1.0001), so any return would be tens of thousands of years away at the soonest.'],
+    refs: [{ label: 'JPL SBDB', note: 'C/2023 A3 osculating elements, full precision (orbit 113)' }],
   },
   oumuamua: {
     name: '1I/ʻOumuamua', aliases: ['Oumuamua', '1I/2017 U1', '1I'], tagline: 'First interstellar object seen passing through the Solar System',

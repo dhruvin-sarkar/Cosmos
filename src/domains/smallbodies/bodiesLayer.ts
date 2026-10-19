@@ -19,11 +19,11 @@ import { SmallBodyMaterial } from './smallBodyMaterial';
 import { lookupNeoRow } from './neoProvider';
 import { neoElements } from './neoApi';
 import { sunSource } from './sources';
+import { registerScaledBody, renderTransform } from '../../core/visualScale';
+import { SPIN_STATES, decodeShape, illustrativeSpin, loadShapeIndex, spinPole, spinQuaternion, type ShapeIndex, type SpinState } from './famousShapes';
 
 const MIN_MESH_PX = 0.8;
 const MARKER_HIDE_PX = 14;
-const ENLARGE_TARGET_PX = 9;
-const MAX_ENLARGE = 2e6;
 
 interface Visual {
   entity: Entity;
@@ -37,6 +37,11 @@ interface Visual {
   orbit: OrbitLine | null;
   comet: CometSystem | null;
   active: boolean;
+  spin: SpinState;
+  /** Mean radius the mesh is scaled to (the real shape model's when loaded, else the catalogue's). */
+  meshRadiusM: number;
+  shape: 'procedural' | 'loading' | 'real' | 'failed';
+  unregister: (() => void) | null;
 }
 
 const MARKER_VERTEX = /* glsl */ `
@@ -80,13 +85,7 @@ function colorKey(m: SmallBodyModel): keyof typeof MARKER_COLOR {
   return m.isInterstellar ? 'interstellar' : m.isComet ? 'comet' : 'asteroid';
 }
 
-/** Spin pole (unit, ICRS) — illustrative, deterministic per body (the real poles of most of these are not in the dataset). */
-function spinAxis(id: string, out: THREE.Vector3): THREE.Vector3 {
-  const h = hashString(id);
-  const lon = ((h & 0xffff) / 0xffff) * Math.PI * 2;
-  const lat = (((h >>> 16) / 0xffff) * 2 - 1) * 1.1;
-  return out.set(Math.cos(lat) * Math.cos(lon), Math.cos(lat) * Math.sin(lon), Math.sin(lat)).normalize();
-}
+const spinFor = (m: SmallBodyModel): SpinState => SPIN_STATES[m.id] ?? illustrativeSpin(m.id, m.spinPeriodH);
 
 export interface SmallBodiesLayer extends Layer {
   readonly visuals: readonly Visual[];
@@ -118,17 +117,22 @@ export function createSmallBodiesLayer(
   let markerSize: Float32Array;
   let markerColor: Float32Array;
   let visitor: Visual | null = null;
+  let shapeIndex: ShapeIndex | null = null;
   let visitorId: string | null = null;
   let meshBudget = 0;
-  const cometState: CometState = { head: tmp, antiSun: tmp2, velocityDir: vel, rAU: 1, size: 1, metersPerUnit: 1, pxPerRad: 1, insolation: 1, opacity: 1, cameraDistM: 1 };
+  const cometState: CometState = { head: tmp, antiSun: tmp2, velocityDir: vel, rAU: 1, size: 1, metersPerUnit: 1, pxPerRad: 1, insolation: 1, opacity: 1, cameraDistM: 1, nucleusRadiusM: 1 };
 
   for (const e of entities) {
     const model = MODEL_BY_ENTITY_ID.get(e.id);
     if (!model) continue;
-    const v: Visual = { entity: e, model, world: new THREE.Vector3(), distM: 1, px: 0, enlarge: 1, mesh: null, material: null, orbit: null, comet: null, active: true };
+    const v: Visual = {
+      entity: e, model, world: new THREE.Vector3(), distM: 1, px: 0, enlarge: 1, mesh: null, material: null, orbit: null, comet: null, active: true,
+      spin: spinFor(model), meshRadiusM: model.meanRadiusM, shape: 'procedural', unregister: null,
+    };
     visuals.push(v);
     byEntity.set(e.id, v);
   }
+  const didymos = byEntity.get('sb:didymos') ?? null;
 
   const ensureMesh = (v: Visual): void => {
     if (v.mesh || !svcRef) return;
@@ -147,6 +151,31 @@ export function createSmallBodiesLayer(
     svcRef.groups.main.add(v.mesh);
   };
 
+  /** Real shape model (mission data) when one is published for this body: swap it in once loaded. */
+  const tryRealShape = (v: Visual): void => {
+    const entry = shapeIndex?.shapes[v.model.id];
+    if (entry && svcRef && v.shape === 'procedural') {
+      v.shape = 'loading';
+      void svcRef.assets.binary(`data/smallbodies/${entry.file}`).then((buf) => {
+        if (!v.mesh) return;
+        const { geometry } = decodeShape(buf);
+        geometry.scale(1 / entry.meanRadiusKm, 1 / entry.meanRadiusKm, 1 / entry.meanRadiusKm);
+        v.mesh.geometry.dispose();
+        v.mesh.geometry = geometry;
+        v.meshRadiusM = entry.meanRadiusKm * 1000;
+        v.shape = 'real';
+        if (v.material) {
+          // The real model carries the true relief: keep only subtle procedural detail.
+          v.material.uniforms.uBump.value = 0.07;
+          v.material.uniforms.uCraterAmp.value = v.model.isComet ? 0.08 : 0.22;
+          v.material.uniforms.uBoulders.value = 0.85;
+          // Skip the coarse octaves: the mission model already resolves everything larger than ~1/25 of the radius.
+          v.material.uniforms.uCraterStart.value = 22;
+        }
+      }).catch(() => { v.shape = 'failed'; });
+    }
+  };
+
   const ensureOrbit = (v: Visual): void => {
     if (v.orbit || !svcRef || !v.model.elements) return;
     const el = v.model.elements;
@@ -161,10 +190,10 @@ export function createSmallBodiesLayer(
 
   const updateVisual = (v: Visual, ctx: FrameContext, sunPosReady: boolean): void => {
     void sunPosReady;
-    v.entity.position(ctx.timeMs, v.world);
+    // Drawn position and exhibition-scale factor from the shared visual-scale runtime (identity in true scale).
+    v.enlarge = renderTransform(v.entity, ctx.timeMs, v.world);
     v.distM = Math.max(v.world.distanceTo(ctx.cameraPosition), 1);
     v.px = ctx.pixelDiameter(v.model.meanRadiusM, v.distM);
-    v.enlarge = ctx.overlays['enlarge-bodies'] && v.px < ENLARGE_TARGET_PX ? Math.min(ENLARGE_TARGET_PX / Math.max(v.px, 1e-9), MAX_ENLARGE) : 1;
     const shownPx = v.px * v.enlarge;
     const wantMesh = shownPx >= MIN_MESH_PX;
     if (wantMesh && !v.mesh && meshBudget > 0) {
@@ -172,16 +201,24 @@ export function createSmallBodiesLayer(
       meshBudget--;
     }
     if (v.mesh && v.material) {
+      if (v.shape === 'procedural' && shapeIndex) tryRealShape(v);
       v.mesh.visible = wantMesh;
       if (wantMesh) {
         ctx.toRender(v.world, v.mesh.position);
-        v.mesh.scale.setScalar((v.model.meanRadiusM * v.enlarge) / ctx.metersPerUnit);
-        // Spin: illustrative pole, true period when known.
-        const periodH = v.model.spinPeriodH ?? 12;
-        const hoursSinceJ2000 = (ctx.timeMs - 946728000000) / 3.6e6;
-        const phase = (((hoursSinceJ2000 / periodH) % 1) + 1) % 1;
-        spinAxis(v.model.id, axis);
-        quat.setFromAxisAngle(axis, phase * Math.PI * 2);
+        v.mesh.scale.setScalar((v.meshRadiusM * v.enlarge) / ctx.metersPerUnit);
+        if (v.model.id === 'dimorphos' && didymos) {
+          // Tidally locked: long axis toward Didymos, spin axis = Didymos' pole (the orbit is equatorial).
+          renderTransform(didymos.entity, ctx.timeMs, tmp2);
+          axis.subVectors(tmp2, v.world).normalize();
+          spinPole(didymos.spin, tmp2);
+          const y = vel.crossVectors(tmp2, axis).normalize();
+          tmp2.crossVectors(axis, y);
+          m4.makeBasis(axis, y, tmp2);
+          quat.setFromRotationMatrix(m4);
+        } else {
+          // IAU-style spin state: published pole and rotation for the famous bodies, illustrative pole otherwise.
+          spinQuaternion(v.spin, ctx.timeMs, quat);
+        }
         v.mesh.quaternion.copy(quat);
         m4.makeRotationFromQuaternion(quat);
         v.material.uniforms.uObjToWorld.value.setFromMatrix4(m4);
@@ -212,8 +249,9 @@ export function createSmallBodiesLayer(
         cometState.metersPerUnit = ctx.metersPerUnit;
         cometState.pxPerRad = ctx.pixelsPerRadian;
         cometState.insolation = irr;
-        cometState.opacity = Math.max(0.15, near);
+        cometState.opacity = Math.max(0.5, near);
         cometState.cameraDistM = v.distM;
+        cometState.nucleusRadiusM = v.meshRadiusM * v.enlarge;
         v.comet.update(cometState, ctx.viewport.height);
       }
     }
@@ -236,7 +274,11 @@ export function createSmallBodiesLayer(
     line.visible = show;
     if (!show) return;
     line.material.role = focusedLike ? 'focused' : 'minor';
-    line.material.setFade(fade);
+    // Unfocused orbits are faint (≈ 13 % of the minor-orbit style, well under the planet orbits) and the huge comet/TNO ellipses fainter still, so the
+    // overview is not a tangle of lines; the focused orbit keeps full strength.
+    const el0 = v.model.elements!;
+    const big = el0.e > 0.8 || el0.aAU > 6;
+    line.material.setFade(focusedLike ? 1 : fade * (big ? 0.06 : 0.13));
     line.parentPositionM.copy(sunWorld);
     const el = v.model.elements!;
     if (el.e < 1) {
@@ -271,7 +313,10 @@ export function createSmallBodiesLayer(
       elements: el,
       activity: 0,
     };
-    return { entity, model, world: new THREE.Vector3(), distM: 1, px: 0, enlarge: 1, mesh: null, material: null, orbit: null, comet: null, active: true };
+    return {
+      entity, model, world: new THREE.Vector3(), distM: 1, px: 0, enlarge: 1, mesh: null, material: null, orbit: null, comet: null, active: true,
+      spin: illustrativeSpin(model.id, model.spinPeriodH), meshRadiusM: r, shape: 'procedural', unregister: null,
+    };
   };
 
   const disposeVisual = (v: Visual): void => {
@@ -283,6 +328,8 @@ export function createSmallBodiesLayer(
     v.orbit?.removeFromParent();
     v.orbit?.dispose();
     v.comet?.dispose();
+    v.unregister?.();
+    v.unregister = null;
   };
 
   return {
@@ -291,6 +338,8 @@ export function createSmallBodiesLayer(
 
     init(svc: EngineServices): void {
       svcRef = svc;
+      void loadShapeIndex((p) => svc.assets.json(p)).then((ix) => { shapeIndex = ix; });
+      for (const v of visuals) v.unregister = registerScaledBody(v.entity, { kind: v.entity.kind, radiusM: v.model.meanRadiusM });
       markerPos = new Float32Array(MAX_MARKERS * 3);
       markerSize = new Float32Array(MAX_MARKERS);
       markerColor = new Float32Array(MAX_MARKERS * 4);
@@ -326,6 +375,7 @@ export function createSmallBodiesLayer(
         visitorId = want;
       }
       let nm = 0;
+      const markerFieldM = Math.pow(10, ctx.scaleLog10);
       for (let vi = 0; vi <= visuals.length; vi++) {
         const v = vi < visuals.length ? visuals[vi] : visitor;
         if (!v) continue;
@@ -339,7 +389,9 @@ export function createSmallBodiesLayer(
           markerPos[3 * nm] = tmp.x;
           markerPos[3 * nm + 1] = tmp.y;
           markerPos[3 * nm + 2] = tmp.z;
-          const fade = 1 - THREE.MathUtils.smoothstep(shownPx, MARKER_HIDE_PX * 0.5, MARKER_HIDE_PX);
+          let fade = 1 - THREE.MathUtils.smoothstep(shownPx, MARKER_HIDE_PX * 0.5, MARKER_HIDE_PX);
+          // Same rule as the labels: at planet-scale views distant unlabelled markers are just clutter.
+          if (markerFieldM < 3e9 && !focusedLike) fade *= 1 - THREE.MathUtils.smoothstep(v.distM, 100 * markerFieldM, 200 * markerFieldM);
           const c = MARKER_COLOR[colorKey(v.model)];
           markerColor[4 * nm] = c[0];
           markerColor[4 * nm + 1] = c[1];

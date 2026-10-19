@@ -1,0 +1,77 @@
+{
+  "note": "Small-body shape model sources. fetch-shapes.mjs downloads 'url' to data-raw/smallbodies/<id>/<file>; build-shapes.py converts them to public/data/smallbodies/shapes/<id>.bin. 'format' selects the reader; 'targetTris' is the QEM decimation target (null = keep the source mesh).",
+  "bodies": {
+    "bennu": {
+      "url": "https://naif.jpl.nasa.gov/pub/naif/pds/pds4/orex/orex_spice/spice_kernels/dsk/bennu_g_03250mm_alt_obj_0000n00000_v021.bds",
+      "file": "bennu_g_03250mm_alt_obj_0000n00000_v021.bds",
+      "format": "dsk2",
+      "targetTris": 40000,
+      "model": "OSIRIS-REx OLA/altimetry global shape model v021, 3.25 m GSD (SPICE DSK g_03250mm_alt_obj_0000n00000_v021)",
+      "citation": "OSIRIS-REx Altimetry Working Group; Daly, M. G. et al. 2020, Sci. Adv. 6, eabd3649 (NASA/GSFC/Univ. of Arizona/CSA/York/MDA), v021 archived in the OSIRIS-REx SPICE PDS4 bundle",
+      "license": "Public domain (NASA PDS / NAIF archive, U.S. Government work)"
+    },
+    "ryugu": {
+      "url": "https://data.darts.isas.jaxa.jp/pub/hayabusa2/paper/Watanabe_2019/SHAPE_SFM_49k_v20180804.obj",
+      "file": "SHAPE_SFM_49k_v20180804.obj",
+      "format": "obj",
+      "targetTris": 40000,
+      "model": "Hayabusa2 ONC SfM shape model SHAPE_SFM_49k_v20180804",
+      "citation": "Watanabe, S. et al. 2019, Science 364, 268 (JAXA/Hayabusa2 project; Univ. of Tokyo, Kochi, Rikkyo, Nagoya, Chiba Inst. Tech., Meiji, Aizu, AIST)",
+      "license": "JAXA DARTS open data (free use with credit to JAXA and the Hayabusa2 team)"
+    },
+    "eros": {
+      "url": "https://sbnarchive.psi.edu/pds3/near/NEAR_A_MSI_5_EROSSHAPE_V1_0/data/vertex/ver128q.tab",
+      "file": "ver128q.tab",
+      "format": "plate",
+      "targetTris": 40000,
+      "model": "Gaskell Eros Shape Model V1.0, ICQ q=128 plate model (ver128q)",
+      "citation": "Gaskell, R. W. 2008, Gaskell Eros Shape Model V1.0, NEAR-A-MSI-5-EROSSHAPE-V1.0, NASA Planetary Data System",
+      "license": "Public domain (NASA PDS, U.S. Government work)"
+    },
+    "itokawa": {
+      "url": "https://sbnarchive.psi.edu/pds3/hayabusa/HAY_A_AMICA_5_ITOKAWASHAPE_V1_0/data/vertex/ver128q.tab",
+      "file": "ver128q.tab",
+      "format": "plate",
+      "targetTris": 40000,
+      "model": "Gaskell Itokawa Shape Model V1.0, ICQ q=128 plate model (ver128q)",
+      "citation": "Gaskell, R. et al. 2008, Gaskell Itokawa Shape Model V1.0, HAY-A-AMICA-5-ITOKAWASHAPE-V1.0, NASA Planetary Data System",
+      "license": "Public domain (NASA PDS, U.S. Government work)"
+    },
+    "didymos": {
+      "url": "https://pds-smallbodies.astro.umd.edu/holdings/pds4-dart_shapemodel-v1.0/data_derived_didymos_model_v003/didymos_g_4657mm_spc_obj_0000n00000_v003.obj",
+      "file": "didymos_g_4657mm_spc_obj_0000n00000_v003.obj",
+      "format": "obj",
+      "targetTris": 20000,
+      "model": "DART SPC global shape model of Didymos v003, 4.657 m GSD",
+      "citation": "Daly, R. T., Barnouin, O. S., Ernst, C. M., Nair, H., Espiritu, R., Waller, C. 2023, DART Shape Model Bundle, NASA PDS SBN, doi:10.26007/96fn-p578 (Daly et al. 2023, Nature 616, 443)",
+      "license": "Public domain (NASA PDS, U.S. Government work)"
+    },
+    "dimorphos": {
+      "url": "https://pds-smallbodies.astro.umd.edu/holdings/pds4-dart_shapemodel-v1.0/data_derived_dimorphos_model_v004/dimorphos_g_0972mm_spc_obj_0000n00000_v004.obj",
+      "file": "dimorphos_g_0972mm_spc_obj_0000n00000_v004.obj",
+      "format": "obj",
+      "targetTris": 20000,
+      "model": "DART SPC global shape model of Dimorphos v004, 0.972 m GSD",
+      "citation": "Daly, R. T. et al. 2024, PSJ 5, 24, doi:10.3847/PSJ/ad0b07; DART Shape Model Bundle, NASA PDS SBN, doi:10.26007/96fn-p578",
+      "license": "Public domain (NASA PDS, U.S. Government work)"
+    },
+    "arrokoth": {
+      "url": "https://pdssbn.astro.umd.edu/holdings/pds4-nh_derived-v4.0/arrokoth_geophysics/shape_models/mu69_merged.obj",
+      "file": "mu69_merged.obj",
+      "format": "obj",
+      "targetTris": 40000,
+      "model": "New Horizons merged high-polygon shape model of (486958) Arrokoth (mu69_merged, 107,506 facets)",
+      "citation": "Spencer, J. R. et al. 2020, Science 367, eaay3999 (New Horizons team; NASA/JHUAPL/SwRI), PDS4 nh_derived arrokoth_geophysics",
+      "license": "Public domain (NASA PDS, U.S. Government work)"
+    },
+    "67p": {
+      "url": "https://pds-smallbodies.astro.umd.edu/holdings/ro-c-multi-5-67p-shape-v2.0/data/triplate/spc_esa/mtp019/cshp_dv_130_01_lores_obj.obj",
+      "file": "cshp_dv_130_01_lores_obj.obj",
+      "format": "obj",
+      "targetTris": 40000,
+      "model": "ESA Rosetta NAVCAM SPC shape model, MTP019 (CSHP_DV_130_01_LORES), Cheops reference frame",
+      "citation": "ESA/Rosetta/NAVCAM, ESA RMOC Flight Dynamics SPC model MTP019 (2016), RO-C-MULTI-5-67P-SHAPE-V2.0, NASA PDS SBN / ESA PSA",
+      "license": "CC BY-SA 3.0 IGO (ESA/Rosetta/NAVCAM)"
+    }
+  }
+}

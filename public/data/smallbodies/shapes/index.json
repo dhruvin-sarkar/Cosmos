@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "generated": "2026-10-19",
+  "shapes": {
+    "67p": {
+      "file": "shapes/67p.bin",
+      "vertices": 20002,
+      "triangles": 40000,
+      "meanRadiusKm": 1.64962,
+      "extentKm": [
+        5.06,
+        3.7146,
+        3.3115
+      ],
+      "model": "ESA Rosetta NAVCAM SPC shape model, MTP019 (CSHP_DV_130_01_LORES), Cheops reference frame",
+      "source": "https://pds-smallbodies.astro.umd.edu/holdings/ro-c-multi-5-67p-shape-v2.0/data/triplate/spc_esa/mtp019/cshp_dv_130_01_lores_obj.obj",
+      "citation": "ESA/Rosetta/NAVCAM, ESA RMOC Flight Dynamics SPC model MTP019 (2016), RO-C-MULTI-5-67P-SHAPE-V2.0, NASA PDS SBN / ESA PSA",
+      "license": "CC BY-SA 3.0 IGO (ESA/Rosetta/NAVCAM)"
+    },
+    "arrokoth": {
+      "file": "shapes/arrokoth.bin",
+      "vertices": 20002,
+      "triangles": 40000,
+      "meanRadiusKm": 9.12752,
+      "extentKm": [
+        36.032,
+        19.9592,
+        9.8294
+      ],
+      "model": "New Horizons merged high-polygon shape model of (486958) Arrokoth (mu69_merged, 107,506 facets)",
+      "source": "https://pdssbn.astro.umd.edu/holdings/pds4-nh_derived-v4.0/arrokoth_geophysics/shape_models/mu69_merged.obj",
+      "citation": "Spencer, J. R. et al. 2020, Science 367, eaay3999 (New Horizons team; NASA/JHUAPL/SwRI), PDS4 nh_derived arrokoth_geophysics",
+      "license": "Public domain (NASA PDS, U.S. Government work)"
+    },
+    "bennu": {
+      "file": "shapes/bennu.bin",
+      "vertices": 20002,
+      "triangles": 40000,
+      "meanRadiusKm": 0.24461,
+      "extentKm": [
+        0.5672,
+        0.5456,
+        0.498
+      ],
+      "model": "OSIRIS-REx OLA/altimetry global shape model v021, 3.25 m GSD (SPICE DSK g_03250mm_alt_obj_0000n00000_v021)",
+      "source": "https://naif.jpl.nasa.gov/pub/naif/pds/pds4/orex/orex_spice/spice_kernels/dsk/bennu_g_03250mm_alt_obj_0000n00000_v021.bds",
+      "citation": "OSIRIS-REx Altimetry Working Group; Daly, M. G. et al. 2020, Sci. Adv. 6, eabd3649 (NASA/GSFC/Univ. of Arizona/CSA/York/MDA), v021 archived in the OSIRIS-REx SPICE PDS4 bundle",
+      "license": "Public domain (NASA PDS / NAIF archive, U.S. Government work)"
+    },
+    "didymos": {
+      "file": "shapes/didymos.bin",
+      "vertices": 10002,
+      "triangles": 20000,
+      "meanRadiusKm": 0.36486,
+      "extentKm": [
+        0.8185,
+        0.8015,
+        0.6055
+      ],
+      "model": "DART SPC global shape model of Didymos v003, 4.657 m GSD",
+      "source": "https://pds-smallbodies.astro.umd.edu/holdings/pds4-dart_shapemodel-v1.0/data_derived_didymos_model_v003/didymos_g_4657mm_spc_obj_0000n00000_v003.obj",
+      "citation": "Daly, R. T., Barnouin, O. S., Ernst, C. M., Nair, H., Espiritu, R., Waller, C. 2023, DART Shape Model Bundle, NASA PDS SBN, doi:10.26007/96fn-p578 (Daly et al. 2023, Nature 616, 443)",
+      "license": "Public domain (NASA PDS, U.S. Government work)"
+    },
+    "dimorphos": {
+      "file": "shapes/dimorphos.bin",
+      "vertices": 10002,
+      "triangles": 20000,
+      "meanRadiusKm": 0.07489,
+      "extentKm": [
+        0.1784,
+        0.1693,
+        0.1146
+      ],
+      "model": "DART SPC global shape model of Dimorphos v004, 0.972 m GSD",
+      "source": "https://pds-smallbodies.astro.umd.edu/holdings/pds4-dart_shapemodel-v1.0/data_derived_dimorphos_model_v004/dimorphos_g_0972mm_spc_obj_0000n00000_v004.obj",
+      "citation": "Daly, R. T. et al. 2024, PSJ 5, 24, doi:10.3847/PSJ/ad0b07; DART Shape Model Bundle, NASA PDS SBN, doi:10.26007/96fn-p578",
+      "license": "Public domain (NASA PDS, U.S. Government work)"
+    },
+    "eros": {
+      "file": "shapes/eros.bin",
+      "vertices": 20002,
+      "triangles": 40000,
+      "meanRadiusKm": 8.42743,
+      "extentKm": [
+        32.6677,
+        16.8892,
+        11.961
+      ],
+      "model": "Gaskell Eros Shape Model V1.0, ICQ q=128 plate model (ver128q)",
+      "source": "https://sbnarchive.psi.edu/pds3/near/NEAR_A_MSI_5_EROSSHAPE_V1_0/data/vertex/ver128q.tab",
+      "citation": "Gaskell, R. W. 2008, Gaskell Eros Shape Model V1.0, NEAR-A-MSI-5-EROSSHAPE-V1.0, NASA Planetary Data System",
+      "license": "Public domain (NASA PDS, U.S. Government work)"
+    },
+    "itokawa": {
+      "file": "shapes/itokawa.bin",
+      "vertices": 20002,
+      "triangles": 40000,
+      "meanRadiusKm": 0.16178,
+      "extentKm": [
+        0.562,
+        0.3054,
+        0.2434
+      ],
+      "model": "Gaskell Itokawa Shape Model V1.0, ICQ q=128 plate model (ver128q)",
+      "source": "https://sbnarchive.psi.edu/pds3/hayabusa/HAY_A_AMICA_5_ITOKAWASHAPE_V1_0/data/vertex/ver128q.tab",
+      "citation": "Gaskell, R. et al. 2008, Gaskell Itokawa Shape Model V1.0, HAY-A-AMICA-5-ITOKAWASHAPE-V1.0, NASA Planetary Data System",
+      "license": "Public domain (NASA PDS, U.S. Government work)"
+    },
+    "ryugu": {
+      "file": "shapes/ryugu.bin",
+      "vertices": 20002,
+      "triangles": 40000,
+      "meanRadiusKm": 0.44825,
+      "extentKm": [
+        1.0186,
+        1.0192,
+        0.9643
+      ],
+      "model": "Hayabusa2 ONC SfM shape model SHAPE_SFM_49k_v20180804",
+      "source": "https://data.darts.isas.jaxa.jp/pub/hayabusa2/paper/Watanabe_2019/SHAPE_SFM_49k_v20180804.obj",
+      "citation": "Watanabe, S. et al. 2019, Science 364, 268 (JAXA/Hayabusa2 project; Univ. of Tokyo, Kochi, Rikkyo, Nagoya, Chiba Inst. Tech., Meiji, Aizu, AIST)",
+      "license": "JAXA DARTS open data (free use with credit to JAXA and the Hayabusa2 team)"
+    }
+  }
+}

@@ -14,6 +14,7 @@ import {
 import { aphelionAU, heliocentricIcrsM, heliocentricVelocityIcrs, jdTdbFromMs, perihelionAU, periodDays, type HelioElements } from './orbits';
 import { loadCloseApproaches, loadSentry, normalizeDesignation } from './neoApi';
 import { sunSource, type PositionFn } from './sources';
+import { REAL_SHAPES, SPIN_STATES } from './famousShapes';
 
 export const SB_ENTITY_PREFIX = 'sb:';
 export const sbEntityId = (id: string): string => `${SB_ENTITY_PREFIX}${id}`;
@@ -254,7 +255,10 @@ function buildFactSheet(m: SmallBodyModel): FactSheet {
     entityId: m.entityId,
     summary: ed.summary,
     sections: sections.map((s) => ({ ...s, paragraphs: 'paragraphs' in s ? (s as { paragraphs?: string[] }).paragraphs : undefined })),
-    representation: {
+    representation: REAL_SHAPES[m.id] ? {
+      provenance: 'reconstructed',
+      description: `Real shape model: ${REAL_SHAPES[m.id].model} (${REAL_SHAPES[m.id].citation}; ${REAL_SHAPES[m.id].license}). Uniform illustrative albedo with procedural fine relief below the model resolution; rotation from ${(SPIN_STATES[m.id]?.source ?? 'an illustrative pole')}.${m.isComet ? ' Coma, jets and tails are illustrative but physically oriented.' : ''}`,
+    } : {
       provenance: 'illustrative',
       description: m.isComet
         ? `Illustrative nucleus (${m.recipe} shape from published dimensions) with a procedural surface and physically oriented tails. Not an image of ${ed.name}.`
@@ -265,7 +269,7 @@ function buildFactSheet(m: SmallBodyModel): FactSheet {
     missing: phys.missing.length ? phys.missing : undefined,
     assumptions: [
       'Orbit: two-body propagation from the osculating epoch (no planetary perturbations).',
-      m.sizeFromH ? 'Size: from H with an assumed albedo of 0.14.' : 'Shape: ellipsoid-based recipe, illustrative.',
+      m.sizeFromH ? 'Size: from H with an assumed albedo of 0.14.' : REAL_SHAPES[m.id] ? 'Shape: mission shape model (decimated).' : 'Shape: ellipsoid-based recipe, illustrative.',
       ...(rec.id === 'dimorphos' ? ['Orbital phase and orbit-plane orientation are illustrative; the pre/post-DART periods are measured.'] : []),
     ],
   };
@@ -311,6 +315,8 @@ export function createSmallBodyEntities(registry: Pick<EntityRegistry, 'get'>): 
       domain: 'solar',
       parentId: isMoon ? 'sb:didymos' : 'sol:sun',
       radiusM: m.meanRadiusM,
+      // Elongated bodies (Eros, Arrokoth, Itokawa, 67P): fit the long axis, not the mean radius, in the inspect view.
+      ...(m.axesM[0] > m.meanRadiusM * 1.15 ? { framingRadiusM: m.axesM[0] } : {}),
       position,
       velocity,
       viewDistance: { min: minView, default: ed.viewDistanceM ?? Math.max(m.meanRadiusM * 4.2, minView * 1.2) },

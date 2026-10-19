@@ -6,6 +6,7 @@ import type { DiscoveredDomain } from '../index';
 import { SMALL_BODY_MODELS, createSmallBodyEntities } from './bodies';
 import { createSmallBodiesLayer } from './bodiesLayer';
 import { createAsteroidCloudLayer } from './asteroidLayer';
+import { createBeltRocksLayer } from './beltRocks';
 import { CRAFT_META, createCraftEntities } from './spacecraft';
 import { createCraftLayer } from './craftLayer';
 import { loadNeoCatalog } from './neoApi';
@@ -23,7 +24,7 @@ export const domain: DiscoveredDomain = {
       .then((rows) => ctx.registry.registerProvider(createNeoProvider(ctx.registry, rows)))
       .catch(() => undefined);
     return {
-      layers: [createAsteroidCloudLayer(ctx.registry), createSmallBodiesLayer(bodyEntities, models, ctx.registry), createCraftLayer(craftEntities, ctx.registry)],
+      layers: [createAsteroidCloudLayer(ctx.registry), createSmallBodiesLayer(bodyEntities, models, ctx.registry), createCraftLayer(craftEntities, ctx.registry), createBeltRocksLayer(ctx.registry)],
       entities: [...bodyEntities, ...craftEntities],
       providers: [],
     };
