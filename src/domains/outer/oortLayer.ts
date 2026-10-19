@@ -1,6 +1,6 @@
 /**
  * Oort cloud: an ILLUSTRATIVE seeded point cloud (inner toroidal Hills part 2,000–20,000 au; outer spherical part to 100,000 au)
- * plus a very faint limb shell at the outer edge. Labelled "hypothesised, illustrative"; nothing here is a measured object.
+ * with a smooth r^-3.5 density falloff (no boundary shell). Labelled "hypothesised, illustrative"; nothing here is a measured object.
  * Visible from ~800 au out to a few million au (and always when an outer:* entity is focused).
  */
 import * as THREE from 'three';
@@ -8,9 +8,8 @@ import type { EngineServices, FrameContext, LabelCandidate, Layer } from '../../
 import type { EntityRegistry } from '../../core/entity';
 import { AU_M, DEG } from '../../core/units';
 import { FRAGMENT_PRELUDE, LOGDEPTH_FRAGMENT, LOGDEPTH_VERTEX, VERTEX_PRELUDE } from '../../render/glsl/logdepth';
-import { OORT_HILLS_EDGE_AU, OORT_OUTER_AU, generateOortCloud } from './model';
+import { NOSE_ECLIPTIC_LON_DEG, OORT_HILLS_EDGE_AU, OORT_OUTER_AU, SCALE_RINGS, generateOortCloud } from './model';
 import { OUTER_IDS } from './entities';
-import { createShellVisual, type ShellVisual } from './shell';
 import { sunSource } from './sources';
 
 const VERTEX = /* glsl */ `
@@ -26,7 +25,7 @@ void main() {
   vec4 mv = modelViewMatrix * vec4(uEclToIcrs * position * uUnitsPerAu, 1.0);
   gl_Position = projectionMatrix * mv;
   gl_PointSize = (uSize + 1.2 * aB) * uPixelRatio;
-  vColor = mix(vec3(0.62, 0.72, 0.95), vec3(0.9, 0.94, 1.0), aB) * (0.18 + 0.5 * aB) * uOpacity;
+  vColor = mix(vec3(0.62, 0.72, 0.95), vec3(0.9, 0.94, 1.0), aB) * (0.036 + 0.1 * aB) * uOpacity;
   ${LOGDEPTH_VERTEX}
 }`;
 
@@ -41,6 +40,11 @@ void main() {
   gl_FragColor = vec4(vColor * a, a);
 }`;
 
+/** Minimum vertical separation between neighbouring annotation labels, and the horizontal span they are assumed to occupy. */
+const LABEL_GAP_PX = 28;
+const LABEL_W_PX = 220;
+const placedPx = new Float64Array(8);
+
 const ECL_TO_ICRS = new THREE.Matrix3();
 {
   const eps = 23.4392911 * DEG;
@@ -48,14 +52,13 @@ const ECL_TO_ICRS = new THREE.Matrix3();
   ECL_TO_ICRS.set(1, 0, 0, 0, c, -s, 0, s, c);
 }
 
-export function createOortLayer(registry: Pick<EntityRegistry, 'get'>, count = 48000): Layer {
+export function createOortLayer(registry: Pick<EntityRegistry, 'get'>, count = 16000): Layer {
   const sun = sunSource(registry);
   const sunWorld = new THREE.Vector3();
   const tmp = new THREE.Vector3();
   const screen = { x: 0, y: 0, depthM: 0, visible: false };
   let points: THREE.Points | null = null;
   let material: THREE.ShaderMaterial | null = null;
-  let limb: ShellVisual | null = null;
   let opacity = 0;
   // Ecliptic-frame label anchors (AU): inner cloud near the ecliptic plane edge, outer cloud off the plane.
   const anchorInner = new THREE.Vector3(OORT_HILLS_EDGE_AU * 0.55, OORT_HILLS_EDGE_AU * 0.15, 0);
@@ -96,34 +99,23 @@ export function createOortLayer(registry: Pick<EntityRegistry, 'get'>, count = 4
       points.visible = false;
       points.renderOrder = 1;
       svc.groups.far.add(points);
-
-      limb = createShellVisual(
-        { R: OORT_OUTER_AU, k: 0, p: 1, a: 0, thetaMaxDeg: 180 },
-        { color: [0.55, 0.68, 1.0], base: 0.0, rim: 0.12, grid: 0.025, gridThetaDeg: 15, gridPhiDeg: 30 },
-        'oort-limb',
-        48,
-        72,
-      );
-      limb.mesh.renderOrder = 5;
-      svc.groups.transparent.add(limb.mesh);
     },
 
     update(ctx: FrameContext): void {
-      if (!points || !material || !limb) return;
+      if (!points || !material) return;
       sun(ctx.timeMs, sunWorld);
       const dSunAu = ctx.cameraPosition.distanceTo(sunWorld) / AU_M;
       const focus = ctx.focusEntityId === OUTER_IDS.oort || ctx.selectedId === OUTER_IDS.oort;
-      const fadeOut = 1 - THREE.MathUtils.smoothstep(dSunAu, 5e5, 6e6);
+      // GLSL smoothstep(16, 15, log10 scale): full below 1e15 m, gone by 1e16 m.
+      const fadeOut = 1 - THREE.MathUtils.smoothstep(ctx.scaleLog10, 15, 16);
       const target = Math.max(THREE.MathUtils.smoothstep(dSunAu, 700, 4500) * fadeOut, focus ? fadeOut : 0);
       opacity += (target - opacity) * Math.min(1, ctx.dtRealSec * 3);
       if (Math.abs(target - opacity) < 0.002) opacity = target;
       const show = opacity > 0.003;
       points.visible = show;
       const unitsPerAu = AU_M / ctx.metersPerUnit;
-      limb.setFrame(unitsPerAu, show ? opacity : 0);
       if (!show) return;
       ctx.toRender(sunWorld, points.position);
-      limb.mesh.position.copy(points.position);
       material.uniforms.uUnitsPerAu.value = unitsPerAu;
       material.uniforms.uPixelRatio.value = ctx.viewport.pixelRatio;
       material.uniforms.uOpacity.value = opacity;
@@ -134,11 +126,33 @@ export function createOortLayer(registry: Pick<EntityRegistry, 'get'>, count = 4
       sun(ctx.timeMs, sunWorld);
       const eps = 23.4392911 * DEG;
       const c = Math.cos(eps), s = Math.sin(eps);
+      // Screen position of the 1-light-year ring label (see scaleRings.ts); Oort labels keep >= LABEL_GAP_PX away from it and each other.
+      const placed = placedPx;
+      let n = 0;
+      if (ctx.overlays['scale-markers']) {
+        const R = SCALE_RINGS[SCALE_RINGS.length - 1]!.radiusM, lon = NOSE_ECLIPTIC_LON_DEG * DEG + 0.5;
+        const ex = Math.cos(lon), ey = Math.sin(lon);
+        tmp.set(R * ex, R * ey * c, R * ey * s).add(sunWorld);
+        ctx.project(tmp, screen);
+        if (screen.visible) { placed[n++] = screen.x; placed[n++] = screen.y; }
+      }
       for (const [a, text, detail, prio] of labelAnchors) {
         tmp.set(a.x, c * a.y - s * a.z, s * a.y + c * a.z).multiplyScalar(AU_M).add(sunWorld);
         ctx.project(tmp, screen);
         if (!screen.visible) continue;
-        out.push({ entityId: text === 'Oort cloud' ? OUTER_IDS.oort : null, text, detail, x: screen.x, y: screen.y, priority: prio, kind: 'annotation', opacity: Math.min(1, opacity) });
+        let y = screen.y;
+        for (let pass = 0; pass < 6; pass++) {
+          let moved = false;
+          for (let k = 0; k < n; k += 2) {
+            if (Math.abs(placed[k]! - screen.x) < LABEL_W_PX && Math.abs(placed[k + 1]! - y) < LABEL_GAP_PX) {
+              y = placed[k + 1]! + (y >= placed[k + 1]! ? LABEL_GAP_PX : -LABEL_GAP_PX);
+              moved = true;
+            }
+          }
+          if (!moved) break;
+        }
+        placed[n++] = screen.x; placed[n++] = y;
+        out.push({ entityId: text === 'Oort cloud' ? OUTER_IDS.oort : null, text, detail, x: screen.x, y, priority: prio, kind: 'annotation', opacity: Math.min(1, opacity) });
       }
     },
 
@@ -146,9 +160,7 @@ export function createOortLayer(registry: Pick<EntityRegistry, 'get'>, count = 4
       points?.removeFromParent();
       points?.geometry.dispose();
       material?.dispose();
-      limb?.dispose();
       points = null;
-      limb = null;
     },
   };
 }

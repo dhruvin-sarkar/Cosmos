@@ -130,7 +130,7 @@ export interface OortCloudData {
 /**
  * Seeded illustrative Oort cloud in the ECLIPTIC frame: ~35 % inner cloud (2 000–20 000 AU, concentrated toward the
  * ecliptic: latitude σ ≈ 25°), ~65 % outer cloud (20 000–100 000 AU, isotropic). Radii follow a density ∝ r⁻³·⁵ shell
- * profile for the inner part and a gently peaked shell for the outer part so the edge reads clearly.
+ * profile for both parts so the cloud fades out gradually instead of ending in a rim.
  */
 export function generateOortCloud(count: number, seed = 1950): OortCloudData {
   const rnd = mulberry32(seed);
@@ -147,9 +147,10 @@ export function generateOortCloud(count: number, seed = 1950): OortCloudData {
       r = Math.pow(a - u * (a - b), -2);
       lat = (gauss() * 25 * Math.PI) / 180;
     } else {
-      // Outer: log-uniform in r, then biased outward so the shell edge is visible.
-      const u = Math.pow(rnd(), 0.7);
-      r = OORT_HILLS_EDGE_AU * Math.pow(OORT_OUTER_AU / OORT_HILLS_EDGE_AU, u);
+      // Outer: same r^-3.5 number-density profile (shell pdf ∝ r^-1.5) so the cloud thins smoothly with no hard edge.
+      const u = rnd();
+      const a = Math.pow(OORT_HILLS_EDGE_AU, -0.5), b = Math.pow(OORT_OUTER_AU, -0.5);
+      r = Math.pow(a - u * (a - b), -2);
       lat = Math.asin(2 * rnd() - 1);
     }
     const lon = 2 * Math.PI * rnd();

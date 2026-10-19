@@ -66,6 +66,18 @@ describe('oort cloud', () => {
   });
 });
 
+describe('oort density profile', () => {
+  it('thins outward (r^-3.5): far fewer points in the outer half of the radial range than the inner', () => {
+    const c = generateOortCloud(8000, 11);
+    let near = 0, far = 0;
+    for (let i = 0; i < c.count; i++) {
+      const r = Math.hypot(c.positions[3 * i]!, c.positions[3 * i + 1]!, c.positions[3 * i + 2]!);
+      if (r < 20_000) near++; else if (r > 60_000) far++;
+    }
+    expect(near).toBeGreaterThan(far * 2);
+  });
+});
+
 describe('named TNO ids', () => {
   it('links existing entities and slugs the rest', () => {
     expect(tnoEntityId('Pluto')).toBe('sol:pluto');
