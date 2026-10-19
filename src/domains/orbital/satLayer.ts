@@ -106,7 +106,7 @@ export function createSatLayer(sats: readonly NotableSat[]): SatLayer {
   function ensureModel(v: Visual): void {
     if (v.group || !svc || v.sat.info.model === 'glint') return;
     const def = modelDef(v.sat.info.model as ModelId);
-    const mat = new SpacecraftMaterial(v.sat.info.model === 'iss' ? 82 : 24, v.sat.info.model === 'iss' ? 8 : 6);
+    const mat = new SpacecraftMaterial();
     const g = new THREE.Group();
     g.add(new THREE.Mesh(def.structure, mat));
     for (const a of def.arrays) {
@@ -293,6 +293,8 @@ export function createSatLayer(sats: readonly NotableSat[]): SatLayer {
             u.uEarthDir.value.copy(v.rel).multiplyScalar(-1 / r);
             const q = R_EARTH_M / r;
             u.uEarthshine.value = irr * 0.3 * q * q * 0.5 * (1 + v.rel.dot(sunDir) / r);
+            u.uSunIrr.value = irr;
+            u.uEarthQ.value = q;
           }
         }
         // Glint (fades out as the model grows).

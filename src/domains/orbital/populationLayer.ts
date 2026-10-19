@@ -36,6 +36,7 @@ uniform float uExposure;
 uniform float uEarthRr;   // Earth's drawn radius, render units (its centre is this object's origin; the camera is at render-space origin)
 uniform vec3 uMap;       // visual scale: Earth factor f, core radius c (m), gap growth g
 uniform float uLeoCrowd;  // 0..1 dimming of the LEO swarm when Earth is small on screen (no additive haze)
+uniform float uLab;       // 0 = default view (muted near-white, smaller, fainter), 1 = debris lab (full class colour coding)
 varying vec3 vColor;
 
 float solveE(float M, float e) {
@@ -71,11 +72,14 @@ void main() {
   else if (cls == 1) { c = vec3(1.0, 0.6, 0.24); size = 2.2; }
   else if (cls == 2) { c = vec3(1.0, 0.36, 0.3); size = 1.8; }
   else { c = vec3(0.62, 0.62, 0.62); size = 1.8; }
+  // Default view: a quiet, near-neutral shell; class colours return in full in the debris lab.
+  c = mix(c, vec3(0.85, 0.88, 0.92), 0.7 * (1.0 - uLab));
+  size *= mix(0.75, 1.0, uLab);
   if (starlink && uStarlink > 0.0) { c = mix(c, vec3(0.75, 1.0, 0.85), uStarlink); size += uStarlink; lit = max(lit, 0.5 * uStarlink); }
   float leo = 1.0 - smoothstep(1.3, 1.6, length(p) / uEarthR);
   float crowd = mix(1.0, uLeoCrowd, leo);
   size *= mix(1.0, 0.8, leo * (1.0 - uLeoCrowd));
-  vColor = c * (lit * vis * uFade * crowd * 0.9 / uExposure);
+  vColor = c * (lit * vis * uFade * crowd * mix(0.55, 1.0, uLab) * 0.9 / uExposure);
   // VISUAL SCALE (src/core/visualScale.ts mapSatelliteOffset): a' = f·min(a,c) + max(a−c,0)·g about Earth's drawn centre.
   float ra = length(p);
   vec3 pd = uMap.x > 1.0 && ra > 0.0 ? p * ((uMap.x * min(ra, uMap.y) + max(ra - uMap.y, 0.0) * uMap.z) / ra) : p;
@@ -88,7 +92,7 @@ void main() {
   if (md < ed && ed > uEarthRr) {
     float cosSep = dot(wp, ev) / max(md * ed, 1e-30);
     float cosDisc = sqrt(max(1.0 - (uEarthRr * uEarthRr) / (ed * ed), 0.0));
-    vColor *= mix(1.0, 0.3, smoothstep(cosDisc - 0.002, cosDisc + 0.002, cosSep));
+    vColor *= mix(1.0, mix(0.12, 0.3, uLab), smoothstep(cosDisc - 0.002, cosDisc + 0.002, cosSep));
   }
   gl_Position = projectionMatrix * mv;
   gl_PointSize = size * uPixelRatio;
@@ -127,6 +131,7 @@ export function createPopulationLayer(opts: PopulationLayerOptions): Layer & { r
   let perm: Uint32Array = new Uint32Array(0);
   let fade = 0;
   let starlinkK = 0;
+  let labK = 0;
   const vis = new THREE.Vector4();
   const earthW = new THREE.Vector3();
   const sunW = new THREE.Vector3();
@@ -176,6 +181,7 @@ export function createPopulationLayer(opts: PopulationLayerOptions): Layer & { r
         uLeoCrowd: { value: 1 },
         uMap: { value: new THREE.Vector3(1, R_EARTH_M, 1) },
         uEarthRr: { value: 1 },
+        uLab: { value: 0 },
       },
       blending: THREE.AdditiveBlending,
       depthWrite: false,
@@ -211,6 +217,7 @@ export function createPopulationLayer(opts: PopulationLayerOptions): Layer & { r
       const deb = ctx.overlays.debris ? 1 : 0;
       vis.set(smooth(vis.x, sat, ctx.dtRealSec), smooth(vis.y, deb, ctx.dtRealSec), smooth(vis.z, deb, ctx.dtRealSec), smooth(vis.w, deb, ctx.dtRealSec));
       starlinkK = smooth(starlinkK, highlight.starlink, ctx.dtRealSec, 3);
+      labK = smooth(labK, svc?.store.getState().lab.active === 'debris' ? 1 : 0, ctx.dtRealSec, 3);
       const d = orbitalScale.earthDistM;
       const scaleFade = d <= FADE_NEAR_M ? 1 : d >= FADE_FAR_M ? 0 : 1 - Math.log(d / FADE_NEAR_M) / Math.log(FADE_FAR_M / FADE_NEAR_M);
       fade = scaleFade;
@@ -245,6 +252,7 @@ export function createPopulationLayer(opts: PopulationLayerOptions): Layer & { r
       // When only the Starlink highlight is on, show just the payload class.
       if (vis.x < starlinkK) vis.x = starlinkK;
       u.uStarlink.value = starlinkK;
+      u.uLab.value = labK;
       // Budget: draw a prefix of the shuffled order (a uniform random subset) on weaker presets.
       geo.setDrawRange(0, Math.min(pop.count, Math.max(2000, ctx.quality.satelliteBudget || pop.count)));
     },
