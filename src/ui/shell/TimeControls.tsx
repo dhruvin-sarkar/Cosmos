@@ -77,9 +77,9 @@ export function TimeControls() {
         <span className="cx-time__clock">{formatSimDate(t.ms, { style: 'time', seconds: true })}</span>
       </button>
       <div className="cx-time__rate">
-        <IconButton label="Slower or reverse" icon={ChevronLeft} shortcut="[" tooltipSide="top" onClick={() => commands.setTimeRate(stepRate(t.rate, -1))} />
+        <IconButton label="Slower or reverse" icon={ChevronLeft} shortcut="," tooltipSide="top" onClick={() => commands.setTimeRate(stepRate(t.rate, -1))} />
         <span className="cx-time__words" aria-live="polite">{words}</span>
-        <IconButton label="Faster" icon={ChevronRight} shortcut="]" tooltipSide="top" onClick={() => commands.setTimeRate(stepRate(t.rate, 1))} />
+        <IconButton label="Faster" icon={ChevronRight} shortcut="." tooltipSide="top" onClick={() => commands.setTimeRate(stepRate(t.rate, 1))} />
       </div>
       
       <Button variant="quiet" size="sm" className="cx-time__now" disabled={nearNow} onClick={() => commands.timeToNow()}>

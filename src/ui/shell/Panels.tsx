@@ -11,8 +11,9 @@ import { ProvenanceBadge, ProvenanceLegend } from '../components/Provenance';
 import { formatIsoAge, formatIsoDate } from '../format';
 
 const KEYS: ReadonlyArray<{ group: string; items: ReadonlyArray<[string | string[], string]> }> = [
+  { group: 'Travel', items: [['B', 'Solar System navigator'], ['0', 'The Sun'], ['1–8', 'Mercury to Neptune (9: Pluto)'], [['[', ']'], 'Previous or next moon'], [['Shift+[', 'Shift+]'], 'Previous or next planet']] },
   { group: 'Explore', items: [[['Ctrl+K', '/'], 'Search'], ['Escape', 'Close panel or clear selection'], ['H', 'Return home to Earth'], ['Backspace', 'Go back'], ['F', 'Follow the selected object']] },
-  { group: 'Scale and time', items: [[['ArrowUp', 'ArrowDown'], 'Cosmic Ruler: step a decade (when focused)'], ['Space', 'Play or pause time'], [['[', ']'], 'Slower or faster time'], ['N', 'Time to now']] },
+  { group: 'Scale and time', items: [[['ArrowUp', 'ArrowDown'], 'Cosmic Ruler: step a decade (when focused)'], ['Space', 'Play or pause time'], [[',', '.'], 'Slower or faster time'], ['N', 'Time to now']] },
   { group: 'View', items: [['L', 'Labels'], ['O', 'Orbits'], ['C', 'Constellations'], ['Shift+H', 'Hide the interface'], ['`', 'Debug readout'], ['?', 'This help']] },
   { group: 'Tour', items: [['T', 'Start or exit the tour'], [['ArrowLeft', 'ArrowRight'], 'Previous or next chapter'], ['R', 'Return to demo']] },
 ];
@@ -21,6 +22,7 @@ const POINTER: ReadonlyArray<[string, string]> = [
   ['Drag', 'Orbit around the focus'],
   ['Scroll or pinch', 'Zoom across scales'],
   ['Click', 'Select an object'],
+  ['Click a label', 'Fly to that object'],
   ['Double-click', 'Fly to an object'],
   ['Right-drag or two-finger drag', 'Pan'],
   ['Drag the ruler', 'Scrub through scale'],

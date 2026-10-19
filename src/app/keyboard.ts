@@ -13,7 +13,7 @@ export const TIME_RATE_STEPS: readonly number[] = (() => {
   return [...up.slice().reverse().map(r => -r), ...up];
 })();
 
-export const DEFAULT_TOUR_ID = 'golden-journey-preview';
+export const DEFAULT_TOUR_ID = 'solar-system';
 
 const SPECTRAL_KEYS: Record<string, SpectralBandId> = { '1': 'visible', '2': 'near-infrared', '3': 'x-ray', '4': 'cmb' };
 
@@ -105,10 +105,11 @@ export function installKeyboardShortcuts(opts: KeyboardOptions): () => void {
         if (e.repeat) break;
         commands.togglePause();
         break;
-      case '[':
+      // [ and ] step between moons (src/ui/navigator/keys.ts); time rate lives on , and .
+      case ',':
         commands.setTimeRate(stepTimeRate(store.getState().time.rate, -1));
         break;
-      case ']':
+      case '.':
         commands.setTimeRate(stepTimeRate(store.getState().time.rate, 1));
         break;
       case 'Backspace':

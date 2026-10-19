@@ -7,6 +7,7 @@ import { Popover } from '../components/Popover';
 import { Tooltip } from '../components/Tooltip';
 import { LayersPanel, LightPanel } from './ViewPanels';
 import { bandInfo } from './spectral';
+import { NavigatorButton, NavigatorHost } from '../navigator/Navigator';
 
 /** Default guided tour started by the Tour button (the tours module registers it under this id). */
 export const DEFAULT_TOUR_ID = 'golden-journey';
@@ -92,6 +93,7 @@ export function TopBar({ tourId = DEFAULT_TOUR_ID }: { tourId?: string }) {
             <span className="cx-chip cx-chip--warn" tabIndex={0}>Enlarged, not to scale</span>
           </Tooltip>
         )}
+        <NavigatorButton />
         <BarButton label="Layers" shortcut="Shift+L" expanded={menu === 'layers'} buttonRef={layersRef} onClick={() => setMenu(m => (m === 'layers' ? null : 'layers'))} />
         <BarButton label="Light" expanded={menu === 'light'} buttonRef={lightRef} onClick={() => setMenu(m => (m === 'light' ? null : 'light'))}>
           Light{band !== 'visible' && <span className="cx-bar-btn__value">{bandInfo(band).short}</span>}
@@ -107,6 +109,7 @@ export function TopBar({ tourId = DEFAULT_TOUR_ID }: { tourId?: string }) {
       <Popover open={menu === 'light'} onClose={() => setMenu(null)} anchorRef={lightRef} label="Light" className="cx-popover--light">
         <LightPanel />
       </Popover>
+      <NavigatorHost />
     </header>
   );
 }

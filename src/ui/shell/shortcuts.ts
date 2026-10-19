@@ -51,10 +51,11 @@ export function useGlobalShortcuts(store: CosmosStore, commands: AppCommands, to
           e.preventDefault();
           commands.togglePause();
           break;
-        case '[':
+        // [ and ] step between moons (src/ui/navigator/keys.ts); time rate lives on , and .
+        case ',':
           commands.setTimeRate(stepRate(s.time.rate, -1));
           break;
-        case ']':
+        case '.':
           commands.setTimeRate(stepRate(s.time.rate, 1));
           break;
         case 'n':

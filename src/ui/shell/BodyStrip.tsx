@@ -4,6 +4,7 @@ import type { Entity, EntityRegistry } from '../../core/entity';
 import { useCommands, useCosmos, useRegistry, useRegistryVersion, safeGetEntity } from '../hooks';
 import { useUiExtensions } from '../context';
 import { cx, useElementWidth } from '../lib/dom';
+import { MoonStrip } from '../navigator/MoonStrip';
 
 const SOLAR_BODIES = ['sol:mercury', 'sol:venus', 'sol:earth', 'sol:mars', 'sol:jupiter', 'sol:saturn', 'sol:uranus', 'sol:neptune'];
 const PRIMARY_KINDS = new Set(['star', 'stellar-system', 'black-hole']);
@@ -85,12 +86,13 @@ export function BodyStrip() {
     return collide ? even : t;
   }, [bodies, width]);
 
-  if (bodies.length === 0) return <div className="cx-strip cx-strip--empty" />;
+  if (bodies.length === 0) return <div className="cx-strip cx-strip--empty"><MoonStrip /></div>;
   const prev = focusIndex > 0 ? bodies[focusIndex - 1] : undefined;
   const next = focusIndex >= 0 && focusIndex < bodies.length - 1 ? bodies[focusIndex + 1] : undefined;
 
   return (
     <nav className="cx-strip" aria-label="Bodies in this system">
+      <MoonStrip />
       <button type="button" className="cx-strip__step" disabled={!prev} onClick={() => prev && void commands.focus(prev.entity.id)} aria-label={prev ? `Previous: ${prev.entity.name}` : 'No previous body'}>
         {prev ? `‹ ${prev.entity.name}` : ''}
       </button>
