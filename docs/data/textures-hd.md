@@ -62,3 +62,13 @@ Raw inputs (data-raw/textures-hd/, retrieved 2026-10-18): `sss/*.jpg` from https
 - Pluto/Charon/other unobserved areas stay low-resolution/flat by construction.
 
 **Reproduce**: `build-wms8k.mjs <bodies>`, `build-usgs8k.mjs <body>` (download the GeoTIFF named in its JOBS table from `https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/` into `data-raw/textures-hd/usgs2/`), `build-wms4k.mjs`, `build-normals2.mjs <body>` (DEM into `data-raw/textures-hd/dem2/`, reduced by `tiff_dem.py`, which now also reads float32 and an extra nodata value and writes a `.valid` mask), then `finalize2.mjs`. Raws were deleted after processing (disk). Licences: all public domain (NASA/USGS/DLR-released data distributed by USGS); credit "USGS Astrogeology Science Center".
+
+## Polish round 1: seam repair
+`scripts/data/textures-hd/fix-seams.mjs` repairs antimeridian-seam defects: Ceres/Vesta 4k/1k colour maps rebuilt from the clean 8k maps (old 4k/1k had black edge columns), Mercury 8k and Venus surface 4k edge columns interpolated across the wrap. All equirect colour maps were scanned for edge-column jumps; the remaining wraps (Moon 4k/Rhea/Tethys/Earth day) differ by 3-9 grey levels, consistent with real surface differences/mosaic edges.
+
+## Polish round 2 – Europa / Io mosaic seams
+`scripts/data/textures-hd/feather-mosaic.mjs` (originals kept in `data-raw/textures-hd/src/*_color_8k_orig.jpg`; idempotent).
+- **Europa** `color_8k.jpg`: the WMS half-globe stitch column (x=4096) was half-dark and showed as a hard N–S line down the disc – interpolated from its neighbours.
+  The Galileo (sharp) / Voyager (soft) resolution boundaries were hard edges – local detail is now faded smoothly (σ≈120 px ≈ 5° of longitude) approaching soft-data regions (`THR=50 SIG=120`).
+  Remaining brightness steps between the source image footprints are inherent to the USGS mosaic. Unobserved areas stay illustrative.
+- **Io** `color_8k.jpg`: the smeared, unobserved polar caps carried a hard colour step (x≈4230, lat>65°N) – blended to a heavily low-passed copy poleward of 50–68°.
