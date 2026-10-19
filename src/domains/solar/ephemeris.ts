@@ -220,10 +220,17 @@ export const exposureState = { gain: 1, targetGain: 1 };
 export function exhibitionDisplayGain(enlarge: number, sunDistanceM: number): number {
   if (!(enlarge > 1.5)) return 1;
   const r2 = (sunDistanceM / AU_M) ** 2;
-  const lost = Math.min(Math.max(r2 / Math.max(exposureState.gain, 1e-6), 1), 2500);
-  if (lost <= 1) return 1;
+  const rel = r2 / Math.max(exposureState.gain, 1e-6);
   const t = Math.min(Math.max((enlarge - 1.5) / 18.5, 0), 1);
   const w = t * t * (3 - 2 * t);
+  if (rel < 1) {
+    // Inner planets in an overview: Mercury gets 6.7× and Venus 1.9× Earth's sunlight, so strongly enlarged discs blow
+    // out to flat white. Give back part of that excess and scale the drawn albedo by 0.6 (Venus still outshines Earth).
+    // Continuous at rel = 1 (Earth-distance bodies keep their gain of 1).
+    const s = Math.min(Math.max((1 - rel) / 0.5, 0), 1);
+    return Math.pow(rel, 0.5 * w) * (1 - 0.4 * w * s * s * (3 - 2 * s));
+  }
+  const lost = Math.min(rel, 2500);
   return Math.pow(lost, 0.8 * w);
 }
 

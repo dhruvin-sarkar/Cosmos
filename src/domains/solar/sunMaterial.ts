@@ -256,6 +256,7 @@ varying vec3 vObjPos;
 const float GRANULES_PER_TILE = ${GRANULES_PER_TILE.toFixed(1)};
 // Network tile scale: NETWORK_CELLS_PER_TILE supergranules (~30 Mm, ≈ 23 granules) per network tile.
 const float NETWORK_SCALE = ${(GRANULES_PER_TILE / (23 * NETWORK_CELLS_PER_TILE)).toFixed(5)};
+const float NETWORK_CELLS_PER_TILE = ${NETWORK_CELLS_PER_TILE.toFixed(1)};
 const float FRAME_RATE = ${SUN_FRAME_RATE_DEG_DAY.toFixed(4)};
 
 // Body-frame point p now → where that plasma was at the image time (differential rotation relative to the frame).
@@ -317,9 +318,15 @@ void main() {
   vec3 pn = p * tile * 0.03;
   vec3 warpN = 0.45 * vec3(simplexNoise3(pn + vec3(3.3, 1.7, 9.1)), simplexNoise3(pn + vec3(13.7, 4.1, 0.3)), simplexNoise3(pn + vec3(8.9, 17.3, 6.1)));
   vec4 tn = tri(p, w, tile * NETWORK_SCALE, vec3(0.0, 0.0, uTime * 1e-6) + warpN);
-  float g = uPatternOn * ((ta.r - 0.5) * wa + (tb.b - 0.5) * wb) / (0.22 * sqrt(wa * wa + wb * wb));
-  float meso = uPatternOn * (tn.a - 0.5) / 0.22;
-  float network = uPatternOn * tn.g;
+  // Fade each band by its on-screen cell size: mip-mapping alone leaves the tile repetition visible as a lattice
+  // once granules approach pixel size (StarSurfaceMaterial does the same).
+  float cellPx = 1.0 / max(length(fwidth(p * uGranuleScale)), 1e-6);
+  float granFade = smoothstep(1.5, 4.0, cellPx);
+  float netPx = 1.0 / max(length(fwidth(p * tile * NETWORK_SCALE * NETWORK_CELLS_PER_TILE)), 1e-6);
+  float netFade = smoothstep(1.5, 4.0, netPx);
+  float g = granFade * uPatternOn * ((ta.r - 0.5) * wa + (tb.b - 0.5) * wb) / (0.22 * sqrt(wa * wa + wb * wb));
+  float meso = netFade * uPatternOn * (tn.a - 0.5) / 0.22;
+  float network = netFade * uPatternOn * tn.g;
   float contrast = uContrast * (0.3 + 0.7 * mu);
   float quiet = 1.0 + contrast * clamp(g, -2.5, 2.5) + 0.008 * meso; // meso/supergranular intensity contrast < 1 %
 
@@ -329,7 +336,7 @@ void main() {
   float act = belt * smoothstep(0.05, 0.45, fbm3(p * 3.2 + vec3(11.0, 3.0, 7.0), 2));
   // Faculae: grains of bright network, invisible at disc centre, strongest toward (not at) the limb.
   float facProfile = pow(1.0 - mu, 1.3) * smoothstep(0.0, 0.12, mu);
-  float grain = clamp(0.5 + (ta.a - 0.5) * 3.0, 0.0, 1.0);
+  float grain = mix(0.5, clamp(0.5 + (ta.a - 0.5) * 3.0, 0.0, 1.0), granFade);
   float faculae = facProfile * (0.3 * network * grain * (0.25 + 0.75 * act) + 0.1 * act);
 
   float relProc = 1.0;

@@ -24,6 +24,19 @@ export interface SolarRingOptions {
   polarRatio: number;
   dustFraction: number;
   albedoScale?: number;
+  /** Linear colour multiplied into the (desaturated) strip: true-colour particle hue. Default white. */
+  tint?: [number, number, number];
+  /**
+   * Remap of the strip's opacity to normal optical depth: τ' = τ · mix(lowGain, 1, smoothstep(0.4, 0.95, a)).
+   * Image-derived strips overstate the faint rings (Saturn's C ring and Cassini division read τ ≈ 0.4; measured
+   * τ ≈ 0.05–0.15, Colwell et al. 2009). Default 1 (no remap).
+   */
+  thinGain?: number;
+  /**
+   * Planetshine on the rings (fraction of direct sunlight at r = 1 a, falling as 1/r²): keeps the rings inside the
+   * planet's shadow faintly visible, as in Cassini's shadowed-ring frames. ≈ 0.1 × the planet's geometric albedo.
+   */
+  planetShine?: number;
 }
 
 export class SolarRingMaterial extends THREE.ShaderMaterial {
@@ -38,6 +51,9 @@ export class SolarRingMaterial extends THREE.ShaderMaterial {
     uSunAngularRadius: { value: number };
     uDust: { value: number };
     uAlbedoScale: { value: number };
+    uTint: { value: THREE.Vector3 };
+    uThinGain: { value: number };
+    uPlanetShine: { value: number };
   };
 
   constructor(opts: SolarRingOptions) {
@@ -53,6 +69,9 @@ export class SolarRingMaterial extends THREE.ShaderMaterial {
         uSunAngularRadius: { value: 4.9e-4 },
         uDust: { value: opts.dustFraction },
         uAlbedoScale: { value: opts.albedoScale ?? 1 },
+        uTint: { value: new THREE.Vector3(...(opts.tint ?? [1, 1, 1])) },
+        uThinGain: { value: opts.thinGain ?? 1 },
+        uPlanetShine: { value: opts.planetShine ?? 0 },
       },
       vertexShader: VERTEX_SHADER,
       fragmentShader: FRAGMENT_SHADER,
@@ -114,6 +133,9 @@ uniform float uSunIntensity;
 uniform float uSunAngularRadius;
 uniform float uDust;
 uniform float uAlbedoScale;
+uniform vec3 uTint;
+uniform float uThinGain;
+uniform float uPlanetShine;
 varying vec3 vLocal;
 
 float hg(float cosTheta, float g) {
@@ -127,10 +149,11 @@ void main() {
   if (u < 0.0 || u > 1.0) discard;
   vec4 strip = texture2D(uStrip, vec2(u, 0.5));
   // The strip's hues are exaggerated by its source stretch; true-colour Cassini views show subtle tan/grey rings.
-  strip.rgb = mix(vec3(dot(strip.rgb, vec3(0.2126, 0.7152, 0.0722))), strip.rgb, 0.6);
+  // Keep a little of the strip's own hue and impose the measured particle colour (warm tan; Cuzzi et al. 2009).
+  strip.rgb = mix(vec3(dot(strip.rgb, vec3(0.2126, 0.7152, 0.0722))), strip.rgb, 0.3) * uTint;
   float a = min(strip.a, 0.999);
   if (a <= 0.001) discard;
-  float tau = -log(1.0 - a);
+  float tau = -log(1.0 - a) * mix(uThinGain, 1.0, smoothstep(0.4, 0.95, a));
 
   vec3 s = normalize(uSunDir);
   vec3 toCam = normalize(uCamLocal - vLocal);
@@ -154,9 +177,12 @@ void main() {
   // Oblate planet shadow: scale z so the ellipsoid becomes the unit sphere.
   vec3 pS = vec3(vLocal.xy, vLocal.z / uPolar);
   vec3 sS = normalize(vec3(s.xy, s.z / uPolar));
-  float shadow = solarSphereShadow(pS, sS, uSunAngularRadius, vec3(0.0), 1.0);
+  // Penumbra: the solar disc (≈ 1 px wide at 9.5 au), widened to at least ~1 pixel so the edge is antialiased.
+  float pixAng = length(fwidth(vLocal.xy)) / max(r, 1.0);
+  float shadow = solarSphereShadow(pS, sS, max(uSunAngularRadius, 0.6 * pixAng), vec3(0.0), 1.0);
   // Chandrasekhar single scattering with πF = E: I = E·ϖ·P(θ)/(4π) · …  (Lommel–Seeliger limit for τ → ∞).
-  vec3 radiance = uSunIntensity * RECIPROCAL_PI * min(strip.rgb * uAlbedoScale, vec3(0.95)) * phase * 0.25 * layer * shadow;
+  float light = shadow + uPlanetShine / (r * r);
+  vec3 radiance = uSunIntensity * RECIPROCAL_PI * min(strip.rgb * uAlbedoScale, vec3(0.95)) * phase * 0.25 * layer * light;
   float viewOpacity = 1.0 - exp(-tau / muV);
   gl_FragColor = vec4(radiance, viewOpacity);
   ${LOGDEPTH_FRAGMENT}

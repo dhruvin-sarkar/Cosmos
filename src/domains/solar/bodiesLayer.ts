@@ -49,6 +49,12 @@ const PLUTO_HAZE: AtmosphereParams = {
   mieG: 0.75,
 };
 
+/** Normal-map strength per body (maps are relief-exaggerated; Pluto's DEM ×3, so 0.3 ≈ true relief). */
+const NORMAL_STRENGTH: Record<string, number> = { mars: 0.55, pluto: 0.3 };
+
+/** Geometric albedo the shared exposure is calibrated for (Earth ≈ 0.37). */
+const EXPOSURE_REF_ALBEDO = 0.37;
+
 const MOON_OCCLUDERS: Record<string, string[]> = {
   'sol:mars': ['sol:phobos', 'sol:deimos'],
   'sol:jupiter': ['sol:io', 'sol:europa', 'sol:ganymede', 'sol:callisto'],
@@ -209,7 +215,7 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
     }
     if (def.surface === 'rocky' || def.surface === 'ice' || def.hasNormalMap) {
       if (def.hasNormalMap || quality !== 'low') {
-        void resolveBodyTexture(svc.assets, svc.renderer, def.key, 'normal', quality, 'linear', (t) => v.material.setNormalMap(t, def.key === 'mars' ? 0.55 : 0.5), {
+        void resolveBodyTexture(svc.assets, svc.renderer, def.key, 'normal', quality, 'linear', (t) => v.material.setNormalMap(t, NORMAL_STRENGTH[def.key] ?? 0.5), {
           isCancelled: () => !isLive(),
         }).catch(() => undefined);
       }
@@ -253,6 +259,8 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
           material.setResolutionCap(rc.lonDeg, rc.latDeg, rc.fullDeg, rc.blurDeg);
         }
         if (def.mapContrast !== undefined) material.uniforms.uMapContrast.value = def.mapContrast;
+        if (def.limbPow !== undefined) material.uniforms.uLimbPow.value = def.limbPow;
+        if (def.polarCap) material.uniforms.uPolarCap.value.set(def.polarCap[0] * DEG, def.polarCap[1] * DEG, def.polarCap[2]);
         const mesh = new THREE.Mesh(midGeo, material);
         mesh.name = def.id;
         mesh.frustumCulled = false;
@@ -277,6 +285,9 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
             polarRatio: def.axesM[2] / a,
             dustFraction: ringDef.dust,
             albedoScale: ringDef.albedoScale,
+            tint: ringDef.tint,
+            thinGain: ringDef.thinGain,
+            planetShine: def.key === 'saturn' ? 0.1 * (def.geometricAlbedo ?? 0.3) : 0,
           });
           ring = new THREE.Mesh(createRingGeometry(ringDef.innerM / a, ringDef.outerM / a, 512), ringMat);
           ring.name = `${def.id}:rings`;
@@ -286,6 +297,7 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
           disposables.push(ring.geometry, ringMat);
           material.uniforms.uRingStrip.value = placeholder;
           if (def.key === 'saturn') material.uniforms.uRingShine.value = 0.06;
+          material.uniforms.uRingThinGain.value = ringDef.thinGain ?? 1;
           if (ringDef.strip === 'saturn') {
             const r = ring;
             void resolveBodyTexture(svc.assets, svc.renderer, 'saturn', 'rings', 'ultra', 'srgb', (t) => {
@@ -333,6 +345,10 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
         focus.position(ctx.timeMs, focusPos);
         const dAu = focusPos.distanceTo(sunWorld) / AU_M;
         if (dAu < 300) target = THREE.MathUtils.clamp(dAu * dAu, 0.1, 2500);
+        // Bright bodies (Venus, Pluto, Eris) are exposed for their own albedo, as a camera would: otherwise a small
+        // disc that the frame meter cannot see (< 2 % coverage) renders near-white. Darker bodies keep the 1 au exposure.
+        const albedo = focus.domain === 'solar' ? (focus as Partial<SolarEntity>).def?.geometricAlbedo : null;
+        if (albedo && albedo > EXPOSURE_REF_ALBEDO) target *= Math.max(EXPOSURE_REF_ALBEDO / albedo, 0.4);
       }
       exposureState.targetGain = target;
       const k = 1 - Math.exp(-Math.max(ctx.dtRealSec, 0) / 0.6);

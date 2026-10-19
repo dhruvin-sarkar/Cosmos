@@ -7,7 +7,7 @@ import type { Capability, Entity, EntityRegistry } from '../../core/entity';
 import { AU_M, C_M_PER_S, LIGHT_MINUTE_M } from '../../core/units';
 import { derived, observed, unknown, type Fact, type FactSheet, type SourceRef } from '../../data/provenance';
 import { SOLAR_BODIES, type SolarBodyDef } from './constants';
-import { bodyNorthPole, bodyPosition, bodyVelocity } from './ephemeris';
+import { bodyNorthPole, bodyOrientation, bodyPosition, bodyVelocity } from './ephemeris';
 
 interface BodyRecord {
   id: string;
@@ -183,8 +183,24 @@ const CAPS: Capability[] = ['focus', 'orbit', 'follow', 'travel', 'show-orbit', 
 
 export type SolarEntity = Entity & {
   northPole(tMs: number, out: THREE.Vector3): THREE.Vector3;
+  /**
+   * Camera arrival hint (duck-typed like northPole): unit ICRS vector from the body toward the side worth seeing
+   * (Pluto: the New Horizons encounter hemisphere centred on Tombaugh Regio), or null for no preference.
+   */
+  preferredViewDir(tMs: number, out: THREE.Vector3): THREE.Vector3 | null;
   def: SolarBodyDef;
 };
+
+const viewQ = new THREE.Quaternion();
+/** Body-fixed unit vector of the best-imaged hemisphere's centre, in ICRS at tMs (null when the body has none). */
+function hemisphereDir(def: SolarBodyDef, tMs: number, out: THREE.Vector3): THREE.Vector3 | null {
+  const cap = def.resolutionCap;
+  if (!cap) return null;
+  const lon = (cap.lonDeg * Math.PI) / 180;
+  const lat = (cap.latDeg * Math.PI) / 180;
+  out.set(Math.cos(lat) * Math.cos(lon), Math.cos(lat) * Math.sin(lon), Math.sin(lat));
+  return out.applyQuaternion(bodyOrientation(def.rotation, tMs, viewQ));
+}
 
 export function createSolarEntities(fctx: SolarFactsContext): SolarEntity[] {
   return SOLAR_BODIES.map((def): SolarEntity => {
@@ -202,6 +218,7 @@ export function createSolarEntities(fctx: SolarFactsContext): SolarEntity[] {
       position: (tMs, out) => bodyPosition(def, tMs, out),
       velocity: (tMs, out) => bodyVelocity(def, tMs, out),
       northPole: (tMs, out) => bodyNorthPole(def.rotation, tMs, out),
+      preferredViewDir: (tMs, out) => hemisphereDir(def, tMs, out),
       ...(def.rings ? { framingRadiusM: Math.max(...def.rings.map((r) => r.outerM)) } : {}),
       viewDistance: { min: a * (isSun ? 1.15 : 1.08), default: a * (isSun ? 4.5 : def.rings ? 6.5 : 3.4) },
       tagline: def.tagline,

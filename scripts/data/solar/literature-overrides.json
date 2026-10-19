@@ -1,0 +1,202 @@
+{
+ "_note": "Audited literature values applied last by build-bodies.mjs so re-running the JPL scrape keeps them (science audit 2026-10-19; sources per body below).",
+ "_sources": {
+  "pluto": "NASA NSSDCA Pluto fact sheet; JPL SSD",
+  "eris": "Sicardy et al. 2011 (radius, albedo); Holler et al. 2021 (mass, density); Szakats et al. 2023 (rotation)",
+  "haumea": "Ortiz et al. 2017 (triaxial shape, density, albedo)",
+  "makemake": "Ortiz et al. 2012 (radius); Parker et al. 2018 (mass); Heinze & de Lahunta 2015 (rotation)",
+  "moon": "NASA NSSDCA Moon fact sheet",
+  "moons": "NASA/JPL sidereal orbital periods"
+ },
+ "bodies": {
+  "pluto": {
+   "radius": {
+    "equatorialKm": 1188.3,
+    "polarKm": 1188.3,
+    "meanKm": 1188.3
+   },
+   "massKg": 1.30246e+22,
+   "densityKgM3": 1853,
+   "surfaceGravityMs2": 0.6156,
+   "escapeVelocityKms": 1.21,
+   "rotation.siderealPeriodHours": 153.29335,
+   "rotation.wDotDegPerDay": 56.3625225,
+   "albedo": {
+    "geometric": 0.52,
+    "bond": 0.72
+   },
+   "temperature": {
+    "meanK": 48,
+    "minK": 33,
+    "maxK": 55,
+    "note": "NSSDCA Small Worlds mean (-225 C); surface range ~33-55 K"
+   },
+   "orbit.aAU": 39.482,
+   "orbit.periodDays": 90560,
+   "discovery": {
+    "by": "Tombaugh, C. W.",
+    "year": 1930
+   },
+   "summary": "Pluto is a dwarf planet in the Kuiper belt with a nitrogen-dominated atmosphere, visited by New Horizons in July 2015. Pluto and its largest moon Charon orbit a barycentre outside Pluto."
+  },
+  "eris": {
+   "radius": {
+    "equatorialKm": 1163,
+    "polarKm": null,
+    "meanKm": 1163
+   },
+   "massKg": 1.6466e+22,
+   "densityKgM3": 2430,
+   "surfaceGravityMs2": 0.8125,
+   "escapeVelocityKms": 1.375,
+   "rotation.siderealPeriodHours": 378.86,
+   "rotation.wDotDegPerDay": 333.64226,
+   "albedo": {
+    "geometric": 0.96,
+    "bond": null
+   },
+   "temperature": {
+    "meanK": 42,
+    "note": "approximate mean surface temperature (30-56 K range); poorly constrained"
+   },
+   "orbit.aAU": 67.93394687853566,
+   "orbit.periodDays": 204516.6629430732,
+   "discovery": {
+    "by": "Brown, M. E., Trujillo, C. A., Rabinowitz, D. (discovery images 2003-10-21; identified 2005-01-05)",
+    "year": 2005
+   },
+   "summary": "Eris is the most massive known dwarf planet, a scattered-disc object about as large as Pluto. Its discovery in 2005 helped prompt the IAU definition of a planet in 2006. Its moon Dysnomia orbits in 15.8 days."
+  },
+  "haumea": {
+   "radius": {
+    "equatorialKm": 1161,
+    "polarKm": 513,
+    "meanKm": 798
+   },
+   "massKg": 4.006e+21,
+   "densityKgM3": 1885,
+   "surfaceGravityMs2": 0.42,
+   "escapeVelocityKms": 0.819,
+   "rotation.siderealPeriodHours": 3.9144,
+   "rotation.wDotDegPerDay": 2207.2348,
+   "albedo": {
+    "geometric": 0.51,
+    "bond": null
+   },
+   "temperature": null,
+   "orbit.aAU": 43.06029023650952,
+   "orbit.periodDays": 103208.1173403618,
+   "discovery": {
+    "by": "Brown, M. E. et al. (Caltech, images 2004-12-28); Ortiz, J. L. et al. (Sierra Nevada, precovery 2003); credit disputed",
+    "year": 2004
+   },
+   "summary": "Haumea is a rapidly rotating (3.9 h), elongated dwarf planet in the Kuiper belt with two known moons (Hiʻiaka and Namaka) and a ring."
+  },
+  "makemake": {
+   "radius": {
+    "equatorialKm": 715,
+    "polarKm": null,
+    "meanKm": 715
+   },
+   "massKg": 2.69e+21,
+   "densityKgM3": 1760,
+   "surfaceGravityMs2": 0.351,
+   "escapeVelocityKms": 0.709,
+   "rotation.siderealPeriodHours": 22.83,
+   "rotation.wDotDegPerDay": 384.20491,
+   "albedo": {
+    "geometric": 0.82,
+    "bond": null
+   },
+   "temperature": {
+    "meanK": 35,
+    "note": "approximate (30-40 K range); poorly constrained"
+   },
+   "orbit.aAU": 45.57093317300052,
+   "orbit.periodDays": 112364.8068762869,
+   "discovery": {
+    "by": "Brown, M. E., Trujillo, C. A., Rabinowitz, D.",
+    "year": 2005
+   },
+   "summary": "Makemake is a dwarf planet in the Kuiper belt, among the brightest trans-Neptunian objects, with one known moon."
+  },
+  "moon": {
+   "temperature": {
+    "meanK": 253,
+    "minK": 95,
+    "maxK": 390,
+    "note": "NSSDCA Small Worlds mean (-20 C); equatorial surface range 95-390 K"
+   },
+   "orbit.periodDays": 27.322
+  },
+  "phobos": {
+   "orbit.periodDays": 0.31891
+  },
+  "deimos": {
+   "orbit.periodDays": 1.2624407
+  },
+  "io": {
+   "orbit.periodDays": 1.769138
+  },
+  "europa": {
+   "orbit.periodDays": 3.551181
+  },
+  "ganymede": {
+   "orbit.periodDays": 7.154553
+  },
+  "callisto": {
+   "orbit.periodDays": 16.689018
+  },
+  "amalthea": {
+   "orbit.periodDays": 0.498179
+  },
+  "mimas": {
+   "orbit.periodDays": 0.942422
+  },
+  "enceladus": {
+   "orbit.periodDays": 1.370218
+  },
+  "tethys": {
+   "orbit.periodDays": 1.887802
+  },
+  "dione": {
+   "orbit.periodDays": 2.736916
+  },
+  "rhea": {
+   "orbit.periodDays": 4.5175
+  },
+  "titan": {
+   "orbit.periodDays": 15.945421
+  },
+  "hyperion": {
+   "orbit.periodDays": 21.2766
+  },
+  "iapetus": {
+   "orbit.periodDays": 79.3215
+  },
+  "miranda": {
+   "orbit.periodDays": 1.413479
+  },
+  "ariel": {
+   "orbit.periodDays": 2.520379
+  },
+  "umbriel": {
+   "orbit.periodDays": 4.144176
+  },
+  "titania": {
+   "orbit.periodDays": 8.705867
+  },
+  "oberon": {
+   "orbit.periodDays": 13.463234
+  },
+  "triton": {
+   "orbit.periodDays": 5.876854
+  },
+  "nereid": {
+   "orbit.periodDays": 360.1362
+  },
+  "charon": {
+   "orbit.periodDays": 6.38723
+  }
+ }
+}

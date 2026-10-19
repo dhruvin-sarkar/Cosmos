@@ -79,6 +79,9 @@ export class PlanetMaterial extends THREE.ShaderMaterial {
     uMapContrast: { value: number };
     uHiRes: { value: THREE.Vector4 };
     uDetailTex: { value: THREE.Texture };
+    uLimbPow: { value: number };
+    uPolarCap: { value: THREE.Vector3 };
+    uRingThinGain: { value: number };
   };
 
   constructor(opts: PlanetMaterialOptions) {
@@ -120,6 +123,9 @@ export class PlanetMaterial extends THREE.ShaderMaterial {
         uMapContrast: { value: 1 },
         uHiRes: { value: new THREE.Vector4(0, 0, -2, -3) },
         uDetailTex: { value: detailTexture() },
+        uLimbPow: { value: 0 },
+        uPolarCap: { value: new THREE.Vector3(0, 0, 0) },
+        uRingThinGain: { value: 1 },
       },
       vertexShader: VERTEX_SHADER,
       fragmentShader: FRAGMENT_SHADER,
@@ -203,6 +209,24 @@ uniform float uMicro;
 uniform float uMapContrast;
 uniform vec4 uHiRes;
 uniform sampler2D uDetailTex;
+uniform float uLimbPow;
+uniform vec3 uPolarCap;
+uniform float uRingThinGain;
+
+// Ring shadow on the planet with the ring material's optical-depth remap (SolarRingOptions.thinGain), so the C ring
+// and Cassini division cast the same translucent shadow the rings show (render-kit ringTransmittance without it).
+float solarRingTransmittance(vec3 p, vec3 sunDir, float innerRadius, float outerRadius, sampler2D ringStrip) {
+  float mu0 = sunDir.z;
+  if (abs(mu0) < 1e-4) return 1.0;
+  float t = -p.z / mu0;
+  if (t <= 0.0) return 1.0;
+  float r = length(p + t * sunDir);
+  float u = (r - innerRadius) / (outerRadius - innerRadius);
+  if (u < 0.0 || u > 1.0) return 1.0;
+  float a = min(texture2D(ringStrip, vec2(u, 0.5)).a, 0.999);
+  float tau = -log(1.0 - a) * mix(uRingThinGain, 1.0, smoothstep(0.4, 0.95, a));
+  return exp(-tau / abs(mu0));
+}
 varying vec3 vSph;
 varying vec3 vViewPos;
 
@@ -294,11 +318,16 @@ void main() {
   float magnified = smoothstep(0.7, 0.2, foot / uTexelRad) * uDetail * uMicro;
 
   vec3 albedo = uTint;
+  // Map coverage weight: 1 where the source data are high-resolution, 0 where they are coarse (relief fades out there).
+  float hiResW = 1.0;
+#if defined(USE_PLUTO_PALETTE)
+  // Data resolution: sharp on the encounter hemisphere, honestly blurred where New Horizons saw only coarsely.
+  vec3 cdir = vec3(cos(uHiRes.y) * cos(uHiRes.x), cos(uHiRes.y) * sin(uHiRes.x), sin(uHiRes.y));
+  float blur = smoothstep(uHiRes.z, uHiRes.w, dot(sph, cdir));
+  hiResW = 1.0 - smoothstep(0.0, 0.5, blur);
+#endif
   if (uHasMap > 0.5) {
 #if defined(USE_PLUTO_PALETTE)
-    // Data resolution: sharp on the encounter hemisphere, honestly blurred where New Horizons saw only coarsely.
-    vec3 cdir = vec3(cos(uHiRes.y) * cos(uHiRes.x), cos(uHiRes.y) * sin(uHiRes.x), sin(uHiRes.y));
-    float blur = smoothstep(uHiRes.z, uHiRes.w, dot(sph, cdir));
     gX *= mix(1.0, 40.0, blur);
     gY *= mix(1.0, 40.0, blur);
 #endif
@@ -342,11 +371,17 @@ void main() {
     float A = dot(albedo, vec3(0.2126, 0.7152, 0.0722));
     // Soft knee: Sputnik Planitia's N₂ ice (normal albedo ≈ 0.9–1) keeps its cellular texture instead of clipping flat.
     A = A < 0.6 ? A : 0.6 + 0.36 * (1.0 - exp(-(A - 0.6) / 0.36));
-    vec3 hue = mix(vec3(1.85, 0.80, 0.52), vec3(1.546, 0.890, 0.476), smoothstep(0.08, 0.4, A));
-    hue = mix(hue, vec3(1.072, 0.9925, 0.862), smoothstep(0.5, 0.95, A));
+    // Unit-luminance hues: brick-red maculae (Cthulhu), cream-tan mid terrain, near-white N₂ ice (Tombaugh Regio).
+    vec3 hue = mix(vec3(1.85, 0.80, 0.52), vec3(1.40, 0.93, 0.62), smoothstep(0.08, 0.4, A));
+    hue = mix(hue, vec3(1.04, 0.995, 0.93), smoothstep(0.5, 0.95, A));
+    // True-colour saturation (×0.8 about the hue's luminance): the post AgX Punchy look adds ×1.4 on top.
+    float hl = dot(hue, vec3(0.2126, 0.7152, 0.0722));
+    hue = max(hl + (hue - hl) * 0.8, vec3(0.0));
     albedo = hue * A;
   }
 #endif
+  // Polar haze brightening (Uranus' sunward north-polar cap): albedo × (1 + gain) poleward of the latitude band.
+  if (uPolarCap.z != 0.0) albedo *= 1.0 + uPolarCap.z * smoothstep(uPolarCap.x, uPolarCap.y, lat);
   albedo = min(albedo, vec3(0.98));
 
   vec3 ns = n;
@@ -354,7 +389,7 @@ void main() {
     vec3 east = normalize(vec3(-n.y, n.x, 0.0) + vec3(1e-6, 0.0, 0.0));
     vec3 north = cross(n, east);
     vec3 t = mapAt(uNormalMap, lon, lat).xyz * 2.0 - 1.0;
-    t.xy *= uNormalStrength * uDetail * (1.0 - smoothstep(1.466, 1.553, abs(lat)));
+    t.xy *= uNormalStrength * uDetail * hiResW * (1.0 - smoothstep(1.466, 1.553, abs(lat)));
     ns = normalize(east * t.x + north * t.y + n * max(t.z, 0.05));
   }
 #if defined(MICRO_RELIEF)
@@ -366,7 +401,7 @@ void main() {
     float q = 1.0 / (4.0 * uTexelRad);
     float amp = 0.012 * uTexelRad;
     float h = (detailTri(P * q, tw) - 0.5) * amp + (detailTri(P * q * 6.1 + 0.37, tw) - 0.5) * (amp / 6.1);
-    h *= magnified;
+    h *= magnified * hiResW;
     vec3 dPx = dFdx(P);
     vec3 dPy = dFdy(P);
     vec3 r1 = cross(dPy, ns);
@@ -398,13 +433,15 @@ void main() {
   } else {
     float k = uMinnaertK;
     f = pow(mu0c, k) * pow(mu, k - 1.0);
+    // Extra limb darkening for deep hazy atmospheres seen through a log tone curve (ice giants; see constants.ts).
+    if (uLimbPow > 0.0) f *= pow(mu, uLimbPow);
     f *= smoothstep(-0.01, 0.06, mu0g);
   }
   vec3 light = vec3(f * discUp);
 
   vec3 Pm = P;
 #ifdef USE_RING_SHADOW
-  light *= ringTransmittance(Pm, s, vec3(0.0, 0.0, 1.0), uRingRadii.x, uRingRadii.y, uRingStrip);
+  light *= solarRingTransmittance(Pm, s, uRingRadii.x, uRingRadii.y, uRingStrip);
 #endif
   for (int i = 0; i < 4; i++) {
     if (uOccluders[i].w > 0.0) light *= solarSphereShadow(Pm, s, uSunAngularRadius, uOccluders[i].xyz, uOccluders[i].w);

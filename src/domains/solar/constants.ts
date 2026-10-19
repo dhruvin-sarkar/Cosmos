@@ -46,6 +46,10 @@ export interface RingDef {
   dust: number;
   /** Strip colour → single-scattering albedo ϖ (the strip stores image brightness, not ϖ). Default 1. */
   albedoScale?: number;
+  /** Linear particle colour multiplied into the strip (ringMaterial uTint). */
+  tint?: [number, number, number];
+  /** Optical-depth gain for the strip's faint rings (ringMaterial thinGain). */
+  thinGain?: number;
 }
 
 /** Animated cloud motion (winds.ts). */
@@ -102,6 +106,10 @@ export interface SolarBodyDef {
   atmosphere?: 'venus' | 'mars' | 'pluto';
   /** Gas-giant limb darkening (Minnaert k). */
   minnaertK?: number;
+  /** Extra limb-darkening exponent on top of Minnaert (giant BRDF): f × μ^limbPow. */
+  limbPow?: number;
+  /** North-polar haze brightening: [start latitude °, full latitude ° (> start), albedo gain]. */
+  polarCap?: [number, number, number];
   importance: number;
   tagline: string;
   /** Orbit period, days (orbit sampling and interpolation windows). */
@@ -147,7 +155,7 @@ export const SOLAR_BODIES: readonly SolarBodyDef[] = [
   {
     id: 'sol:jupiter', key: 'jupiter', name: 'Jupiter', aliases: [], kind: 'planet', aeBody: 'Jupiter',
     axesM: [km(71492), km(71492), km(66854)], meanRadiusM: km(69911), gmM3S2: GM(126686531.9),
-    geometricAlbedo: 0.52, tint: [1, 1, 0.95], surface: 'giant', colorMap: 'color', minnaertK: 1.05,
+    geometricAlbedo: 0.52, tint: [1.04, 1.0, 0.86], surface: 'giant', colorMap: 'color', minnaertK: 1.05,
     // Great Red Spot of the map (lon −47.8°, lat −20.5°, ≈ 22° × 12°); collar spin slowed ~2.5× (real period ≈ 3 d) so
     // the two advected copies stay coherent.
     winds: { profile: 'jupiter', shearBudgetDeg: 25, vortex: { lonDeg: -47.8, latDeg: -20.5, halfLonDeg: 11.5, halfLatDeg: 6.5, spinDegPerDay: 45 } },
@@ -161,7 +169,7 @@ export const SOLAR_BODIES: readonly SolarBodyDef[] = [
     geometricAlbedo: 0.47, tint: [0.82, 0.74, 0.56], surface: 'giant', colorMap: 'color', minnaertK: 1.05,
     winds: { profile: 'saturn', shearBudgetDeg: 60 },
     // Strip B-ring peak ≈ 0.24 linear; ϖ ≈ 0.6 for the B ring at visible wavelengths (Cuzzi et al. 1984; Porco et al. 2008).
-    rings: [{ innerM: km(74500), outerM: km(140220), strip: 'saturn', dust: 0.08, albedoScale: 2.5 }],
+    rings: [{ innerM: km(74500), outerM: km(140220), strip: 'saturn', dust: 0.08, albedoScale: 2.5, tint: [0.92, 0.84, 0.7], thinGain: 0.25 }],
     appearance: 'reconstructed', appearanceNote: 'Cloud bands from a Cassini-based composite (Solar System Scope, CC BY 4.0); rings from a Cassini radial profile. Band longitudes are illustrative.',
     rotation: { ra0: 40.589, dec0: 83.537, raRate: -0.036, decRate: -0.004, w0: 38.9, wDot: 810.7939024 },
     importance: 95, tagline: 'The ringed gas giant, less dense than water', periodDays: 10759.22,
@@ -169,7 +177,10 @@ export const SOLAR_BODIES: readonly SolarBodyDef[] = [
   {
     id: 'sol:uranus', key: 'uranus', name: 'Uranus', aliases: [], kind: 'planet', aeBody: 'Uranus',
     axesM: [km(25559), km(25559), km(24973)], meanRadiusM: km(25362), gmM3S2: GM(5793951.26),
-    geometricAlbedo: 0.51, tint: [0.925, 0.975, 1.13], surface: 'giant', colorMap: 'color', minnaertK: 1.1,
+    geometricAlbedo: 0.51, tint: [0.68, 1.0, 1.13], surface: 'giant', colorMap: 'color', minnaertK: 1.1,
+    // Voyager 2 / HST true colour ≈ sRGB (172, 208, 214) at disc centre, clear limb darkening; the sunward north pole
+    // (2026, near solstice) shows the bright polar hood poleward of ~60° N (Sromovsky et al. 2015; Karkoschka 2015).
+    limbPow: 0.7, polarCap: [52, 64, 0.12],
     winds: { profile: 'uranus', shearBudgetDeg: 40 },
     rings: [{ innerM: km(41837), outerM: km(51149), strip: 'uranus', dust: 0.05 }],
     appearance: 'reconstructed', appearanceNote: 'Pale cyan disc after Voyager 2 imagery (Solar System Scope, CC BY 4.0); faint cloud features are illustrative.',
@@ -197,7 +208,7 @@ export const SOLAR_BODIES: readonly SolarBodyDef[] = [
   {
     id: 'sol:pluto', key: 'pluto', name: 'Pluto', aliases: ['134340 Pluto'], kind: 'dwarf-planet', aeBody: 'Pluto',
     axesM: [km(1188.3), km(1188.3), km(1188.3)], meanRadiusM: km(1188.3), gmM3S2: GM(869.3009),
-    geometricAlbedo: 0.52, tint: [3.4, 3.4, 3.4], hdTint: [3.4, 3.4, 3.4], palette: 'pluto', surface: 'ice', colorMap: 'color', hasCoverage: true, atmosphere: 'pluto',
+    geometricAlbedo: 0.52, tint: [2.75, 2.75, 2.75], hdTint: [2.75, 2.75, 2.75], palette: 'pluto', surface: 'ice', colorMap: 'color', hasCoverage: true, atmosphere: 'pluto',
     resolutionCap: { lonDeg: 175, latDeg: 15, fullDeg: 80, blurDeg: 100 },
     appearance: 'observed', appearanceNote: 'New Horizons LORRI global mosaic (USGS), coloured by brightness after MVIC colour imaging (dark maculae red-brown, bright nitrogen ice cream-white); the hemisphere New Horizons saw only coarsely is shown at that coarse resolution, the unseen south featureless.',
     rotation: { ra0: 132.993, dec0: -6.163, raRate: 0, decRate: 0, w0: 302.695, wDot: 56.3625225 },

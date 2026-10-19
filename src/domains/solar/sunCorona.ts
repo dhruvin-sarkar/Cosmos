@@ -183,11 +183,16 @@ void main() {
   float corona = base * (0.3 + 2.2 * streamer * eq + 0.5 * plumes) * rays;
   // Soft outer fade so the billboard edge never shows.
   corona *= 1.0 - smoothstep(uOuter * 0.6, uOuter, r);
-  vec3 col = uColor * corona * uCoronaGain;
+  // Rise from zero at the limb: the corona is ~10⁻⁶ of the disc and never reads as a rim on top of the darkened limb.
+  // The ramp spans ~0.12 R so the r⁻¹⁷ inner term never peaks in a thin band just off the limb (a neutral outline),
+  // and the colour warms toward the red limb there so no grey band separates disc and corona.
+  float rim = smoothstep(1.0, 1.12, r);
+  vec3 tint = mix(vec3(1.0, 0.45, 0.2), uColor, smoothstep(1.0, 1.2, r));
+  vec3 col = tint * corona * uCoronaGain * rim;
 
   // ── chromosphere rim + prominences (eclipse view) ──
   vec3 hAlpha = vec3(1.0, 0.22, 0.34);
-  float chromo = h < 0.04 ? exp(-h / 0.006) * (0.7 + 0.3 * simplexNoise3(a3 * 220.0 + vec3(0.0, 0.0, uTime * 0.01))) : 0.0;
+  float chromo = h < 0.04 ? exp(-h / 0.006) * smoothstep(0.0, 0.006, h) * (0.7 + 0.3 * simplexNoise3(a3 * 220.0 + vec3(0.0, 0.0, uTime * 0.01))) : 0.0;
   float prom = 0.0;
   if (uPromW > 0.0 && h < 0.16) {
     vec2 uv = 0.5 + sky * uPromScale;

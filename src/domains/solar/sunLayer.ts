@@ -198,11 +198,13 @@ export function createSunLayer(sun: SolarEntity): SunLayerHandle {
       glare.material.setViewportHeight(ctx.viewport.height);
       veil.material.setViewportHeight(ctx.viewport.height);
       glare.material.setRadius(rUnits * 2);
-      glare.material.uniforms.uOpacity.value = far * unresolved;
+      // Exhibition scale: an enlarged disc of up to ~120 px still blooms (the post glare is scaled to the true size).
+      const enlargedGlow = factor > 1 ? 0.35 * (1 - THREE.MathUtils.smoothstep(px, 80, 120)) : 0;
+      glare.material.uniforms.uOpacity.value = far * Math.max(unresolved, enlargedGlow);
       veil.material.setRadius(rUnits * 6);
       veil.material.uniforms.uOpacity.value = 0.5 * far * unresolved;
       const visible = far > 0.002 && unresolved > 0.002;
-      glare.visible = visible;
+      glare.visible = far > 0.002 && Math.max(unresolved, enlargedGlow) > 0.002;
       veil.visible = visible;
     },
 
