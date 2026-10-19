@@ -309,8 +309,8 @@ void main() {
     vec3 dk = vec3(0.045, 0.034, 0.026);
     albedo = mix(bright, dk, dark) * (0.85 + 0.3 * fbm(dir * 14.0));
   } else if (uSpecial == 2) {                              // Charon: red-brown polar cap ("Mordor Macula")
-    float cap = smoothstep(0.78, 1.15, lat * 1.0 + 0.12 * (fbm(dir * 6.0) - 0.5) + 0.0);
-    albedo *= mix(vec3(1.0), vec3(1.55, 0.78, 0.55), cap * 0.9);
+    float cap = smoothstep(1.05, 1.35, lat + 0.10 * (fbm(dir * 6.0) - 0.5));   // north of ~60°N only
+    albedo *= mix(vec3(1.0), vec3(1.33, 0.87, 0.73), cap * 0.9);
   } else if (uSpecial == 9) {                              // Miranda: patchwork of bright/dark provinces
     float pm = smoothstep(0.35, 0.65, fbm(dir * 2.4 + 5.0));
     albedo *= mix(0.72, 1.25, pm);

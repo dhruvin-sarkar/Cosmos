@@ -8,8 +8,6 @@ import type { EngineServices, FrameContext, LabelCandidate, Layer, PickHit } fro
 import type { Entity } from '../../core/entity';
 import { AU_M, R_SUN_M } from '../../core/units';
 import { FRAGMENT_PRELUDE, LOGDEPTH_FRAGMENT, LOGDEPTH_VERTEX, VERTEX_PRELUDE } from '../../render/glsl/logdepth';
-import type { AtmosphereParams } from '../../render/glsl/atmosphere';
-import { AtmosphereShell } from '../../render/materials/AtmosphereShell';
 import { lodBlend, type LodBlend } from '../../render/lod';
 import { OrbitLine } from '../../render/orbitBuilder';
 import { exhibitionDisplayGain, exposureState, sunPosition, SUN_SCENE_IRRADIANCE_1AU } from '../solar/ephemeris';
@@ -24,17 +22,8 @@ import { meanRadiusM } from './entities';
 
 const DEG = Math.PI / 180;
 
-/** Titan: a thick tholin haze. Orange single-scattering (red-biased coefficients), no sea-level Mie; ~600 km deep. */
-const TITAN_HAZE: AtmosphereParams = {
-  planetRadiusM: 2_574_700,
-  atmosphereHeightM: 650_000,
-  rayleighScaleHeightM: 70_000,
-  mieScaleHeightM: 60_000,
-  rayleighScattering: [2.2e-6, 1.1e-6, 2.6e-7],
-  mieScattering: 1.5e-6,
-  mieExtinction: 2.2e-6,
-  mieG: 0.62,
-};
+/** Titan's haze reaches ~500 km above the surface (Cassini ISS/UVIS; detached layer ~450-500 km); outer shell radius in mean radii. */
+const TITAN_HAZE_OUTER = 1 + 500 / 2575;
 
 /** Named large features placed at their published positions (planetographic east-positive lon, lat in degrees). */
 const FEATURES: Record<string, { lon: number; lat: number; radius: number; depth: number }[]> = {
@@ -92,7 +81,6 @@ interface MoonVisual {
   overlayGroup: THREE.Group;
   mesh: THREE.Mesh<THREE.BufferGeometry, MoonMaterial>;
   material: MoonMaterial;
-  atmosphere: AtmosphereShell | null;
   detached: DetachedHaze | null;
   plume: PlumeSystem | null;
   shapeRequested: boolean;
@@ -305,16 +293,9 @@ export function createMoonsLayer(entities: Entity[]): Layer {
         svc.groups.transparent.add(overlayGroup);
         disposables.push(material, placeholder);
 
-        let atmosphere: AtmosphereShell | null = null;
-        if (special === 'titan') {
-          atmosphere = new AtmosphereShell({ params: { ...TITAN_HAZE, planetRadiusM: radiusM }, sunIntensity: 5, steps: 10 });
-          atmosphere.name = 'titan:haze';
-          overlayGroup.add(atmosphere);
-          disposables.push(atmosphere);
-        }
         let detached: DetachedHaze | null = null;
         if (special === 'titan') {
-          detached = new DetachedHaze(1.19, 1.2, 1.0);
+          detached = new DetachedHaze(TITAN_HAZE_OUTER);
           overlayGroup.add(detached);
           disposables.push(detached);
         }
@@ -334,7 +315,7 @@ export function createMoonsLayer(entities: Entity[]): Layer {
         const c = new THREE.Color(look.color);
         const v: MoonVisual = {
           rec, entity, index, parentId: PARENT_ENTITY[rec.parent], radiusM, aOrbitM: rec.orbit.aKm * 1000,
-          group, overlayGroup, mesh, material, atmosphere, detached, plume, shapeRequested: false, orbitFactor: Number.NaN, orbitTrue: new Float64Array(3 * 160), orbitN: 0, trueWorld: new THREE.Vector3(), orbit, orbitBuiltMs: Number.NaN,
+          group, overlayGroup, mesh, material, detached, plume, shapeRequested: false, orbitFactor: Number.NaN, orbitTrue: new Float64Array(3 * 160), orbitN: 0, trueWorld: new THREE.Vector3(), orbit, orbitBuiltMs: Number.NaN,
           orbitPeriodMs: (SIDEREAL_DAYS[rec.id] ?? rec.orbit.periodDays) * 86_400_000,
           world: new THREE.Vector3(), parentWorld: new THREE.Vector3(), distM: 1, px: 0, shownPx: 0, enlarge: 1, sepPx: 1e6,
           highRequested: false, geometryBuilt: false, meanLum: 0, lod: { level: 'point', point: 1, sphere: 0, detail: 0, extras: 0 },
@@ -499,11 +480,6 @@ export function createMoonsLayer(entities: Entity[]): Layer {
             v.plume.sunDirectionWorld.copy(sunDir);
             v.plume.step(ctx.dtRealSec, E * v.lod.sphere, scale, ctx.pixelsPerRadian, ctx.viewport.pixelRatio);
           }
-        }
-        if (v.atmosphere) {
-          v.atmosphere.visible = v.lod.detail > 0.01;
-          v.atmosphere.sunDirectionWorld.copy(sunDir);
-          v.atmosphere.material.uniforms.uSunIntensity.value = E * v.lod.detail;
         }
       }
       (pointGeo.attributes.position as THREE.BufferAttribute).needsUpdate = true;

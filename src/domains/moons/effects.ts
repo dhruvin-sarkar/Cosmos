@@ -98,7 +98,7 @@ void main() {
   float ds = dot(p, s);
   float lit = ds < 0.0 ? smoothstep(0.98, 1.04, length(p - s * ds)) : 1.0;       // the moon's own shadow
   vec3 rd = normalize(p - uCamLocal);
-  float cosT = dot(-s, rd);                                                      // 1 = looking toward the Sun through the plume
+  float cosT = dot(s, rd);                                                      // 1 = looking toward the Sun through the plume
   float ph = uIso * 0.0796 + (1.0 - uIso) * (0.8 * hg(uForwardG, cosT) + 0.2 * hg(-0.25, cosT));
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   float depth = max(-mv.z, 1e-9);
@@ -269,7 +269,7 @@ export function ioPlumeSpec(radiusM: number, gravityMps2: number): PlumeSpec {
   };
 }
 
-// ── Titan's detached haze ─────────────────────────────────────────────────────────────────────────────────────────
+// ── Titan's haze (main + detached layer) ──────────────────────────────────────────────────────────────────────────
 
 const HAZE_VERTEX = /* glsl */ `
 ${VERTEX_PRELUDE}
@@ -280,12 +280,16 @@ void main() {
   ${LOGDEPTH_VERTEX}
 }`;
 
+/**
+ * One ray-marched shell from the surface (r = 1) to uROut. Exponential haze density (H ~ 115 km) plus the thin detached
+ * layer near 470 km; blue-violet single scattering, forward-peaked, sunlit side + forward-scatter ring brightest. The
+ * march runs down to the surface for rays that hit the body, so the haze blends into the disc with no transparent gap.
+ */
 const HAZE_FRAGMENT = /* glsl */ `
 ${FRAGMENT_PRELUDE}
 uniform vec3 uSunDir;
 uniform vec3 uCameraLocal;
 uniform float uSunIntensity;
-uniform float uRIn;
 uniform float uROut;
 uniform float uTau;
 varying vec3 vLocal;
@@ -298,11 +302,6 @@ vec2 raySphere(vec3 ro, vec3 rd, float r) {
   h = sqrt(h);
   return vec2(-b - h, -b + h);
 }
-float chord(vec3 ro, vec3 rd, float r, float tMax) {
-  vec2 t = raySphere(ro, rd, r);
-  float t0 = max(t.x, 0.0), t1 = min(t.y, tMax);
-  return t.x > t.y ? 0.0 : max(t1 - t0, 0.0);
-}
 float hg(float g, float c) {
   float d = 1.0 + g * g - 2.0 * g * c;
   return (1.0 - g * g) / (12.566370614 * d * sqrt(d));
@@ -313,36 +312,40 @@ void main() {
   vec3 rd = normalize(vLocal - ro);
   vec2 tb = raySphere(ro, rd, 1.0);
   float tMax = (tb.x <= tb.y && tb.y > 0.0) ? max(tb.x, 0.0) : 1e9;           // the body hides what is behind it
-  float path = chord(ro, rd, uROut, tMax) - chord(ro, rd, uRIn, tMax);
-  if (path <= 0.0) discard;
-  // sample the shell for sunlight: skip the shadowed part (shadow cylinder of the body, lit side fully lit)
   vec2 to = raySphere(ro, rd, uROut);
   float t0 = max(to.x, 0.0);
   float tEnd = min(to.y, tMax);
-  float lit = 0.0;
-  for (int i = 0; i < 6; i++) {
-    float tt = mix(t0, tEnd, (float(i) + 0.5) / 6.0);
-    vec3 p = ro + rd * tt;
-    float ds = dot(p, uSunDir);
-    float rc = length(p - uSunDir * ds);
-    float inner = length(p) < uRIn ? 0.0 : 1.0;
-    lit += (ds > 0.0 ? 1.0 : smoothstep(0.96, 1.06, rc)) * inner;
+  if (tEnd <= t0) discard;
+  float cosT = dot(uSunDir, rd);
+  float phase = 0.4 * (3.0 / (16.0 * 3.14159265) * (1.0 + cosT * cosT)) + 0.6 * hg(0.6, cosT);
+  const int N = 20;
+  float ds = (tEnd - t0) / float(N);
+  float T = 1.0;
+  vec3 acc = vec3(0.0);
+  for (int i = 0; i < N; i++) {
+    vec3 p = ro + rd * (t0 + (float(i) + 0.5) * ds);
+    float h = max(length(p) - 1.0, 0.0);
+    float rho = exp(-h / 0.045) + 0.35 * exp(-pow((h - 0.172) / 0.008, 2.0));
+    float dtau = uTau * rho * ds;
+    float s = dot(p, uSunDir);
+    float rc = length(p - uSunDir * s);
+    float lit = s > 0.0 ? 1.0 : smoothstep(0.97, 1.04, rc);
+    float a = 1.0 - exp(-dtau);
+    acc += T * a * lit;
+    T *= 1.0 - a;
   }
-  lit /= 6.0;
-  float cosT = dot(-uSunDir, rd);
-  float phase = 0.55 * (3.0 / (16.0 * 3.14159265) * (1.0 + cosT * cosT)) + 0.45 * hg(0.45, cosT);
-  float tau = uTau * path * 2.0;
-  float a = 1.0 - exp(-tau);
-  vec3 col = vec3(0.30, 0.50, 1.0) * (uSunIntensity * phase * lit * 2.2 * a);
-  gl_FragColor = vec4(col, a * 0.25);
+  vec3 albedo = vec3(0.52, 0.60, 1.0);
+  vec3 col = albedo * (uSunIntensity * phase * 1.6) * acc;
+  float hit = (tb.x <= tb.y && tb.y > 0.0) ? 1.0 : 0.0;                         // over the disc the haze only tints it (surface is already hazy)
+  gl_FragColor = vec4(col * mix(1.0, 0.6, hit), (1.0 - T) * mix(1.0, 0.35, hit));
   ${LOGDEPTH_FRAGMENT}
 }`;
 
 export class DetachedHaze extends THREE.Mesh<THREE.SphereGeometry, THREE.ShaderMaterial> {
   readonly sunDirectionWorld = new THREE.Vector3(1, 0, 0);
 
-  /** rIn / rOut: shell radii in mean radii (Titan: ~500 km altitude ≈ 1.19 R, ~25 km thick). */
-  constructor(rIn: number, rOut: number, tau = 1.0) {
+  /** rOut: outer shell radius in mean radii (Titan: 500 km altitude -> 1 + 500/2575). tau: vertical optical depth. */
+  constructor(rOut: number, tau = 0.6) {
     const mat = new THREE.ShaderMaterial({
       vertexShader: HAZE_VERTEX,
       fragmentShader: HAZE_FRAGMENT,
@@ -350,7 +353,6 @@ export class DetachedHaze extends THREE.Mesh<THREE.SphereGeometry, THREE.ShaderM
         uSunDir: { value: new THREE.Vector3(1, 0, 0) },
         uCameraLocal: { value: new THREE.Vector3(0, 0, 10) },
         uSunIntensity: { value: 5 },
-        uRIn: { value: rIn },
         uROut: { value: rOut },
         uTau: { value: tau },
       },
@@ -364,14 +366,14 @@ export class DetachedHaze extends THREE.Mesh<THREE.SphereGeometry, THREE.ShaderM
       blendSrcAlpha: THREE.OneFactor,
       blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
     });
-    super(new THREE.SphereGeometry(rOut * 1.002, 96, 48), mat);
-    this.name = 'titan:detached-haze';
+    super(new THREE.SphereGeometry(rOut, 96, 48), mat);
+    this.name = 'titan:haze';
     this.frustumCulled = false;
     this.onBeforeRender = (_r, _s, camera) => {
       const u = this.material.uniforms;
       worldDirectionToLocal(this, this.sunDirectionWorld, u.uSunDir.value);
       cameraPositionToLocal(this, camera, u.uCameraLocal.value);
-      this.material.side = u.uCameraLocal.value.length() < rOut * 1.002 ? THREE.BackSide : THREE.FrontSide;
+      this.material.side = u.uCameraLocal.value.length() < rOut ? THREE.BackSide : THREE.FrontSide;
     };
   }
 
