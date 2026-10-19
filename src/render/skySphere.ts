@@ -149,7 +149,7 @@ uniform mat4 uInvProjection;
 uniform mat3 uCameraRotation;
 varying vec3 vDir;
 void main() {
-  vec4 view = uInvProjection * vec4(position.xy, 1.0, 1.0);
+  vec4 view = uInvProjection * vec4(position.xy, -1.0, 1.0);
   vDir = uCameraRotation * (view.xyz / view.w);
   gl_Position = vec4(position.xy, 1.0, 1.0);
   ${LOGDEPTH_VERTEX}

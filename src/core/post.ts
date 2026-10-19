@@ -1,74 +1,57 @@
 /**
- * Post-processing (docs/ARCHITECTURE.md §5.4): linear HDR scene → HalfFloat target (optional MSAA)
- * → ordered domain passes (e.g. lensing) → bloom → OutputPass (tone mapping + sRGB).
+ * Post-processing (docs/ARCHITECTURE.md §5.4): linear HDR scene → HalfFloat target (MSAA per preset)
+ * → ordered domain passes (e.g. lensing) → CinematicPass (src/render/post) → screen.
+ *
+ * CinematicPass: metered cinematic exposure (EV per scale regime + lit-pixel metering, smooth asymmetric
+ * adaptation), occlusion-tested Sun glare (aureole, halo, veiling glare, faint diffraction spikes), physically
+ * based mip-chain bloom (Karis-averaged 13-tap downsample, soft-knee threshold in exposure space, energy-
+ * conserving tent upsample), extremely subtle vignette, AgX tone mapping, sRGB encoding, blue-noise dither
+ * and fine grain — one fullscreen composite.
  *
  * Tone mapping: AgX. Stars, the Sun and accretion flows are emissive HDR sources whose hue carries physical
  * information (blackbody temperature). ACES Filmic skews saturated highlights (deep red/blue emitters drift
  * toward yellow/magenta and clip hard), whereas AgX desaturates smoothly toward white and keeps the hue of
- * bright sources, which matches how an overexposed real star looks. The cost is slightly flatter mid-tones,
- * compensated by exposure. Exposure (`renderer.toneMappingExposure`) is a separate, linear control.
+ * bright sources, which matches how an overexposed real star looks. The curve is three.js r186's AgX
+ * (Filament/Blender), reproduced in src/render/post/shaders.ts and mirrored in src/render/tonemap.ts.
  *
- * Bloom only picks up linear values above BLOOM_THRESHOLD (> display white under AgX at exposure 1), so a
- * sunlit surface (albedo ≤ 1 under unit irradiance) never glows; only emissive HDR sources do.
- *
- * Final pass: blue-noise-like dithering (interleaved gradient noise, Jimenez 2014) of ±0.5 LSB on every
- * non-black pixel to kill 8-bit banding in dark gradients, plus film grain of at most 1.5 % luminance,
- * attenuated in highlights and in true black (black stays #000). Grain is static under reduced motion.
+ * Bloom only picks up exposure-scaled values above ~display white (soft knee from 0.8, full at 1.6), so a
+ * sunlit surface never hazes; the Sun, specular glints and hot emitters do.
  */
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import type { Pass } from 'three/addons/postprocessing/Pass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import type { EffectiveQuality, QualityProfile } from './types';
+import { CinematicPass, GRAIN_AMOUNT as CINEMATIC_GRAIN, type CinematicSettings } from '../render/post/cinematic';
+import { computeSunScreen } from '../render/post/glare';
+import type { ExposureState } from '../render/post/exposure';
+import type { EntityRegistry } from './entity';
+import type { EffectiveQuality, FrameContext, QualityProfile } from './types';
 
 export const TONE_MAPPING = THREE.AgXToneMapping;
 export const DEFAULT_EXPOSURE = 1;
-/** Linear-light luminance above which pixels contribute to bloom. */
-export const BLOOM_THRESHOLD = 1.5;
+/** Exposure-scaled linear brightness where bloom reaches full contribution (soft knee below). */
+export const BLOOM_THRESHOLD = 1.6;
 /** Peak grain amplitude as a fraction of display luminance (VISUAL_DIRECTION: ≤ 1.5 %). */
-export const GRAIN_AMOUNT = 0.012;
+export const GRAIN_AMOUNT = CINEMATIC_GRAIN;
+/** Added bloom = profile.bloomStrength × this × (energy-conserving bloom texture). */
+export const BLOOM_STRENGTH_SCALE = 0.6;
+/** Entity whose glare the pipeline renders. */
+export const SUN_ENTITY_ID = 'sol:sun';
 
-const GrainDitherShader = {
-  name: 'CosmosGrainDither',
-  uniforms: {
-    tDiffuse: { value: null as THREE.Texture | null },
-    uFrame: { value: 0 },
-    uGrain: { value: GRAIN_AMOUNT },
-  },
-  vertexShader: /* glsl */ `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }`,
-  fragmentShader: /* glsl */ `
-    uniform sampler2D tDiffuse;
-    uniform float uFrame;
-    uniform float uGrain;
-    varying vec2 vUv;
-    float ign(vec2 p) {
-      return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
-    }
-    void main() {
-      vec4 c = texture2D(tDiffuse, vUv);
-      float luma = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722));
-      vec2 p = gl_FragCoord.xy + vec2(5.588238, 3.1415) * uFrame;
-      float n0 = ign(p) - 0.5;
-      float n1 = ign(p + vec2(17.0, 59.0)) - 0.5;
-      float alive = step(0.5 / 255.0, luma);
-      float grain = uGrain * n1 * smoothstep(0.0, 0.06, luma) * (1.0 - smoothstep(0.55, 1.0, luma));
-      c.rgb += alive * (n0 / 255.0 + grain);
-      gl_FragColor = vec4(max(c.rgb, 0.0), c.a);
-    }`,
-};
-export const BLOOM_RADIUS = 0.55;
-/** Bloom strength = profile.bloomStrength × this. */
-export const BLOOM_STRENGTH_SCALE = 0.75;
-/** Bloom buffer resolution relative to the render resolution (the pass halves it again internally). */
-const BLOOM_RESOLUTION_SCALE: Record<EffectiveQuality, number> = { performance: 0.5, balanced: 0.75, ultra: 1 };
+/**
+ * Current linear exposure as a shared uniform (updated every frame). Overlay materials whose colours are
+ * pre-inverted through AgX at exposure 1 (src/render/tonemap.ts) can divide by it to stay on their tokens.
+ */
+export const POST_EXPOSURE_UNIFORM: { value: number } = { value: DEFAULT_EXPOSURE };
+
+/** Post settings per effective preset (Balanced ≲ 1 ms of post on an RTX 3050 at 1080p). */
+export const POST_QUALITY: Readonly<
+  Record<EffectiveQuality, Readonly<Pick<CinematicSettings, 'bloomLevels' | 'bloomResolution' | 'glare' | 'spikes' | 'metering'>>>
+> = Object.freeze({
+  performance: { bloomLevels: 5, bloomResolution: 0.25, glare: true, spikes: 0, metering: true },
+  balanced: { bloomLevels: 6, bloomResolution: 0.5, glare: true, spikes: 1, metering: true },
+  ultra: { bloomLevels: 7, bloomResolution: 0.5, glare: true, spikes: 1, metering: true },
+});
 
 export interface PostPipelineOptions {
   renderer: THREE.WebGLRenderer;
@@ -76,20 +59,31 @@ export interface PostPipelineOptions {
   camera: THREE.Camera;
   /** False when the GPU cannot render to half-float targets (LDR fallback, bloom stays off). */
   halfFloat: boolean;
+  /** Source of the Sun entity for glare (optional; no glare without it). */
+  registry?: Pick<EntityRegistry, 'get'>;
 }
 
 export interface PostPipeline {
   readonly composer: EffectComposer;
-  readonly bloom: UnrealBloomPass;
+  readonly cinematic: CinematicPass;
+  /** Linear exposure currently in effect (2^EV). */
   readonly exposure: number;
   /** CSS size and effective device pixel ratio of the drawing buffer. */
   setSize(cssWidth: number, cssHeight: number, pixelRatio: number): void;
   applyQuality(profile: QualityProfile): void;
   /** Insert a pass before bloom/tone mapping; lower order runs first (stable for equal orders). */
   addPass(pass: Pass, order: number): () => void;
+  /** Manual linear exposure (sets a manual EV override); see setExposureOverride. */
   setExposure(exposure: number): void;
+  /** Manual exposure in EV (linear = 2^EV), or null for automatic. */
+  setExposureOverride(ev: number | null): void;
+  /** EV bias added to automatic exposure (e.g. a "brighter / darker" UI control). */
+  setExposureBias(ev: number): void;
+  exposureState(): Readonly<ExposureState>;
   /** Static grain when true (reduced motion); dithering stays on. */
   setReducedMotion(on: boolean): void;
+  /** Per-frame inputs (scale regime, Sun screen position). Call after the camera update, before render. */
+  update(ctx: FrameContext): void;
   render(dtSec: number): void;
   dispose(): void;
 }
@@ -100,6 +94,8 @@ interface CustomPass {
   seq: number;
 }
 
+const _sunPos = new THREE.Vector3();
+
 export function createPostPipeline(opts: PostPipelineOptions): PostPipeline {
   const { renderer, scene, camera } = opts;
   renderer.toneMapping = TONE_MAPPING;
@@ -107,11 +103,11 @@ export function createPostPipeline(opts: PostPipelineOptions): PostPipeline {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   let samples = 0;
-  const makeTarget = (): THREE.WebGLRenderTarget => {
+  const makeTarget = (msaa: number): THREE.WebGLRenderTarget => {
     const size = renderer.getDrawingBufferSize(new THREE.Vector2());
     const target = new THREE.WebGLRenderTarget(Math.max(1, size.x), Math.max(1, size.y), {
       type: opts.halfFloat ? THREE.HalfFloatType : THREE.UnsignedByteType,
-      samples,
+      samples: msaa,
       depthBuffer: true,
       stencilBuffer: false,
     });
@@ -119,62 +115,65 @@ export function createPostPipeline(opts: PostPipelineOptions): PostPipeline {
     return target;
   };
 
-  const composer = new EffectComposer(renderer, makeTarget());
+  const composer = new EffectComposer(renderer, makeTarget(0));
+  // Only the scene buffer (the composer's readBuffer at frame start) is multisampled; the ping-pong buffer
+  // used by domain passes is single-sample. At 1080p × DPR 1.5 this saves ~75 MB (2×) / ~150 MB (4×) of VRAM.
+  let sceneTarget: THREE.WebGLRenderTarget = composer.renderTarget2;
+  const installTargets = (): void => {
+    composer.reset(makeTarget(0));
+    composer.renderTarget2.dispose();
+    sceneTarget = makeTarget(samples);
+    composer.renderTarget2 = sceneTarget;
+    composer.readBuffer = sceneTarget;
+    composer.setPixelRatio(pr);
+    composer.setSize(cssW, cssH);
+  };
   const renderPass = new RenderPass(scene, camera);
-  const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 1, BLOOM_RADIUS, BLOOM_THRESHOLD);
-  const output = new OutputPass();
-  const grain = new ShaderPass(GrainDitherShader);
-  let grainFrame = 0;
-  let staticGrain = false;
+  const cinematic = new CinematicPass(opts.halfFloat);
   const custom: CustomPass[] = [];
   let seq = 0;
   let cssW = 1;
   let cssH = 1;
   let pr = 1;
-  let bloomScale = BLOOM_RESOLUTION_SCALE.balanced;
-  let exposure = DEFAULT_EXPOSURE;
+  let bufferH = 1;
 
   const rebuildChain = (): void => {
     custom.sort((a, b) => a.order - b.order || a.seq - b.seq);
-    composer.passes = [renderPass, ...custom.map(c => c.pass), bloom, output, grain];
-  };
-
-  const sizeBloom = (): void => {
-    const w = Math.max(2, Math.round(cssW * pr * bloomScale));
-    const h = Math.max(2, Math.round(cssH * pr * bloomScale));
-    bloom.setSize(w, h);
+    composer.passes = [renderPass, ...custom.map(c => c.pass), cinematic];
   };
 
   rebuildChain();
 
+  const currentLinear = (): number => Math.pow(2, cinematic.exposure.state.ev);
+
   return {
     composer,
-    bloom,
+    cinematic,
     get exposure() {
-      return exposure;
+      return currentLinear();
     },
 
     setSize(width: number, height: number, pixelRatio: number): void {
       cssW = Math.max(1, width);
       cssH = Math.max(1, height);
       pr = pixelRatio;
+      bufferH = Math.max(1, Math.round(cssH * pr));
       composer.setPixelRatio(pr);
       composer.setSize(cssW, cssH);
-      sizeBloom();
     },
 
     applyQuality(profile: QualityProfile): void {
-      bloom.enabled = profile.bloom && opts.halfFloat;
-      bloom.strength = profile.bloomStrength * BLOOM_STRENGTH_SCALE;
-      bloomScale = BLOOM_RESOLUTION_SCALE[profile.preset];
+      const q = POST_QUALITY[profile.preset];
+      cinematic.configure({
+        ...q,
+        bloom: profile.bloom && opts.halfFloat,
+        bloomIntensity: profile.bloomStrength * BLOOM_STRENGTH_SCALE,
+      });
       const nextSamples = opts.halfFloat ? profile.msaaSamples : 0;
       if (nextSamples !== samples) {
         samples = nextSamples;
-        composer.reset(makeTarget());
-        composer.setPixelRatio(pr);
-        composer.setSize(cssW, cssH);
+        installTargets();
       }
-      sizeBloom();
     },
 
     addPass(pass: Pass, order: number): () => void {
@@ -192,24 +191,52 @@ export function createPostPipeline(opts: PostPipelineOptions): PostPipeline {
 
     setExposure(value: number): void {
       if (!Number.isFinite(value) || value <= 0) return;
-      exposure = value;
-      renderer.toneMappingExposure = value;
+      cinematic.exposure.setManual(Math.log2(value));
+    },
+
+    setExposureOverride(ev: number | null): void {
+      cinematic.exposure.setManual(ev);
+    },
+
+    setExposureBias(ev: number): void {
+      cinematic.exposure.setBias(ev);
+    },
+
+    exposureState(): Readonly<ExposureState> {
+      return cinematic.exposure.state;
     },
 
     setReducedMotion(on: boolean): void {
-      staticGrain = on;
+      cinematic.staticGrain = on;
+    },
+
+    update(ctx: FrameContext): void {
+      cinematic.scaleLog10 = ctx.scaleLog10;
+      const sunScreen = cinematic.sun;
+      sunScreen.gain = 0;
+      sunScreen.inFront = false;
+      const sun = opts.registry?.get(SUN_ENTITY_ID);
+      if (!sun || !(sun.radiusM && sun.radiusM > 0)) return;
+      try {
+        sun.position(ctx.timeMs, _sunPos);
+      } catch {
+        return;
+      }
+      _sunPos.sub(ctx.cameraPosition);
+      computeSunScreen(_sunPos, sun.radiusM, camera, bufferH, sunScreen);
     },
 
     render(dtSec: number): void {
-      if (!staticGrain) grainFrame = (grainFrame + 1) % 64;
-      grain.uniforms.uFrame.value = grainFrame;
       composer.render(dtSec);
+      // Domain passes swap the ping-pong buffers; the next frame's scene must land in the MSAA target again.
+      if (composer.readBuffer !== sceneTarget) composer.swapBuffers();
+      const lin = currentLinear();
+      POST_EXPOSURE_UNIFORM.value = lin;
+      renderer.toneMappingExposure = lin;
     },
 
     dispose(): void {
-      bloom.dispose();
-      output.dispose();
-      grain.dispose();
+      cinematic.dispose();
       renderPass.dispose();
       composer.dispose();
     },

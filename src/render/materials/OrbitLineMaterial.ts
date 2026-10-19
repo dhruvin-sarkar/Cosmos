@@ -18,6 +18,7 @@ import * as THREE from 'three';
 import { FRAGMENT_PRELUDE, LOGDEPTH_FRAGMENT, LOGDEPTH_VERTEX, VERTEX_PRELUDE } from '../glsl/logdepth';
 import { OVERLAY_TOKENS, sceneLinearForOklch, type Rgb3 } from '../tonemap';
 import type { ProvenanceClass } from '../../data/provenance';
+import { POST_EXPOSURE_UNIFORM } from '../../core/post';
 
 export type OrbitRole = 'planet' | 'minor' | 'focused';
 export type LineTexture = 'solid' | 'dashed' | 'dotted';
@@ -72,6 +73,7 @@ export class OrbitLineMaterial extends THREE.ShaderMaterial {
     uDash: { value: THREE.Vector3 };
     uPxPerUnit: { value: number };
     uTrail: { value: THREE.Vector2 };
+    uExposure: { value: number };
   };
   private _role: OrbitRole = 'planet';
   private _texture: LineTexture = 'solid';
@@ -87,6 +89,7 @@ export class OrbitLineMaterial extends THREE.ShaderMaterial {
         uDash: { value: new THREE.Vector3() },
         uPxPerUnit: { value: 1 },
         uTrail: { value: new THREE.Vector2(-1, 0.15) },
+        uExposure: POST_EXPOSURE_UNIFORM,
       },
       vertexShader: VERTEX_SHADER,
       fragmentShader: FRAGMENT_SHADER,
@@ -205,6 +208,7 @@ uniform float uOpacity;
 uniform vec3 uDash;
 uniform float uPxPerUnit;
 uniform vec2 uTrail;
+uniform float uExposure;
 
 varying float vAcross;
 varying float vAlong;
@@ -234,7 +238,7 @@ void main() {
   float fade = uOpacity;
   if (uTrail.x >= 0.0) fade *= mix(1.0, uTrail.y, fract(uTrail.x - vT));
   if (cov * fade <= 0.0) discard;
-  gl_FragColor = vec4(uColor * (cov * fade), 1.0);
+  gl_FragColor = vec4(uColor * (cov * fade / max(uExposure, 1e-4)), 1.0);
   ${LOGDEPTH_FRAGMENT}
 }
 `;
