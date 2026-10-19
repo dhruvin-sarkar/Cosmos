@@ -22,7 +22,8 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import type { Pass } from 'three/addons/postprocessing/Pass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { CinematicPass, GRAIN_AMOUNT as CINEMATIC_GRAIN, type CinematicSettings } from '../render/post/cinematic';
-import { computeSunScreen } from '../render/post/glare';
+import { computeSunScreen, glareGain, SUN_ANG_RADIUS_1AU } from '../render/post/glare';
+import { renderTransform } from './visualScale';
 import type { ExposureState } from '../render/post/exposure';
 import type { EntityRegistry } from './entity';
 import type { EffectiveQuality, FrameContext, QualityProfile } from './types';
@@ -217,13 +218,22 @@ export function createPostPipeline(opts: PostPipelineOptions): PostPipeline {
       sunScreen.inFront = false;
       const sun = opts.registry?.get(SUN_ENTITY_ID);
       if (!sun || !(sun.radiusM && sun.radiusM > 0)) return;
+      let f = 1;
       try {
-        sun.position(ctx.timeMs, _sunPos);
+        // Drawn (exhibition-scale) disc position and radius, so the glare sits on the Sun that is actually rendered.
+        f = renderTransform(sun, ctx.timeMs, _sunPos);
       } catch {
         return;
       }
       _sunPos.sub(ctx.cameraPosition);
-      computeSunScreen(_sunPos, sun.radiusM, camera, bufferH, sunScreen);
+      computeSunScreen(_sunPos, sun.radiusM * f, camera, bufferH, sunScreen);
+      if (f > 1 && sunScreen.angRadius > 0) {
+        // Glare strength stays physical: irradiance from the TRUE angular size, not the enlarged disc.
+        const trueAng = Math.asin(Math.min(1, sun.radiusM / Math.max(_sunPos.length(), sun.radiusM)));
+        const r = trueAng / SUN_ANG_RADIUS_1AU;
+        sunScreen.brightness = r * r;
+        sunScreen.gain = glareGain(sunScreen.brightness);
+      }
     },
 
     render(dtSec: number): void {

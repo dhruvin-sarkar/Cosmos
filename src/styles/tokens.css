@@ -85,8 +85,8 @@
   --ruler-w: 160px;
   --scrim-left: linear-gradient(90deg, oklch(0 0 0 / 0.88) 0, oklch(0 0 0 / 0.76) var(--column-w), oklch(0 0 0 / 0) calc(var(--column-w) + 200px));
   --scrim-right: linear-gradient(270deg, oklch(0 0 0 / 0.88) 0, oklch(0 0 0 / 0.76) var(--ruler-w), oklch(0 0 0 / 0) calc(var(--ruler-w) + 140px));
-  --scrim-bottom: linear-gradient(0deg, oklch(0 0 0 / 0.88) 0, oklch(0 0 0 / 0.76) 72px, oklch(0 0 0 / 0) 168px);
-  --scrim-top: linear-gradient(180deg, oklch(0 0 0 / 0.86) 0, oklch(0 0 0 / 0.74) 48px, oklch(0 0 0 / 0) 120px);
+  --scrim-bottom: linear-gradient(0deg, oklch(0 0 0 / 0.7) 0, oklch(0 0 0 / 0.56) 40px, oklch(0 0 0 / 0.34) 84px, oklch(0 0 0 / 0.15) 124px, oklch(0 0 0 / 0.04) 156px, oklch(0 0 0 / 0) 180px);
+  --scrim-top: linear-gradient(180deg, oklch(0 0 0 / 0.66) 0, oklch(0 0 0 / 0.5) 30px, oklch(0 0 0 / 0.28) 62px, oklch(0 0 0 / 0.11) 94px, oklch(0 0 0 / 0.03) 118px, oklch(0 0 0 / 0) 136px);
   --faceplate: oklch(0.13 0 0 / 0.94);
   --popover: oklch(0.17 0 0 / 0.98);
   --surface-panel: var(--faceplate);

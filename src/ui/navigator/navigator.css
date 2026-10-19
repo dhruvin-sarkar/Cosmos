@@ -59,16 +59,18 @@
   background: var(--surface-hover);
 }
 
+.cx-nav__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline-strong) transparent;
+}
 .cx-nav__list {
   list-style: none;
   margin: 0;
   padding: var(--sp-1) 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  flex: 1 1 auto;
-  min-height: 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--hairline-strong) transparent;
 }
 .cx-nav-system + .cx-nav-system {
   border-top: 1px solid oklch(1 0 0 / 0.06);
@@ -208,12 +210,20 @@
   text-wrap: pretty;
 }
 
-/* â”€â”€ Moon strip (above the bottom band) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Moon strip (above the bottom band) */
+/* Fixed band clear of the inspector column on both sides, so the strip never runs under the fact sheet. */
+.cx-moonstrip-band {
+  position: fixed;
+  left: calc(var(--inspector-w) + 2 * var(--hud-gutter));
+  right: calc(var(--inspector-w) + 2 * var(--hud-gutter));
+  bottom: calc(var(--bottom-h) + var(--sp-4));
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
 .cx-moonstrip {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + var(--sp-2));
-  transform: translateX(-50%);
+  position: relative;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: var(--sp-1);
@@ -225,6 +235,7 @@
   pointer-events: auto;
 }
 .cx-moonstrip ol {
+  min-width: 0;
   list-style: none;
   margin: 0;
   padding: 0;

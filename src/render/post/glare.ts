@@ -78,8 +78,11 @@ export function computeSunScreen(
   out.u = _v.x * 0.5 + 0.5;
   out.v = _v.y * 0.5 + 0.5;
   out.angRadius = Math.asin(Math.min(1, radiusM / dist));
-  out.radiusU = out.angRadius * p[0] * 0.5;
-  out.radiusV = out.angRadius * p[5] * 0.5;
+  // A sphere's limb projects at tan(angRadius) (≈ 6 % beyond the linear estimate at 2.6 radii): use it so the glare's
+  // on-disc suppression ends exactly at the drawn limb up close.
+  const tanAng = Math.tan(Math.min(out.angRadius, 1.5));
+  out.radiusU = tanAng * p[0] * 0.5;
+  out.radiusV = tanAng * p[5] * 0.5;
   out.radiusPx = out.radiusV * bufferHeightPx;
   const r = out.angRadius / SUN_ANG_RADIUS_1AU;
   out.brightness = r * r;

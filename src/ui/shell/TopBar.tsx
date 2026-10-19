@@ -8,6 +8,7 @@ import { Tooltip } from '../components/Tooltip';
 import { LayersPanel, LightPanel } from './ViewPanels';
 import { bandInfo } from './spectral';
 import { NavigatorButton, NavigatorHost } from '../navigator/Navigator';
+import { ScaleToggle } from './ScaleToggle';
 
 /** Default guided tour started by the Tour button (the tours module registers it under this id). */
 export const DEFAULT_TOUR_ID = 'golden-journey';
@@ -74,7 +75,6 @@ export function TopBar({ tourId = DEFAULT_TOUR_ID }: { tourId?: string }) {
   const ui = useCosmosShallow(s => ({ sources: s.ui.sourcesOpen, settings: s.ui.settingsOpen, help: s.ui.helpOpen }));
   const tourActive = useCosmos(s => s.tour.activeId != null);
   const band = useCosmos(s => s.spectral.band);
-  const enlarged = useCosmos(s => s.overlays['enlarge-bodies']);
   const [menu, setMenu] = useState<'layers' | 'light' | null>(null);
   const layersRef = useRef<HTMLButtonElement | null>(null);
   const lightRef = useRef<HTMLButtonElement | null>(null);
@@ -88,11 +88,7 @@ export function TopBar({ tourId = DEFAULT_TOUR_ID }: { tourId?: string }) {
         <Kbd keys="Ctrl+K" size="sm" />
       </button>
       <div className="cx-topbar__right">
-        {enlarged && (
-          <Tooltip content="Planets are drawn larger than their true size so you can see them. Turn off in Layers.">
-            <span className="cx-chip cx-chip--warn" tabIndex={0}>Enlarged, not to scale</span>
-          </Tooltip>
-        )}
+        <ScaleToggle />
         <NavigatorButton />
         <BarButton label="Layers" shortcut="Shift+L" expanded={menu === 'layers'} buttonRef={layersRef} onClick={() => setMenu(m => (m === 'layers' ? null : 'layers'))} />
         <BarButton label="Light" expanded={menu === 'light'} buttonRef={lightRef} onClick={() => setMenu(m => (m === 'light' ? null : 'light'))}>

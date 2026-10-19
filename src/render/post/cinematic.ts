@@ -66,6 +66,8 @@ vec3 sunGlare(vec2 uv, float gain) {
   float th = length(d);
   float x = max(th - uSunAng, 0.0);
   float halo = 0.5 * exp(-x / 0.0035) + 0.09 * pow(0.02 / (x + 0.02), 2.0) + 0.004 * pow(0.12 / (x + 0.12), 1.5);
+  // On the disc itself the glare would wash out the limb darkening and colour: keep ~10 % there.
+  halo *= mix(0.1, 1.0, smoothstep(uSunAng * 0.96, uSunAng * 1.01, th));
   float spikes = 0.0;
   if (uSpikes > 0.0) {
     const vec2 a1 = vec2(0.70710678, 0.70710678);

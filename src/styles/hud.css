@@ -462,6 +462,10 @@
   animation: cx-enter-left var(--dur-base) var(--ease-out);
   scrollbar-gutter: stable;
 }
+/* The column scrolls; its children must not shrink (the tab bar, overflow-x: auto, would collapse under tall fact grids). */
+.cx-inspector > * {
+  flex-shrink: 0;
+}
 @keyframes cx-enter-left {
   from {
     opacity: 0;

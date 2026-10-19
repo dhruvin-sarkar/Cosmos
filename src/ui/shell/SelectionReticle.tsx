@@ -2,7 +2,9 @@ import { useEffect, useRef } from 'react';
 import { useCosmos } from '../hooks';
 import { useUiExtensions } from '../context';
 
-const MIN_BOX_PX = 28;
+const MIN_BOX_PX = 40;
+/** Bracket arms never exceed this fraction of the box side, so small boxes stay four corners, not a closed square. */
+const ARM_FRACTION = 0.28;
 const PAD_PX = 10;
 
 /**
@@ -38,6 +40,7 @@ export function SelectionReticle() {
         el.style.transform = `translate3d(${(b.x + b.width / 2 - w / 2).toFixed(1)}px, ${(b.y + b.height / 2 - h / 2).toFixed(1)}px, 0)`;
         el.style.width = `${w.toFixed(1)}px`;
         el.style.height = `${h.toFixed(1)}px`;
+        el.style.setProperty('--bracket-arm', `${Math.min(14, Math.min(w, h) * ARM_FRACTION).toFixed(1)}px`);
         if (first) {
           first = false;
           requestAnimationFrame(() => el.classList.add('is-settled'));

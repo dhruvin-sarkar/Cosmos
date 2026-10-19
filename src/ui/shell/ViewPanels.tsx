@@ -1,5 +1,6 @@
 import type { OverlayId, SpectralBandId } from '../../core/types';
-import { useCommands, useCosmos } from '../hooks';
+import { useCommands, useCosmos, useStoreApi } from '../hooks';
+import { setVisualScale } from '../../state/store';
 import { Toggle } from '../components/Toggle';
 import { cx } from '../lib/dom';
 import { SPECTRAL_BANDS, bandInfo } from './spectral';
@@ -17,16 +18,23 @@ const LAYERS: ReadonlyArray<{ id: OverlayId; label: string; description?: string
   { id: 'grid-galactic', label: 'Galactic grid' },
   { id: 'habitable-zones', label: 'Habitable zones' },
   { id: 'milkyway-procedural', label: 'Milky Way reconstruction', description: 'A model built from survey data, not a photograph' },
-  { id: 'enlarge-bodies', label: 'Enlarge bodies', description: 'Planets drawn larger so they can be seen; not to scale' },
 ];
 
 /** Layers popover body: one switch per scientific overlay. */
 export function LayersPanel() {
   const overlays = useCosmos(s => s.overlays);
+  const exhibition = useCosmos(s => s.visualScale === 'exhibition');
+  const store = useStoreApi();
   const commands = useCommands();
   return (
     <div className="cx-layers">
       <h2 className="cx-pop-title">Layers</h2>
+      <Toggle
+        checked={exhibition}
+        onCheckedChange={on => setVisualScale(store, on ? 'exhibition' : 'true')}
+        label="Exhibition scale"
+        description="Bodies enlarged for visibility, true size up close; distances unchanged"
+      />
       <div className="cx-layers__list">
         {LAYERS.map(l => (
           <Toggle

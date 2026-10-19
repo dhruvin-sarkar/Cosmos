@@ -1,0 +1,39 @@
+/* Exhibition / True scale switch + disclosure (docs/design/VISUAL_SCALE.md). */
+.cx-scale {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 34px;
+  padding: 2px 12px;
+  margin-right: 6px;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--text-primary);
+  font: var(--type-label);
+  line-height: 1.15;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cx-scale--exhibition {
+  border: 1px dotted var(--hairline-bold);
+}
+.cx-scale--true {
+  border: 1px solid var(--hairline-strong);
+}
+.cx-scale:hover {
+  border-color: var(--accent-line);
+}
+.cx-scale:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+.cx-scale__note {
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+}
+@media (max-width: 900px) {
+  .cx-scale__mode { display: none; }
+  .cx-scale { min-height: 30px; }
+}

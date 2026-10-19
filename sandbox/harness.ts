@@ -5,6 +5,7 @@
  *   import { bootSandbox } from './harness';
  *   const { commands } = bootSandbox({ layers: [myLayer], entities: [myEntity], focusId: 'sol:earth' });
  */
+import '../src/core/installIdmSafeFetch';
 import '@fontsource-variable/inter/opsz.css';
 import '@fontsource-variable/bodoni-moda/opsz-italic.css';
 import '@fontsource/jetbrains-mono/400.css';

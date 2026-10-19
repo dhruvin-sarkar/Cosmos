@@ -165,42 +165,44 @@ export function NavigatorPanel() {
       <header className="cx-nav__head">
         <h2 className="cx-nav__title">Solar System</h2>
         <span className="cx-nav__hint">
-          <Kbd keys="0" size="sm" />–<Kbd keys="9" size="sm" /> planets · <Kbd keys={['[', ']']} size="sm" /> moons
+          <Kbd keys="0" size="sm" />–<Kbd keys="9" size="sm" /> planets · <Kbd keys="[" size="sm" /><Kbd keys="]" size="sm" /> moons
         </span>
         <button type="button" className="cx-nav__close" aria-label="Close navigator" onClick={() => setNavigatorOpen(false)}>
           <X size={18} aria-hidden />
         </button>
       </header>
-      <ol className="cx-nav__list">
-        {tree.sun && (
-          <li className="cx-nav-system">
-            <BodyRow entity={tree.sun} focusId={focusId} tick={tick} onGo={go} />
-          </li>
+      <div className="cx-nav__scroll">
+        <ol className="cx-nav__list">
+          {tree.sun && (
+            <li className="cx-nav-system">
+              <BodyRow entity={tree.sun} focusId={focusId} tick={tick} onGo={go} />
+            </li>
+          )}
+          {tree.bodies.map(b => (
+            <SystemSection key={b.entity.id} body={b} focusId={focusId} tick={tick} onGo={go} />
+          ))}
+        </ol>
+        {tree.spacecraft.length > 0 && (
+          <section className="cx-nav__group">
+            <h3 className="cx-nav__group-title">Spacecraft</h3>
+            <ul className="cx-nav-chips">
+              {tree.spacecraft.map(e => (
+                <SatelliteChip key={e.id} entity={e} focusId={focusId} onGo={go} />
+              ))}
+            </ul>
+          </section>
         )}
-        {tree.bodies.map(b => (
-          <SystemSection key={b.entity.id} body={b} focusId={focusId} tick={tick} onGo={go} />
-        ))}
-      </ol>
-      {tree.spacecraft.length > 0 && (
-        <section className="cx-nav__group">
-          <h3 className="cx-nav__group-title">Spacecraft</h3>
-          <ul className="cx-nav-chips">
-            {tree.spacecraft.map(e => (
-              <SatelliteChip key={e.id} entity={e} focusId={focusId} onGo={go} />
-            ))}
-          </ul>
-        </section>
-      )}
-      {tree.smallBodies.length > 0 && (
-        <section className="cx-nav__group">
-          <h3 className="cx-nav__group-title">Asteroids and comets</h3>
-          <ul className="cx-nav-chips">
-            {tree.smallBodies.map(e => (
-              <SatelliteChip key={e.id} entity={e} focusId={focusId} onGo={go} />
-            ))}
-          </ul>
-        </section>
-      )}
+        {tree.smallBodies.length > 0 && (
+          <section className="cx-nav__group">
+            <h3 className="cx-nav__group-title">Asteroids and comets</h3>
+            <ul className="cx-nav-chips">
+              {tree.smallBodies.map(e => (
+                <SatelliteChip key={e.id} entity={e} focusId={focusId} onGo={go} />
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
       <p className="cx-nav__foot">
         {current ? `In the ${current.entity.name} system.` : 'Pick a world to fly there.'} Distances are from the camera; light-time is how long its light takes to reach you.
       </p>

@@ -1,19 +1,18 @@
-import { installIdmSafeFetch } from './core/idmSafeFetch';
-installIdmSafeFetch();
+import './core/installIdmSafeFetch';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Vector3 } from 'three';
 import './styles/index.css';
+import './labs';
 import { createCosmos, type CosmosApp as CosmosRuntime } from './app/createCosmos';
 import { DEFAULT_TOUR_ID } from './app/keyboard';
 import type { AppCommands, AppContextValue } from './app/commands';
 import type { ScreenPoint } from './core/types';
 import { createRegistry } from './core/registry';
+import { renderTransform } from './core/visualScale';
 import { createCosmosStore } from './state/store';
 import { CosmosApp } from './ui/App';
 import type { CosmosUiExtensions } from './ui/context';
-
-installIdmSafeFetch();
 
 const rootEl = document.getElementById('cosmos-root');
 if (!rootEl) throw new Error('Missing #cosmos-root');
@@ -75,10 +74,11 @@ function buildExtensions(app: CosmosRuntime): CosmosUiExtensions {
       const f = frame();
       const e = app.registry.get(id);
       if (!f || !e) return null;
-      e.position(f.timeMs, world);
+      // Drawn (exhibition-scale) centre and radius, so the brackets frame what is on screen.
+      const k = renderTransform(e, f.timeMs, world);
       f.project(world, point);
       if (!point.visible || point.depthM <= 0) return null;
-      const size = e.radiusM ? f.pixelDiameter(e.radiusM, point.depthM) : 0;
+      const size = e.radiusM ? f.pixelDiameter(e.radiusM * k, point.depthM) : 0;
       return { x: point.x - size / 2, y: point.y - size / 2, width: size, height: size };
     },
     tourStep(tourId, step) {
