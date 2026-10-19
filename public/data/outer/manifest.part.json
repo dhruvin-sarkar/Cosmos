@@ -1,0 +1,81 @@
+{
+  "domain": "outer",
+  "datasets": [
+    {
+      "id": "jpl-sbdb-tnos",
+      "name": "JPL SBDB trans-Neptunian objects (all catalogued)",
+      "organization": "NASA JPL SSD (orbits derived from Minor Planet Center astrometry)",
+      "purpose": "Kuiper belt / scattered disk / detached-object point cloud",
+      "mechanism": "SBDB Query API (sb-class=TNO) -> JSON -> Float32 binary",
+      "endpoint": "https://ssd-api.jpl.nasa.gov/sbdb_query.api",
+      "query": "fields=full_name,pdes,name,a,e,i,om,w,ma,epoch,H,diameter,class&sb-kind=a&sb-class=TNO",
+      "version": "live archive state at retrieval",
+      "retrieved": "2026-10-19T06:13:14.898Z",
+      "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+      "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+      "citation": "NASA/JPL Solar System Dynamics, Small-Body Database Query API; orbits fitted to Minor Planet Center observations.",
+      "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+      "fieldsUsed": [
+        "full_name",
+        "pdes",
+        "name",
+        "a",
+        "e",
+        "i",
+        "om",
+        "w",
+        "ma",
+        "epoch",
+        "H",
+        "diameter",
+        "class"
+      ],
+      "updateCadence": "continuous",
+      "cachePolicy": "versioned offline snapshot",
+      "normalization": "scripts/data/outer/fetch-tnos.mjs",
+      "fallback": "No TNO cloud is drawn if the file is missing; named dwarf planets still render from the solar domain.",
+      "files": [
+        {
+          "path": "data/outer/tnos.bin",
+          "bytes": 262836,
+          "records": 7301
+        },
+        {
+          "path": "data/outer/tnos.json",
+          "bytes": 6463,
+          "records": 1
+        }
+      ],
+      "limitations": "Observational census, heavily biased towards bright, near-ecliptic, near-perihelion objects; osculating elements drift beyond a few decades from epoch; dynamical class is a heuristic box. Not a model of the true population.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "outer-literature",
+      "name": "Heliosphere boundary crossings and outer-system constants (published values)",
+      "organization": "Published literature (NASA Voyager and IBEX teams)",
+      "purpose": "Voyager termination-shock / heliopause crossings, interstellar-flow direction, Oort-cloud extents, shell-fit anchors",
+      "mechanism": "Transcribed by hand from publications; no network access",
+      "endpoint": "n/a",
+      "query": null,
+      "version": "Stone 2005, 2008, 2013, 2019; Gurnett 2013; Bzowski 2015; Oort 1950; Hills 1981; Dones 2015",
+      "retrieved": "2026-10-19T06:27:39.713Z",
+      "license": "Facts and measured values cited from peer-reviewed papers; no text or figures reproduced.",
+      "licenseUrl": null,
+      "citation": "Stone et al. 2005 Science 309, 2017; Stone et al. 2008 Nature 454, 71; Stone et al. 2013 Science 341, 150; Gurnett et al. 2013 Science 341, 1489; Stone et al. 2019 Nature Astron. 3, 1013; Bzowski et al. 2015 ApJS 220, 28; Oort 1950 BAN 11, 91; Hills 1981 AJ 86, 1730; Dones et al. 2015 Space Sci. Rev. 197, 191.",
+      "rateLimits": "n/a",
+      "fieldsUsed": [
+        "crossing dates",
+        "crossing heliocentric distances",
+        "interstellar flow ecliptic longitude/latitude/speed",
+        "Oort cloud radial extents"
+      ],
+      "updateCadence": "static",
+      "cachePolicy": "in-repo constants (src/domains/outer/model.ts)",
+      "normalization": "src/domains/outer/model.ts (CROSSINGS, NOSE_*, OORT_*)",
+      "fallback": "n/a",
+      "files": [],
+      "limitations": "Heliosphere shell shapes between the four crossings are reconstructed (a smooth fitted model), the tail is unconstrained, and the Oort cloud is hypothesised: it is rendered as an illustrative random sample.",
+      "provenanceClass": "reconstructed"
+    }
+  ]
+}
