@@ -54,7 +54,7 @@ export const REGIME_EV: readonly (readonly [number, number])[] = [
 ];
 
 /** Scene-linear key the meter aims lit pixels at (after exposure). */
-export const KEY_TARGET = 0.15;
+export const KEY_TARGET = 0.11;
 /** Metered errors within ±this many EV are left alone. */
 export const METER_DEAD_ZONE_EV = 1.25;
 export const METER_COMPENSATION = 0.75;

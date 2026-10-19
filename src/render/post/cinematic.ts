@@ -20,6 +20,9 @@ import { AGX_GLSL, FULLSCREEN_VERT } from './shaders';
 export const GRAIN_AMOUNT = 0.012;
 /** Corner darkening of the (extremely subtle) vignette. */
 export const VIGNETTE_AMOUNT = 0.1;
+/** AgX look: 1 = Blender 'Punchy' (power 1.35, saturation 1.4); 0.6 restores colour that base AgX washes to pastel
+ *  without pushing Jupiter's zones blue-grey or the Sahara burnt orange (art-director round 2). */
+export const AGX_LOOK_AMOUNT = 0.6;
 /** Sun colour for glare: blackbody 5772 K in linear sRGB, normalised to unit luminance (approx.). */
 const SUN_GLARE_COLOR = new THREE.Color(1.0, 0.975, 0.94);
 
@@ -35,6 +38,8 @@ export interface CinematicSettings {
   /** Metered auto exposure on/off (off = regime base EV + bias only). */
   metering: boolean;
   vignette: number;
+  /** AgX 'Punchy' look strength (0 = base AgX, 1 = Punchy). */
+  look: number;
 }
 
 const COMPOSITE_FRAG = /* glsl */ `
@@ -54,6 +59,7 @@ uniform float uVignette;
 uniform float uAspect;
 uniform float uFrame;
 uniform float uGrain;
+uniform float uLook;
 varying vec2 vUv;
 ${AGX_GLSL}
 float ign(vec2 p) {
@@ -93,7 +99,7 @@ void main() {
   vec2 q = (vUv - 0.5) * vec2(uAspect, 1.0);
   float r = clamp(length(q) / length(vec2(uAspect, 1.0) * 0.5), 0.0, 1.0);
   c *= 1.0 - uVignette * r * r * r;
-  c = linearToSrgb(agx(c));
+  c = linearToSrgb(agx(c, uLook));
   // Dither (±0.5 LSB, interleaved gradient noise) + fine grain, both off in true black.
   float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
   vec2 p = gl_FragCoord.xy + vec2(5.588238, 3.1415) * uFrame;
@@ -120,6 +126,7 @@ export class CinematicPass extends Pass {
     spikes: 1,
     metering: true,
     vignette: VIGNETTE_AMOUNT,
+    look: AGX_LOOK_AMOUNT,
   };
   /** Cosmic Ruler scale of the current frame (set by the pipeline before render). */
   scaleLog10 = 7;
@@ -163,6 +170,7 @@ export class CinematicPass extends Pass {
         uAspect: { value: 1 },
         uFrame: { value: 0 },
         uGrain: { value: GRAIN_AMOUNT },
+        uLook: { value: AGX_LOOK_AMOUNT },
       },
       vertexShader: FULLSCREEN_VERT,
       fragmentShader: COMPOSITE_FRAG,
@@ -233,6 +241,7 @@ export class CinematicPass extends Pass {
     u.uPxRad.value = sun.radiusV > 0 ? sun.angRadius / sun.radiusV / this.height : 0.001;
     u.uSpikes.value = s.spikes;
     u.uVignette.value = s.vignette;
+    u.uLook.value = s.look;
     u.uAspect.value = this.width / this.height;
     if (!this.staticGrain) this.grainFrame = (this.grainFrame + 1) % 64;
     u.uFrame.value = this.grainFrame;

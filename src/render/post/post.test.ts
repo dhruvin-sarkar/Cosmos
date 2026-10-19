@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { agxToneMap } from '../tonemap';
-import { AGX_GLSL } from './shaders';
+import { AGX_GLSL, agxPunchyLook } from './shaders';
 import {
   ADAPT_TAU_DOWN,
   ExposureController,
@@ -44,6 +44,22 @@ describe('AgX', () => {
     const hi = srgb(agxToneMap({ r: 2.88, g: 2.88, b: 2.88 }).g);
     expect(hi).toBeGreaterThan(0.9);
     expect(hi).toBeLessThanOrEqual(1);
+  });
+});
+
+describe('AgX Punchy look', () => {
+  it('is the identity at amount 0, keeps greys neutral and raises saturation of a pastel', () => {
+    expect(agxPunchyLook([0.3, 0.5, 0.7], 0)).toEqual([0.3, 0.5, 0.7]);
+    const g = agxPunchyLook([0.6, 0.6, 0.6]);
+    expect(g[0]).toBeCloseTo(Math.pow(0.6, 1.35), 6);
+    expect(g[1]).toBeCloseTo(g[0], 9);
+    // Pastel cream (Io-like): chroma (max - min) relative to luma grows.
+    const pastel: [number, number, number] = [0.82, 0.78, 0.66];
+    const out = agxPunchyLook(pastel);
+    const chroma = (c: number[]) => (Math.max(...c) - Math.min(...c)) / (0.2126 * c[0]! + 0.7152 * c[1]! + 0.0722 * c[2]!);
+    expect(chroma(out)).toBeGreaterThan(chroma(pastel) * 1.5);
+    expect(AGX_GLSL).toContain('vec3(1.35)');
+    expect(AGX_GLSL).toContain('1.4 * (p - vec3(luma))');
   });
 });
 
