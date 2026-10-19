@@ -23,6 +23,18 @@
  *    body is EXACTLY true size within 40 radii and the transition is C¹-smooth (no popping);
  *  - caps: a planet's enlarged satellite system stays within PRIMARY_CLEARANCE_FRACTION of its distance from the Sun, the Sun
  *    stays well inside Mercury's perihelion, a satellite stays within SATELLITE_SIZE_GAP_FRACTION of its gap to the parent;
+ *  - size order: after the caps, a planet is never drawn larger than clamp(sqrt(R/Rj), PLANET_ORDER_MIN_RATIO, 1) times the
+ *    apparent size of any larger planet j (so a clearance-capped Saturn never reads smaller than Uranus or Neptune);
+ *  - context gate: the enlargement is also multiplied by a per-body context weight — 1 for the focused body's system (the
+ *    focused body, its parent planet and all of that planet's satellites) and for the Sun, otherwise
+ *    smoothstep(CONTEXT_NEAR_M, CONTEXT_FAR_M, camera-to-focus distance), eased over CONTEXT_TAU_SEC. In a close-up, planets
+ *    5–30 AU away go back to true-size points; in a system overview everything is enlarged;
+ *  - background cap: a body OUTSIDE the focused system (or every body when nothing is focused) is never drawn with an
+ *    enlarged apparent diameter above BACKGROUND_MAX_FRACTION of the viewport height (the Sun SUN_BACKGROUND_MAX_FRACTION; a
+ *    ringed planet's ring extent ≤ BACKGROUND_RING_MULT × that), eased like the context weight — background bodies read as
+ *    small discs and never dominate the frame;
+ *  - near-planet Sun: when a non-solar system is focused and the camera is within SUN_TRUE_NEAR_M of the focus, the Sun goes
+ *    back to (exactly) its true size, smoothstep up to SUN_TRUE_FAR_M (seen from Earth it is the real 0.53° disc);
  *  - satellite offsets: a' = f·min(a, c) + max(a − c, 0)·f^SATELLITE_GAP_EXPONENT, c = the parent's core radius (its radius or
  *    ring outer edge). Rings and ring-moons scale exactly with the parent (×f); the gap beyond grows by √f so a magnified Moon
  *    stays near Earth instead of flying out to Venus. Continuous, monotonic, identity when f = 1.
@@ -52,11 +64,14 @@ export const PRIMARY_CLEARANCE_FRACTION = 0.12;
  * Beyond the belt the planets are far more widely spaced (Jupiter–Saturn ≥ 3.6 AU apart), so the clearance fraction ramps up to
  * PRIMARY_CLEARANCE_FRACTION_OUTER between 2 and 5 AU (Jupiter) and to PRIMARY_CLEARANCE_FRACTION_FAR between 7 and 9 AU
  * (Saturn outward); this lets Saturn and its rings read at their size next to Uranus and Neptune in outer-system views.
- * Jupiter (aphelion 5.46 AU, 0.22) + Saturn (perihelion 9.04 AU, 0.30) = 3.9 AU vs the 3.58 AU minimum separation: the enlarged
- * systems could only touch in that rare alignment, and only when both are clearance-limited (very distant views).
+ * Raised (0.22 → 0.30, 0.30 → 0.36) so clearance-capped Jupiter and Saturn still lead the size order in far outer views (the
+ * size-order cap then holds Uranus and Neptune below them). Jupiter's capped system at perihelion reaches in to 3.46 AU (outside
+ * the main belt, Mars aphelion 1.67 AU). Jupiter (aphelion 5.46 AU) + Saturn (perihelion 9.04 AU) systems: 1.64 + 3.25 AU vs the
+ * 3.58 AU minimum separation, so they could only touch near a Jupiter–Saturn conjunction (next 2040) and only when both are
+ * clearance-limited (very distant views); the drawn discs themselves (rings 3.2 AU + Jupiter 1.3 AU) touch only within ~4.5 AU.
  */
-export const PRIMARY_CLEARANCE_FRACTION_OUTER = 0.22;
-export const PRIMARY_CLEARANCE_FRACTION_FAR = 0.3;
+export const PRIMARY_CLEARANCE_FRACTION_OUTER = 0.3;
+export const PRIMARY_CLEARANCE_FRACTION_FAR = 0.36;
 const AU_M = 1.495978707e11;
 
 /** Clearance fraction for a body at heliocentric distance `r` (m). */
@@ -73,6 +88,27 @@ export const SUN_MAX_RADIUS_M = 0.4 * MERCURY_PERIHELION_M;
 export const SATELLITE_GAP_EXPONENT = 0.38;
 /** A satellite's enlarged radius is at most this fraction of its (enlarged) gap to the parent's surface. */
 export const SATELLITE_SIZE_GAP_FRACTION = 0.35;
+/** Context gate: bodies outside the focused system are fully enlarged only when the camera is ≥ CONTEXT_FAR_M from the focus… */
+export const CONTEXT_NEAR_M = 3e9;
+/** …and drawn at true size when it is ≤ CONTEXT_NEAR_M from it (smoothstep in between). */
+export const CONTEXT_FAR_M = 3e10;
+/** Time constant of the context-weight easing when the focus changes, s. */
+export const CONTEXT_TAU_SEC = 0.6;
+/** A smaller planet is drawn at most max(sqrt(R/Rj), this) × the apparent size of a larger planet j (art direction: ≤ 0.8×). */
+export const PLANET_ORDER_MIN_RATIO = 0.8;
+/** Max enlarged apparent diameter of a body outside the focused system, viewport-height fraction (≈ 27 px at 1080). */
+export const BACKGROUND_MAX_FRACTION = 0.025;
+/** Same for the Sun when it is not the focus (≈ 43 px at 1080). */
+export const SUN_BACKGROUND_MAX_FRACTION = 0.04;
+/** A background ringed planet's ring (core) extent may reach this multiple of the background cap. */
+export const BACKGROUND_RING_MULT = 2;
+/** Order-ratio floor between two background-capped planets (the flat cap already compresses sizes; a looser floor keeps the
+ *  inner planets readable discs instead of cascading 0.8 × 0.8 × … below the giants). */
+export const BACKGROUND_ORDER_MIN_RATIO = 0.88;
+/** Camera-to-focus distance under which the Sun is drawn at true size when a planet (any non-solar system) is focused, m (0.2 AU). */
+export const SUN_TRUE_NEAR_M = 0.2 * 1.495978707e11;
+/** …and above which it is fully enlarged again, m (0.5 AU). */
+export const SUN_TRUE_FAR_M = 0.5 * 1.495978707e11;
 /** Hard ceiling on any factor (numerical safety). */
 export const MAX_FACTOR = 1e6;
 /** Duration of the Exhibition ⇄ True transition, s (instant under reduced motion). */
@@ -251,6 +287,26 @@ export interface ScaleView {
   weight: number;
   /** Bumped on every change; render transforms cache on (tMs, version). */
   version: number;
+  /** Focused (context) entity id; null = no context gating. */
+  focusId: string | null;
+  /** System root of the focus (top-most non-star ancestor). */
+  focusRootId: string | null;
+  /** Context weight target for bodies outside the focused system (smoothstep of the camera-to-focus distance). */
+  contextGate: number;
+}
+
+/** Focus context fed by the camera rig each frame (reuse one object: no per-frame allocation). */
+export interface ScaleFocusInput {
+  /** The focused / travel-target / anchor entity id (null disables the context gate). */
+  focusId: string | null;
+  /** Camera distance to that entity, m. */
+  focusDistanceM: number;
+  /** Frame time step, s (≤ 0 or immediate → snap). */
+  dtSec: number;
+  /** Snap context weights (reduced motion, instant views). */
+  immediate?: boolean;
+  /** Resolves entities that are not registered for scaling (to walk parent chains, e.g. an ISS focus → Earth). */
+  resolve?: (id: string) => Entity | undefined;
 }
 
 const view: ScaleView = {
@@ -261,6 +317,9 @@ const view: ScaleView = {
   blend: 1,
   weight: 1,
   version: 0,
+  focusId: null,
+  focusRootId: null,
+  contextGate: 1,
 };
 
 /** Read-only access to the current view (layers transforming many points use `weight`, `viewportHeightPx`, `fovYRad`). */
@@ -268,14 +327,97 @@ export function getScaleView(): Readonly<ScaleView> {
   return view;
 }
 
-/** Called by the camera rig once per frame with the final camera pose (before layers update). */
-export function updateScaleView(cameraPosition: THREE.Vector3, viewportHeightPx: number, fovYRad: number): void {
-  if (cameraPosition.x === view.cameraPosition.x && cameraPosition.y === view.cameraPosition.y && cameraPosition.z === view.cameraPosition.z &&
-    viewportHeightPx === view.viewportHeightPx && fovYRad === view.fovYRad) return;
-  view.cameraPosition.copy(cameraPosition);
-  if (viewportHeightPx > 0) view.viewportHeightPx = viewportHeightPx;
-  if (fovYRad > 0) view.fovYRad = fovYRad;
-  view.version++;
+/**
+ * Called by the camera rig once per frame with the final camera pose (before layers update) and the focus context.
+ * Without `focus` (tests, legacy callers) the context gate is off: every body is fully enlarged.
+ */
+export function updateScaleView(cameraPosition: THREE.Vector3, viewportHeightPx: number, fovYRad: number, focus?: ScaleFocusInput): void {
+  let changed = false;
+  if (!(cameraPosition.x === view.cameraPosition.x && cameraPosition.y === view.cameraPosition.y && cameraPosition.z === view.cameraPosition.z &&
+    viewportHeightPx === view.viewportHeightPx && fovYRad === view.fovYRad)) {
+    view.cameraPosition.copy(cameraPosition);
+    if (viewportHeightPx > 0) view.viewportHeightPx = viewportHeightPx;
+    if (fovYRad > 0) view.fovYRad = fovYRad;
+    changed = true;
+  }
+  if (updateContext(focus)) changed = true;
+  if (changed) view.version++;
+}
+
+let resolveEntity: ((id: string) => Entity | undefined) | null = null;
+
+function parentIdOf(id: string): string | null {
+  const r = records.get(id);
+  if (r) return r.parentId;
+  return resolveEntity?.(id)?.parentId ?? null;
+}
+
+function kindOf(id: string): EntityKind | undefined {
+  return records.get(id)?.kind ?? resolveEntity?.(id)?.kind;
+}
+
+/** Top-most non-star ancestor of `id` (a moon → its planet; a planet → itself; the Sun → itself). */
+export function systemRootId(id: string): string {
+  let cur = id;
+  for (let i = 0; i < 8; i++) {
+    const p = parentIdOf(cur);
+    if (!p) break;
+    const k = kindOf(p);
+    if (k === undefined || k === 'star') break;
+    cur = p;
+  }
+  return cur;
+}
+
+function refreshLists(): void {
+  if (listVersion === registryVersion) return;
+  listVersion = registryVersion;
+  recList.length = 0;
+  planetList.length = 0;
+  for (const rec of records.values()) {
+    recList.push(rec);
+    if (rec.kind === 'planet' && rec.radiusM > 0) planetList.push(rec);
+    rec.root = null;
+  }
+}
+
+/** Ease every record's context weight toward its target; true when any weight changed. */
+function updateContext(focus: ScaleFocusInput | undefined): boolean {
+  if (focus?.resolve) resolveEntity = focus.resolve;
+  refreshLists();
+  const focusId = focus?.focusId ?? null;
+  const d = focus?.focusDistanceM ?? Infinity;
+  const gate = focusId === null || !(d >= 0) ? 1 : smoothstep(CONTEXT_NEAR_M, CONTEXT_FAR_M, d);
+  const sunGate = focusId === null || !(d >= 0) ? 1 : smoothstep(SUN_TRUE_NEAR_M, SUN_TRUE_FAR_M, d);
+  const root = focusId === null ? null
+    : view.focusId === focusId && view.focusRootId !== null && rootVersion === listVersion ? view.focusRootId : systemRootId(focusId);
+  view.focusId = focusId;
+  view.focusRootId = root;
+  view.contextGate = gate;
+  rootVersion = listVersion;
+  const dt = focus?.dtSec ?? 0;
+  const k = focus?.immediate || !(dt > 0) ? 1 : 1 - Math.exp(-dt / CONTEXT_TAU_SEC);
+  let changed = false;
+  for (let i = 0; i < recList.length; i++) {
+    const rec = recList[i]!;
+    if (rec.root === null) rec.root = systemRootId(rec.entity.id);
+    const inSystem = root !== null && rec.root === root;
+    const target = root === null || inSystem ? 1 : rec.kind === 'star' ? sunGate : gate;
+    const bgTarget = focus === undefined || inSystem ? 0 : 1;
+    if (rec.ctx !== target) {
+      let c = rec.ctx + (target - rec.ctx) * k;
+      if (Math.abs(target - c) < 1e-4) c = target;
+      rec.ctx = c;
+      changed = true;
+    }
+    if (rec.bg !== bgTarget) {
+      let b = rec.bg + (bgTarget - rec.bg) * k;
+      if (Math.abs(bgTarget - b) < 1e-4) b = bgTarget;
+      rec.bg = b;
+      changed = true;
+    }
+  }
+  return changed;
 }
 
 /** Set the mode; `immediate` skips the eased transition (boot, reduced motion, tests). */
@@ -330,7 +472,17 @@ interface Rec {
   clearanceM: number | null;
   maxFactor: number;
   targetFraction: number | undefined;
+  /** System root id (cached; null = recompute). */
+  root: string | null;
+  /** Eased context weight (0..1) multiplying the enlargement. */
+  ctx: number;
+  /** Eased background weight (0..1): 1 = outside the focused system, apparent size capped. */
+  bg: number;
   // cache
+  /** Exhibition factor before the mode weight and the context weight. */
+  ex: number;
+  /** Camera distance to the drawn position, m. */
+  dist: number;
   t: number;
   ver: number;
   factor: number;
@@ -341,6 +493,10 @@ interface Rec {
 
 const records = new Map<string, Rec>();
 let registryVersion = 0;
+const recList: Rec[] = [];
+const planetList: Rec[] = [];
+let listVersion = -1;
+let rootVersion = -1;
 const tmp = new THREE.Vector3();
 
 /** Register an entity for exhibition scaling. Returns an unregister function. Re-registering replaces the options. */
@@ -356,6 +512,7 @@ export function registerScaledBody(entity: Entity, opts: ScaledBodyOptions = {})
     clearanceM: opts.clearanceM ?? null,
     maxFactor: opts.maxFactor ?? MAX_FACTOR,
     targetFraction: opts.targetFraction,
+    root: null, ctx: 1, bg: 0, ex: 1, dist: Infinity,
     t: NaN, ver: -1, factor: 1, computing: false,
     truePos: new THREE.Vector3(), pos: new THREE.Vector3(),
   };
@@ -414,10 +571,15 @@ function compute(rec: Rec, tMs: number): Rec {
       if (clearance > 0) cap = Math.min(cap, maxFactorForClearance(rec.coreRadiusM, rec.systemExtentM, clearance));
     }
     let f = 1;
+    const d = rec.pos.distanceTo(view.cameraPosition);
+    rec.dist = d;
+    rec.ex = 1;
     if (w > 0) {
-      const d = rec.pos.distanceTo(view.cameraPosition);
-      const ex = bodyScale(rec.radiusM, rec.kind, d, view.viewportHeightPx, view.fovYRad, { maxFactor: cap, targetFraction: rec.targetFraction });
-      f = 1 + (ex - 1) * w;
+      let ex = bodyScale(rec.radiusM, rec.kind, d, view.viewportHeightPx, view.fovYRad, { maxFactor: cap, targetFraction: rec.targetFraction });
+      if (rec.bg > 0 && ex > 1) ex = backgroundCap(rec, ex, d);
+      if (rec.kind === 'planet' && ex > 1) ex = orderCap(rec, ex, d, tMs);
+      rec.ex = ex;
+      f = 1 + (ex - 1) * w * rec.ctx;
     }
     rec.factor = Number.isFinite(f) && f >= 1 ? f : 1;
     if (!Number.isFinite(rec.pos.x + rec.pos.y + rec.pos.z)) rec.pos.copy(rec.truePos);
@@ -429,6 +591,43 @@ function compute(rec: Rec, tMs: number): Rec {
     rec.ver = ver;
   }
   return rec;
+}
+
+/** Background cap: enlarged apparent diameter ≤ BACKGROUND_MAX_FRACTION · H (Sun: SUN_…), blended by the background weight. */
+function backgroundCap(rec: Rec, ex: number, d: number): number {
+  const H = view.viewportHeightPx;
+  const capPx = H * (rec.kind === 'star' ? SUN_BACKGROUND_MAX_FRACTION : BACKGROUND_MAX_FRACTION);
+  const p = trueDiameterPx(rec.radiusM, d, H, view.fovYRad);
+  if (!(p > 0)) return ex;
+  let capF = capPx / p;
+  if (rec.coreRadiusM > rec.radiusM) {
+    const pc = trueDiameterPx(rec.coreRadiusM, d, H, view.fovYRad);
+    if (pc > 0) capF = Math.min(capF, (BACKGROUND_RING_MULT * capPx) / pc);
+  }
+  if (capF < 1) capF = 1;
+  return ex > capF ? ex + (capF - ex) * Math.min(rec.bg, 1) : ex;
+}
+
+/**
+ * Size-order cap: a planet's drawn apparent radius stays ≤ clamp(sqrt(R/Rj), PLANET_ORDER_MIN_RATIO, 1) × that of every larger
+ * registered planet j (pre-context factors; the cap fades with j's context weight so a gated-out giant never shrinks the focus,
+ * and with j's excess background weight so a background-capped giant never shrinks the focused planet).
+ */
+function orderCap(rec: Rec, ex: number, d: number, tMs: number): number {
+  refreshLists();
+  for (let i = 0; i < planetList.length; i++) {
+    const j = planetList[i]!;
+    if (j === rec || !(j.radiusM > rec.radiusM) || !(j.ctx > 0)) continue;
+    compute(j, tMs);
+    if (!(j.dist > 0)) continue;
+    const floor = PLANET_ORDER_MIN_RATIO + (BACKGROUND_ORDER_MIN_RATIO - PLANET_ORDER_MIN_RATIO) * Math.min(rec.bg, j.bg, 1);
+    const ratio = Math.min(Math.max(Math.pow(rec.radiusM / j.radiusM, SIZE_LAW_EXPONENT), floor), 1);
+    const lim = Math.max(1, (ratio * j.ex * j.radiusM * d) / (j.dist * rec.radiusM));
+    // A capped background giant never shrinks a (less-capped) focused planet.
+    const wj = Math.min(j.ctx, 1) * (1 - Math.max(0, j.bg - rec.bg));
+    if (ex > lim) ex += (lim - ex) * wj;
+  }
+  return ex;
 }
 
 /**

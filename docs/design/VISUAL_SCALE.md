@@ -16,13 +16,17 @@ All sizes are CSS px of a viewport of height H at the engine's px-per-radian (H 
 
 | Law | Value | Why |
 | --- | --- | --- |
-| Target apparent diameter | T = H · 0.016 · √(R / R⊕), clamped per kind | square-root compression keeps the order readable: Earth ≈ 17 px at 1080 p, Jupiter ≈ 58 px (3.3 × Earth, not 11 ×), Mercury ≈ 11 px, Pluto ≈ 7 px |
-| Kind clamps (fraction of H) | planet 0.008–0.06, dwarf planet 0.006–0.024, moon 0.003–0.02, asteroid/comet 0.0025–0.01; spacecraft 0.004, station 0.005, satellite 0.003, rocket body 0.0025, debris 0.002 (fixed); the Sun 0.05 | kinds not listed (catalog stars, galaxies, regions…) are never enlarged |
+| Target apparent diameter | T = H · 0.026 · √(R / R⊕), clamped per kind | square-root compression keeps the order readable: Earth ≈ 28 px at 1080 p, Jupiter ≈ 92 px (3.3 × Earth, not 11 ×), Mercury ≈ 17 px |
+| Kind clamps (fraction of H) | planet 0.013–0.085, dwarf planet 0.009–0.032, moon 0.0045–0.026, asteroid/comet 0.0025–0.01; spacecraft 0.004, station 0.005, satellite 0.003, rocket body 0.0025, debris 0.002 (fixed); the Sun 0.075 | kinds not listed (catalog stars, galaxies, regions…) are never enlarged |
 | Displayed diameter | D = (p⁴ + T⁴)^¼, p = true apparent diameter | smooth max: D → T far away, D → p close |
 | Distance gate | enlargement × smoothstep(40 R, 160 R, d) | EXACTLY true size within 40 radii; C¹-smooth, no popping |
-| Sun cap | R'☉ ≤ 0.3 × Mercury perihelion (1.38 × 10¹⁰ m) | big and glowing, never engulfing Mercury's orbit |
-| Planet clearance | enlarged system (core + satellites) ≤ 0.1 × distance from the Sun | no overlaps between neighbours |
-| Satellite offsets | a' = f · min(a, c) + max(a − c, 0) · √f | c = parent core (radius, or ring outer edge: Saturn 136,775 km, Uranus ε 51,149 km, Neptune Adams 62,930 km). Rings and ring-moons scale exactly ×f; the gap beyond grows by √f so the Moon stays near the Earth instead of flying out toward Venus. Identity at f = 1. |
+| Context gate | enlargement × ctx; ctx = 1 for the focused system (focus, its parent planet, all that planet's satellites), the near-planet gate for the Sun (below), else smoothstep(3 × 10⁹ m, 3 × 10¹⁰ m, camera-to-focus distance); eased with τ = 0.6 s on focus changes (instant under reduced motion) | in a close-up, planets 5–30 AU away are true-size points with labels (no toy-diorama discs); in system overviews everything is enlarged. The rig feeds the context (travel target while travelling, else focus, else free-flight anchor) |
+| Background cap | a body outside the focused system (every body when nothing is focused) is drawn at ≤ 2.5 % of H apparent diameter (the Sun ≤ 4 %; a ringed planet's ring extent ≤ 5 %); eased with the context weight; the order floor between two background-capped planets is 0.88 | background bodies read as small discs and never dominate the frame (fix-2: Saturn was a 110 px disc in the belt view). Measured at 1600×900, Sun focus, 4 AU field: Earth ≈ 14 px, Mars ≈ 12 px, giants ≤ 22 px. The focused system is never capped |
+| Near-planet Sun | when a non-solar system is focused, the Sun's enlargement × smoothstep(0.2 AU, 0.5 AU, camera-to-focus distance) | seen from Earth (or any planet close-up) the Sun is its real 0.53° disc, not a 10× ball under the inspector |
+| Sun cap | R'☉ ≤ 0.4 × Mercury perihelion (1.84 × 10¹⁰ m) | big and glowing, never engulfing Mercury's orbit |
+| Planet clearance | enlarged system (core + satellites) ≤ k(r) × distance from the Sun; k = 0.12 inside 2 AU → 0.30 at 5 AU (Jupiter) → 0.36 beyond 9 AU (Saturn outward) | no overlaps between neighbours (Jupiter–Saturn could touch only near a conjunction, next 2040, in very distant views) |
+| Size order | after the caps, a planet's drawn apparent radius ≤ clamp(√(R/Rj), 0.8, 1) × that of every larger planet j (fades with j's context weight) | a clearance-capped Saturn never reads smaller than Uranus/Neptune; measured from 80 AU: Jupiter 40 px, Saturn 37 px (+ rings), Uranus 30 px, Neptune 29 px, Earth 2 px |
+| Satellite offsets | a' = f · min(a, c) + max(a − c, 0) · f^0.38 | c = parent core (radius, or ring outer edge: Saturn 136,775 km, Uranus ε 51,149 km, Neptune Adams 62,930 km). Rings and ring-moons scale exactly ×f; the gap beyond grows by f^0.38 so the Moon stays near the Earth instead of flying out toward Venus. Identity at f = 1. |
 | Satellite size cap | r' ≤ 0.35 × (a' − f · R_parent) | a satellite never touches or enters its enlarged parent |
 | Mode switch | eased over 1.1 s (instant under reduced motion) | no pop when toggling |
 
@@ -47,7 +51,7 @@ import {
 * `renderTransform(entity, tMs, out) → factor` — writes the DRAWN position (ICRS m, rel. SSB) and returns the radius factor
   (drawn radius = radiusM × factor). Cached per frame; unregistered entities are identity (true position, 1).
 * The camera rig (`src/core/camera/rigImpl.ts`, `focusChain.ts`) and the picker (`src/core/picking.ts`) already use these
-  render transforms, and the rig feeds the runtime every frame (`stepVisualScale`, `updateScaleView`) **before** layers
+  render transforms, and the rig feeds the runtime every frame (`stepVisualScale`, `updateScaleView(pos, H, fovY, focusContext)`) **before** layers
   update — so a layer's `ctx.cameraPosition` equals the runtime's camera, and what is drawn, what the camera travels to and
   what the cursor hits always agree.
 

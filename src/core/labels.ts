@@ -7,6 +7,7 @@
  * canvas measurement). Selected and hovered labels are boosted, always shown and styled distinctly.
  * Only the label text receives pointer events: clicking selects, double-clicking focuses.
  */
+import type { EntityKind } from './entity';
 import type { LabelCandidate, LabelKind, Viewport } from './types';
 import './labels.css';
 
@@ -20,6 +21,39 @@ export interface LabelFrameInfo {
   enabled: boolean;
   /** Wall-clock ms (performance.now) used for fade bookkeeping. */
   nowMs: number;
+  /**
+   * Drawn discs of near bodies as flat [x, y, r] CSS px triples: a label anchored outside a disc may not be placed over
+   * it (it would read as written on the body). Anchors inside a disc were already depth-tested by the caller.
+   */
+  discs?: ArrayLike<number>;
+  discCount?: number;
+}
+
+/** Labels drawn per view at the reference viewport (1600 x 900); selected/hovered and entity-less labels are extra. */
+export const LABEL_VIEW_BUDGET = 12;
+
+/** Per-view label budget: LABEL_VIEW_BUDGET scaled with the viewport area, 8..18, never above the quality profile's. */
+export function labelViewBudget(viewport: Viewport, profileBudget: number): number {
+  const k = Math.sqrt(Math.max(1, viewport.width * viewport.height) / (1600 * 900));
+  return Math.min(profileBudget, Math.max(8, Math.min(18, Math.round(LABEL_VIEW_BUDGET * k))));
+}
+
+/**
+ * Ranking tier for decluttering: Sun 7, planet 6, dwarf planet 5, moon 4, surface landmark 3.5, spacecraft 3,
+ * small body 2, rocket body / debris 1.5, everything else (stars, galaxies, structures) 1, no entity 0.
+ */
+export function labelTier(entityId: string | null, kind: EntityKind | undefined, labelKind: LabelKind): number {
+  if (entityId === null) return 0;
+  if (entityId === 'sol:sun') return 7;
+  switch (kind) {
+    case 'planet': return 6;
+    case 'dwarf-planet': return 5;
+    case 'moon': return 4;
+    case 'spacecraft': case 'space-station': case 'satellite': return 3;
+    case 'asteroid': case 'comet': case 'interstellar-object': return 2;
+    case 'rocket-body': case 'debris': return 1.5;
+    default: return labelKind === 'landmark' ? 3.5 : 1;
+  }
 }
 
 export interface LabelManagerOptions {
@@ -30,6 +64,11 @@ export interface LabelManagerOptions {
   onHover?(entityId: string | null): void;
   /** Wheel events over label text are re-dispatched here so zooming never stalls over a label. */
   wheelTarget?: HTMLElement | null;
+  /**
+   * Ranking tier of a candidate (planet > dwarf planet > moon > spacecraft > small body > star); higher tiers win
+   * before `priority` is compared. Candidates without an entity are tier 0 and do not count against the budget.
+   */
+  tierOf?(c: LabelCandidate): number;
 }
 
 export interface LabelManager {
@@ -82,6 +121,15 @@ const RELEASE_AFTER_MS = 400;
 /** A non-forced label whose anchor lies this close to an already placed one is dropped (co-located bodies). */
 const ANCHOR_MERGE_PX = 4;
 const SELECTED_BOOST = 1e12;
+/** Separation between ranking tiers; larger than any layer's own priority. */
+const TIER_STEP = 1e5;
+/**
+ * HUD regions labels never enter (anchors inside are dropped, label boxes may not overlap): the open inspector, the
+ * top bar, the bottom time/planet strip, the moon strip, the cosmic ruler and its scale readout, and anything marked
+ * [data-label-exclude].
+ */
+const EXCLUDE_SELECTOR =
+  '.cx-inspector, [data-label-exclude], .cx-topbar, .cx-bottom, .cx-moonstrip-band, .cx-ruler, .cx-ruler__mag, .cx-ruler__line';
 const HOVERED_BOOST = 1e11;
 
 const SIDE_RIGHT = 0;
@@ -353,6 +401,25 @@ export function createLabelManager(opts: LabelManagerOptions): LabelManager {
     return attempt <= preferred ? attempt - 1 : attempt;
   };
 
+  // Discs (from LabelFrameInfo) that the current candidate's box must avoid.
+  let discs: ArrayLike<number> = [];
+  let discCount = 0;
+  /** True when the box crosses a disc that does not contain the anchor (x, y). */
+  const overDisc = (x: number, y: number, x0: number, y0: number, x1: number, y1: number): boolean => {
+    for (let i = 0; i < discCount; i++) {
+      const cx = discs[3 * i];
+      const cy = discs[3 * i + 1];
+      const r = discs[3 * i + 2];
+      const ax = x - cx;
+      const ay = y - cy;
+      if (ax * ax + ay * ay <= r * r) continue;
+      const dx = cx - Math.max(x0, Math.min(cx, x1));
+      const dy = cy - Math.max(y0, Math.min(cy, y1));
+      if (dx * dx + dy * dy < r * r) return true;
+    }
+    return false;
+  };
+
   /** Greedy placement against already placed labels; returns the side or -1 (result in `placed`). */
   const place = (x: number, y: number, r: number, w: number, h: number, preferred: number, vw: number, vh: number): number => {
     for (let attempt = 0; attempt < 4; attempt++) {
@@ -360,7 +427,12 @@ export function createLabelManager(opts: LabelManagerOptions): LabelManager {
       layoutSide(side, x, y, r, w, h);
       const x0 = placed[2];
       const y0 = placed[3];
-      if (x0 >= 0 && y0 >= 0 && x0 + w <= vw && y0 + h <= vh && !overlaps(x0, y0, x0 + w, y0 + h)) return side;
+      if (
+        x0 >= 0 && y0 >= 0 && x0 + w <= vw && y0 + h <= vh && !overlaps(x0, y0, x0 + w, y0 + h) &&
+        (discCount === 0 || !overDisc(x, y, x0, y0, x0 + w, y0 + h))
+      ) {
+        return side;
+      }
     }
     return -1;
   };
@@ -378,7 +450,7 @@ export function createLabelManager(opts: LabelManagerOptions): LabelManager {
     order.length = n;
     for (let i = 0; i < n; i++) {
       const c = candidates[i];
-      let p = c.priority;
+      let p = c.priority + (opts.tierOf ? TIER_STEP * opts.tierOf(c) : 0);
       if (c.entityId !== null && c.entityId === f.selectedId) p += SELECTED_BOOST;
       else if (c.entityId !== null && c.entityId === f.hoveredId) p += HOVERED_BOOST;
       prio[i] = p;
@@ -440,7 +512,7 @@ export function createLabelManager(opts: LabelManagerOptions): LabelManager {
     if (nowMs - exclusionAt < 250 && nowMs >= exclusionAt) return;
     exclusionAt = nowMs;
     exclusionCount = 0;
-    const els = document.querySelectorAll('.cx-inspector, [data-label-exclude]');
+    const els = document.querySelectorAll(EXCLUDE_SELECTOR);
     if (els.length === 0) return;
     const base = root.getBoundingClientRect();
     els.forEach((el) => {
@@ -477,6 +549,8 @@ export function createLabelManager(opts: LabelManagerOptions): LabelManager {
       insertRect(exclusion[k], exclusion[k + 1], exclusion[k + 2], exclusion[k + 3]);
     }
     sortByPriority(candidates, f);
+    discs = f.discs ?? [];
+    discCount = f.discs ? Math.min(f.discCount ?? 0, Math.floor(f.discs.length / 3)) : 0;
 
     let budgetUsed = 0;
     for (const index of order) {
@@ -490,7 +564,7 @@ export function createLabelManager(opts: LabelManagerOptions): LabelManager {
       const flags = (isSelected ? FLAG_SELECTED : 0) | (isHovered ? FLAG_HOVERED : 0);
       if (!placeCandidate(c, f, forced, flags)) continue;
       shown += 1;
-      if (!forced) budgetUsed += 1;
+      if (!forced && c.entityId !== null) budgetUsed += 1;
     }
 
     for (const slot of pool) {

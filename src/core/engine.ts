@@ -41,7 +41,7 @@ import { createEventBus, type DisposableEventBus } from './events';
 import { createTimeController, type SimulationClock } from './time';
 import { createAssetLoader, type CosmosAssetLoader } from './assets';
 import { createPicker, DEFAULT_PICK_RADIUS_PX, TOUCH_PICK_RADIUS_PX, type Picker } from './picking';
-import { createLabelManager, type LabelManager } from './labels';
+import { createLabelManager, labelTier, labelViewBudget, type LabelManager } from './labels';
 import { createPostPipeline, type PostPipeline } from './post';
 import { createQualityController, pickInitialQuality, type QualityController } from './quality';
 import { createPerfMonitor, type PerfMonitor } from './perf';
@@ -348,8 +348,11 @@ export function createEngine(opts: EngineOptions): Engine {
   const tmp = new THREE.Vector3();
 
   // ── Label occlusion: hide labels of things behind a resolved body disc (the focus and its parent chain). ──
-  const occluders: { x: number; y: number; r: number; d: number; id: string }[] = [];
-  for (let i = 0; i < 3; i++) occluders.push({ x: 0, y: 0, r: 0, d: 0, id: '' });
+  const occluders: { x: number; y: number; r: number; d: number; R: number; id: string }[] = [];
+  for (let i = 0; i < 3; i++) occluders.push({ x: 0, y: 0, r: 0, d: 0, R: 0, id: '' });
+  // Same discs as [x, y, r] triples for the label manager's placement (labels outside a disc never spill onto it).
+  const occDiscs = new Float64Array(9);
+  let occDiscCount = 0;
   const occScreen: ScreenPoint = { x: 0, y: 0, depthM: 0, visible: false };
   const occWorld = new THREE.Vector3();
   function occludeLabels(out: LabelCandidate[]): void {
@@ -370,10 +373,17 @@ export function createEngine(opts: EngineOptions): Engine {
           o.y = occScreen.y;
           o.r = r;
           o.d = d;
+          o.R = e.radiusM * f;
           o.id = e.id;
         }
       }
       id = e.parentId;
+    }
+    occDiscCount = n;
+    for (let k = 0; k < n; k++) {
+      occDiscs[3 * k] = occluders[k].x;
+      occDiscs[3 * k + 1] = occluders[k].y;
+      occDiscs[3 * k + 2] = occluders[k].r * 1.04 + 4;
     }
     if (n === 0) return;
     let w = 0;
@@ -390,9 +400,15 @@ export function createEngine(opts: EngineOptions): Engine {
         }
         const dx = c.x - o.x;
         const dy = c.y - o.y;
-        if (dx * dx + dy * dy > o.r * o.r) continue;
+        // A little beyond the limb: the atmosphere/glow halo hides star labels just past the disc edge too.
+        const rr = o.r * 1.04 + 6;
+        const rho2 = dx * dx + dy * dy;
+        if (rho2 > rr * rr) continue;
         const ce = c.entityId ? registry.get(c.entityId) : undefined;
-        hidden = ce ? renderPosition(ce, ctx.timeMs, occWorld).distanceTo(ctx.cameraPosition) > o.d : true;
+        // Behind the visible surface along the anchor's line of sight (sphere depth there, not the centre's), so a
+        // satellite crossing in front of the disc keeps its label and one behind the limb loses it.
+        const front = o.d - o.R * Math.sqrt(Math.max(0, 1 - rho2 / (o.r * o.r)));
+        hidden = ce ? renderPosition(ce, ctx.timeMs, occWorld).distanceTo(ctx.cameraPosition) > front : true;
       }
       if (!hidden) out[w++] = c;
     }
@@ -536,12 +552,24 @@ export function createEngine(opts: EngineOptions): Engine {
   };
 
   // ── Picking & labels ──────────────────────────────────────────────────────────────────────
+  const labelTiers = new Map<string, number>();
   const labels = createLabelManager({
     parent: container,
     onSelect: id => handlers.select(id),
     onFocus: id => handlers.focus(id),
     onHover: id => setHover(id, Number.NaN, Number.NaN),
     wheelTarget: canvas,
+    tierOf: c => {
+      if (c.entityId === null) return 0;
+      let t = labelTiers.get(c.entityId);
+      if (t === undefined) {
+        const e = registry.get(c.entityId);
+        t = labelTier(c.entityId, e?.kind, c.kind);
+        // Unregistered ids (still loading) are re-resolved on a later frame.
+        if (e) labelTiers.set(c.entityId, t);
+      }
+      return t;
+    },
   });
 
   picker = createPicker({
@@ -780,9 +808,11 @@ export function createEngine(opts: EngineOptions): Engine {
       selectedId,
       hoveredId,
       viewport,
-      budget: profile.labelBudget,
+      budget: labelViewBudget(viewport, profile.labelBudget),
       enabled: overlays.labels,
       nowMs: now,
+      discs: occDiscs,
+      discCount: occDiscCount,
     });
 
     try {

@@ -7,7 +7,7 @@
  * (anchorId, offset) and re-anchors to the body whose sphere of influence contains the camera.
  */
 import * as THREE from 'three';
-import { renderPosition, renderRadius, stepVisualScale, updateScaleView } from '../visualScale';
+import { renderPosition, renderRadius, stepVisualScale, updateScaleView, type ScaleFocusInput } from '../visualScale';
 import type { CameraMode, CameraViewState, TravelOptions } from '../types';
 import type { Entity, EntityKind } from '../entity';
 import type { CameraFrameState, CameraRig, CameraRigDeps } from './rig';
@@ -139,6 +139,9 @@ export class CosmosCameraRig implements CameraRig {
   private readonly yawCoast = { velocity: 0 };
   private readonly pitchCoast = { velocity: 0 };
   private readonly point = new THREE.Vector3();
+  /** Focus context fed to the exhibition-scale runtime each frame (reused; no per-frame allocation). */
+  private readonly scaleFocus: ScaleFocusInput = { focusId: null, focusDistanceM: Infinity, dtSec: 0, immediate: false };
+  private readonly scaleFocusPos = new THREE.Vector3();
   private readonly preferredUp = new THREE.Vector3(0, 0, 1);
   private readonly weights: UpWeights = { pole: 0, ecliptic: 1, galactic: 0 };
   private poleBody: Entity | null = null;
@@ -285,8 +288,28 @@ export class CosmosCameraRig implements CameraRig {
 
     this.finishFrame(dt);
     // Feed the exhibition-scale runtime with this frame's final pose (layers update after the rig).
-    updateScaleView(this.state.position, this.deps.getViewport().height, this.deps.fovYRad);
+    this.feedScaleFocus(dt, timeMs, vsState.ui.reducedMotion);
+    updateScaleView(this.state.position, this.deps.getViewport().height, this.deps.fovYRad, this.scaleFocus);
     return this.state;
+  }
+
+  /** Context for the exhibition-scale gate: the travel target while travelling, else the focus (or the free-flight anchor). */
+  private feedScaleFocus(dt: number, timeMs: number, reducedMotion: boolean): void {
+    const sf = this.scaleFocus;
+    sf.resolve ??= (id: string) => this.deps.registry.get(id);
+    const id = this.travel ? this.travel.targetId : (this._focusId ?? this._anchorId);
+    const e = id ? this.deps.registry.get(id) : undefined;
+    sf.focusId = e ? id : null;
+    sf.focusDistanceM = Infinity;
+    if (e) {
+      try {
+        e.position(timeMs, this.scaleFocusPos);
+        const d = this.scaleFocusPos.distanceTo(this.state.position);
+        if (Number.isFinite(d)) sf.focusDistanceM = d;
+      } catch { /* unpositioned: no gate */ }
+    }
+    sf.dtSec = dt;
+    sf.immediate = reducedMotion;
   }
 
   dispose(): void {
