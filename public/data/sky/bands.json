@@ -1,0 +1,929 @@
+{
+ "schemaVersion": 1,
+ "generated": "2026-10-18T14:40:32.695Z",
+ "domain": "sky",
+ "convention": "All sky images are equirectangular (plate carree, CAR) all-sky maps in ICRS (J2000) equatorial coordinates with width W = 2 x height H. Pixel column x (0-based) has its centre at RA = 360*(x+0.5)/W degrees: RA increases to the RIGHT in the stored image and RA = 0 h lies on the left edge (RA = 360 on the right edge). Pixel row y (0-based from the top) has its centre at Dec = 90 - 180*(y+0.5)/H degrees: north celestial pole along the top edge, south celestial pole along the bottom. This is the view of the celestial sphere from OUTSIDE (like a globe texture); as seen from inside the sphere (the real sky), east is to the left, so a sky-sphere renderer must mirror the texture horizontally (or map it onto the inside of the sphere with u = RA/360 increasing eastward). Direction for a pixel: v = (cos Dec cos RA, cos Dec sin RA, sin Dec) in ICRS. Landmarks: Galactic Centre (RA 266.40, Dec -28.94) at x/W = 0.740, y/H = 0.661; LMC (RA 80.9, Dec -69.8) at x/W = 0.225, y/H = 0.888; Orion Nebula (RA 83.8, Dec -5.4) at x/W = 0.233, y/H = 0.530.",
+ "projection": {
+  "type": "equirectangular (CAR)",
+  "frame": "ICRS",
+  "aspect": "2:1",
+  "raOfPixelCenter": "RA = 360*(x+0.5)/W",
+  "decOfPixelCenter": "Dec = 90 - 180*(y+0.5)/H",
+  "raIncreases": "right",
+  "raAtLeftEdgeDeg": 0
+ },
+ "pathsRelativeTo": "public/ (prepend the app base URL, e.g. fetch(`${import.meta.env.BASE_URL}${file.path}`))",
+ "credits": {
+  "hips": "HiPS: Fernique P. et al. 2015, A&A 578, A114 (IVOA HiPS standard); HiPS surveys distributed by CDS, Strasbourg Astronomical Observatory, France (CNRS/Unistra) unless stated otherwise.",
+  "hips2fits": "All-sky reprojections made with hips2fits, a service provided by CDS (https://alasky.cds.unistra.fr/hips-image-services/hips2fits)."
+ },
+ "bands": [
+  {
+   "id": "visible",
+   "label": "Visible light",
+   "regime": "optical",
+   "wavelengthLabel": "0.33–1.05 µm (Gaia BP / G / RP)",
+   "emMinM": 3.29283e-7,
+   "emMaxM": 0.000001042296,
+   "survey": "Gaia DR3 colour flux map (integrated starlight of ~1.8 billion Gaia DR3 sources)",
+   "instrument": "ESA Gaia — astrometric field + BP/RP photometers",
+   "hipsId": "CDS/P/DM/flux-color-Rp-G-Bp/I/355/gaiadr3",
+   "hipsChannels": [],
+   "hipsServiceUrl": "https://alasky.cds.unistra.fr/ancillary/GaiaDR3/color-Rp-G-Bp-flux-map",
+   "hipsReleaseDate": "2022-06-16T09:03Z",
+   "files": {
+    "ultra": {
+     "path": "data/sky/visible/visible_8k.jpg",
+     "bytes": 10155798,
+     "width": 8192,
+     "height": 4096,
+     "mime": "image/jpeg"
+    },
+    "high": {
+     "path": "data/sky/visible/visible_4k.jpg",
+     "bytes": 2175916,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/jpeg"
+    },
+    "low": {
+     "path": "data/sky/visible/visible_1k.jpg",
+     "bytes": 45226,
+     "width": 1024,
+     "height": 512,
+     "mime": "image/jpeg"
+    }
+   },
+   "credit": "ESA/Gaia/DPAC (Gaia DR3, Gaia Collaboration, Vallenari et al. 2023, A&A 674, A1). Colour flux map HiPS: CDS, Université de Strasbourg/CNRS.",
+   "license": "Gaia data: CC BY-NC 3.0 IGO (ESA; non-commercial use with credit \"ESA/Gaia/DPAC\"). HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://www.cosmos.esa.int/web/gaia-users/license",
+   "citation": "Gaia Collaboration, Vallenari A. et al. 2023, A&A 674, A1 (Gaia DR3). HiPS: Fernique P. et al. 2015, A&A 578, A114.",
+   "processing": {
+    "source": "hips2fits JPG render of the survey's own colour HiPS (8192x4096), used as delivered except for a per-channel levels curve.",
+    "stretch": "levels per channel: out = 255 * clamp((in - 40) / (255 - 40), 0, 1) ^ 1.6",
+    "colormap": "none (survey RGB composite)",
+    "alpha": "no alpha channel",
+    "resampling": "hips2fits reprojection from HEALPix to CAR; 8192 -> 4096 and 4096 -> 1024 downsampling with Lanczos-3 (sharp)"
+   },
+   "colorScale": null,
+   "coverageFraction": 1,
+   "reveals": "This is starlight: the summed light of about 1.8 billion stars measured by ESA's Gaia satellite in its blue, green and red passbands. The bright band is the disc of our own Milky Way seen edge-on from inside it, and the dark, reddened lanes are clouds of interstellar dust that absorb and redden the light of the stars behind them. The two smudges in the far south are the Large and Small Magellanic Clouds, satellite galaxies about 160,000 and 200,000 light-years away.",
+   "caveats": [
+    "Built from the Gaia DR3 source catalogue, not from a photograph: diffuse glowing gas (e.g. the Orion Nebula) is absent, and stars brighter than about G = 3 mag are missing or incomplete in Gaia.",
+    "Faint stripes from Gaia's scanning pattern and star-count noise are visible in low-density regions at full resolution.",
+    "Cosmos applied a per-channel levels curve (black point 40/255, gamma 1.6) to the CDS colour composite to obtain a dark sky background."
+   ],
+   "provenanceClass": "derived",
+   "retrieved": "2026-10-18T14:04:35.058Z"
+  },
+  {
+   "id": "halpha",
+   "label": "Hydrogen-alpha",
+   "regime": "optical",
+   "wavelengthLabel": "656.3 nm (Hα emission line)",
+   "emMinM": 4.8e-7,
+   "emMaxM": 7.3e-7,
+   "survey": "Finkbeiner (2003) full-sky Hα composite (WHAM + VTSS + SHASSA)",
+   "instrument": "Wisconsin H-Alpha Mapper (WHAM), Virginia Tech Spectral-line Survey (VTSS), Southern H-Alpha Sky Survey Atlas (SHASSA)",
+   "hipsId": "CDS/P/Finkbeiner",
+   "hipsChannels": [],
+   "hipsServiceUrl": "https://alasky.cds.unistra.fr/FinkbeinerHalpha",
+   "hipsReleaseDate": "2019-05-05T06:07Z",
+   "files": {
+    "high": {
+     "path": "data/sky/halpha/halpha_4k.jpg",
+     "bytes": 804548,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/jpeg"
+    },
+    "low": {
+     "path": "data/sky/halpha/halpha_1k.jpg",
+     "bytes": 55486,
+     "width": 1024,
+     "height": 512,
+     "mime": "image/jpeg"
+    }
+   },
+   "credit": "Hα composite map: D. P. Finkbeiner (2003, ApJS 146, 407), using data from WHAM (NSF), VTSS (NSF) and SHASSA (NSF). HiPS: CDS.",
+   "license": "Publicly released research data product (Finkbeiner 2003); free use with citation. HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://faun.rc.fas.harvard.edu/dfink/skymaps/halpha/",
+   "citation": "Finkbeiner D. P. 2003, ApJS 146, 407; Haffner L. M. et al. 2003, ApJS 149, 405 (WHAM); Dennison B. et al. 1998, PASA 15, 147 (VTSS); Gaustad J. E. et al. 2001, PASP 113, 1326 (SHASSA).",
+   "processing": {
+    "source": "hips2fits FITS render (float, R) of the survey HiPS at 4096x2048; colourised by Cosmos.",
+    "stretch": "log10: t = (log10(v) - log10(0.5)) / (log10(500) - log10(0.5)), clipped to [0,1]; v <= 0 -> t = 0",
+    "colormap": "halpha: piecewise-linear sRGB interpolation through evenly spaced stops #000000 #1c0000 #420000 #6e0500 #9c1004 #c9260c #ec4b1c #fd7d3c #ffb173 #ffdcb4 #fff7ec",
+    "resampling": "hips2fits reprojection from HEALPix to CAR; 4096 -> 1024 Lanczos-3 (sharp)",
+    "dataStats": {
+     "unit": "R",
+     "nan": 0,
+     "inf": 0,
+     "min": 0.10001,
+     "p01": 0.12109,
+     "p50": 1.6751,
+     "p99": 96.55,
+     "max": 7791.6,
+     "clippedLowFraction": 0.11582,
+     "clippedHighFraction": 0.00023
+    }
+   },
+   "colorScale": {
+    "quantity": "rayleigh (R)",
+    "unit": "R",
+    "stretch": "log10",
+    "min": 0.5,
+    "max": 500,
+    "colormap": "halpha",
+    "stops": [
+     "#000000",
+     "#1c0000",
+     "#420000",
+     "#6e0500",
+     "#9c1004",
+     "#c9260c",
+     "#ec4b1c",
+     "#fd7d3c",
+     "#ffb173",
+     "#ffdcb4",
+     "#fff7ec"
+    ]
+   },
+   "coverageFraction": 1,
+   "reveals": "Hydrogen-alpha is deep-red light emitted when electrons recombine with protons in hydrogen gas that has been ionized by the ultraviolet light of hot young stars or by shock waves. It lights up glowing H II regions such as the Orion–Eridanus bubble with Barnard's Loop and the giant Gum Nebula, plus a faint \"warm ionized medium\" that fills the Galactic disc.",
+   "caveats": [
+    "Composite of three surveys with different resolutions (WHAM ~1°, VTSS/SHASSA ~6′); regions covered only by WHAM look smoother.",
+    "Not corrected for dust extinction: Hα from distant regions of the Galactic plane (e.g. towards the Galactic Centre) is strongly dimmed.",
+    "Residual artifacts around some bright stars may be visible."
+   ],
+   "provenanceClass": "observed",
+   "retrieved": "2026-10-18T14:13:48.315Z"
+  },
+  {
+   "id": "nir",
+   "label": "Near-infrared",
+   "regime": "infrared",
+   "wavelengthLabel": "1.2–2.2 µm (2MASS J, H, Ks)",
+   "emMinM": 0.000001147,
+   "emMaxM": 0.000002303,
+   "survey": "2MASS All-Sky Atlas images, colour composite J (blue), H (green), Ks (red)",
+   "instrument": "Two Micron All Sky Survey 1.3 m telescopes (Mt. Hopkins, USA and Cerro Tololo, Chile)",
+   "hipsId": "CDS/P/2MASS/color",
+   "hipsChannels": [],
+   "hipsServiceUrl": "https://alasky.cds.unistra.fr/2MASS/Color",
+   "hipsReleaseDate": "2024-10-09T07:12Z",
+   "files": {
+    "high": {
+     "path": "data/sky/nir/nir_4k.jpg",
+     "bytes": 1550062,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/jpeg"
+    },
+    "low": {
+     "path": "data/sky/nir/nir_1k.jpg",
+     "bytes": 31235,
+     "width": 1024,
+     "height": 512,
+     "mime": "image/jpeg"
+    }
+   },
+   "credit": "This publication makes use of data products from the Two Micron All Sky Survey, which is a joint project of the University of Massachusetts and the Infrared Processing and Analysis Center/California Institute of Technology, funded by the National Aeronautics and Space Administration and the National Science Foundation. HiPS: CDS.",
+   "license": "2MASS data products are public (NASA/NSF funded); free use with the acknowledgement above. HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://irsa.ipac.caltech.edu/data/2MASS/docs/releases/allsky/doc/sec1_1.html",
+   "citation": "Skrutskie M. F. et al. 2006, AJ 131, 1163.",
+   "processing": {
+    "source": "hips2fits JPG render of the survey's own colour HiPS (4096x2048), used as delivered.",
+    "stretch": "none by Cosmos (colour composite and stretch as published in the HiPS by its creator)",
+    "colormap": "none (survey RGB composite)",
+    "alpha": "no alpha channel",
+    "resampling": "hips2fits reprojection from HEALPix to CAR; 4096 -> 1024 downsampling with Lanczos-3 (sharp)"
+   },
+   "colorScale": null,
+   "coverageFraction": 1,
+   "reveals": "Near-infrared light passes through interstellar dust far more easily than visible light (about ten times less dimming at 2.2 µm), so the dense star clouds of the Galactic bulge and disc that are hidden in the visible view shine through. Most of this light comes from cool, old red-giant stars, which trace where most of the Milky Way's stellar mass is.",
+   "caveats": [
+    "Mosaic of 2MASS Atlas tiles: faint seams between tiles and saturated halos around the brightest stars are possible."
+   ],
+   "provenanceClass": "observed",
+   "retrieved": "2026-10-18T14:14:15.870Z"
+  },
+  {
+   "id": "mir",
+   "label": "Mid-infrared",
+   "regime": "infrared",
+   "wavelengthLabel": "3.4–4.6 µm (WISE W1, W2)",
+   "emMinM": 0.000002754,
+   "emMaxM": 0.0000053413,
+   "survey": "unWISE coadds of WISE + NEOWISE (W1, W2), colour composite",
+   "instrument": "NASA Wide-field Infrared Survey Explorer (WISE / NEOWISE), 40 cm telescope",
+   "hipsId": "CDS/P/unWISE/color-W2-W1W2-W1",
+   "hipsChannels": [],
+   "hipsServiceUrl": "https://alasky.cds.unistra.fr/unWISE/color-W2-W1W2-W1",
+   "hipsReleaseDate": "2022-12-12T11:02Z",
+   "files": {
+    "high": {
+     "path": "data/sky/mir/mir_4k.jpg",
+     "bytes": 2379948,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/jpeg"
+    },
+    "low": {
+     "path": "data/sky/mir/mir_1k.jpg",
+     "bytes": 60367,
+     "width": 1024,
+     "height": 512,
+     "mime": "image/jpeg"
+    }
+   },
+   "credit": "This publication makes use of data products from the Wide-field Infrared Survey Explorer, which is a joint project of the University of California, Los Angeles, and the Jet Propulsion Laboratory/California Institute of Technology, and NEOWISE, which is a project of the Jet Propulsion Laboratory/California Institute of Technology. WISE and NEOWISE are funded by the National Aeronautics and Space Administration. unWISE coadds: Lang (2014); Meisner, Lang & Schlegel. HiPS: CDS.",
+   "license": "WISE/NEOWISE and unWISE data are public (NASA funded); free use with the acknowledgement above. HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://wise2.ipac.caltech.edu/docs/release/allsky/",
+   "citation": "Wright E. L. et al. 2010, AJ 140, 1868 (WISE); Lang D. 2014, AJ 147, 108 (unWISE); Meisner A. M., Lang D., Schlegel D. J. 2017, AJ 153, 38.",
+   "processing": {
+    "source": "hips2fits JPG render of the survey's own colour HiPS (4096x2048), used as delivered.",
+    "stretch": "none by Cosmos (colour composite and stretch as published in the HiPS by its creator)",
+    "colormap": "none (survey RGB composite)",
+    "alpha": "no alpha channel",
+    "resampling": "hips2fits reprojection from HEALPix to CAR; 4096 -> 1024 downsampling with Lanczos-3 (sharp)"
+   },
+   "colorScale": null,
+   "coverageFraction": 1,
+   "reveals": "At 3.4–4.6 µm the glare of interstellar dust is almost gone, so the view is dominated by the combined glow of old stars in the Milky Way's disc and central bulge. Warm dust heated by young stars and by feeding supermassive black holes (quasars) appears redder, because it is brighter at the longer 4.6 µm wavelength.",
+   "caveats": [
+    "Bright stars produce halos and diffraction artifacts; small residual seams between coadd tiles."
+   ],
+   "provenanceClass": "observed",
+   "retrieved": "2026-10-18T14:14:42.287Z"
+  },
+  {
+   "id": "fir",
+   "label": "Far-infrared",
+   "regime": "infrared",
+   "wavelengthLabel": "65–140 µm (AKARI FIS N60, WIDE-S, WIDE-L)",
+   "emMinM": 0.000065,
+   "emMaxM": 0.00014,
+   "survey": "AKARI Far-Infrared Surveyor all-sky maps, colour composite 140 µm (red), 90 µm (green), 65 µm (blue)",
+   "instrument": "JAXA AKARI (ASTRO-F) 68.5 cm cryogenic telescope, Far-Infrared Surveyor (FIS)",
+   "hipsId": "CDS/P/AKARI/FIS/Color",
+   "hipsChannels": [],
+   "hipsServiceUrl": "https://alasky.cds.unistra.fr/AKARI-FIS/ColorLSN60",
+   "hipsReleaseDate": "2019-05-05T04:59Z",
+   "files": {
+    "high": {
+     "path": "data/sky/fir/fir_4k.jpg",
+     "bytes": 552736,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/jpeg"
+    },
+    "low": {
+     "path": "data/sky/fir/fir_1k.jpg",
+     "bytes": 42921,
+     "width": 1024,
+     "height": 512,
+     "mime": "image/jpeg"
+    }
+   },
+   "credit": "This research is based on observations with AKARI, a JAXA project with the participation of ESA. AKARI FIS all-sky maps: Doi et al. (2015), Takita et al. (2015). HiPS: CDS.",
+   "license": "AKARI FIS all-sky maps are publicly released by ISAS/JAXA for research and education with acknowledgement. HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://www.ir.isas.jaxa.jp/AKARI/Archive/Images/FIS_AllSkyMap/",
+   "citation": "Doi Y. et al. 2015, PASJ 67, 50; Takita S. et al. 2015, PASJ 67, 51; Murakami H. et al. 2007, PASJ 59, S369.",
+   "processing": {
+    "source": "hips2fits JPG render of the survey's own colour HiPS (4096x2048), used as delivered.",
+    "stretch": "none by Cosmos (colour composite and stretch as published in the HiPS by its creator)",
+    "colormap": "none (survey RGB composite)",
+    "alpha": "no alpha channel",
+    "resampling": "hips2fits reprojection from HEALPix to CAR; 4096 -> 1024 downsampling with Lanczos-3 (sharp)"
+   },
+   "colorScale": null,
+   "coverageFraction": 1,
+   "reveals": "Far-infrared light is heat radiation from cold interstellar dust grains at roughly 15–30 K, warmed by starlight. It maps the whole network of dusty molecular clouds where new stars are born, including faint wispy \"infrared cirrus\" far from the Galactic plane.",
+   "caveats": [
+    "A few narrow strips with missing or degraded data (scan gaps, Moon avoidance) appear as thin dark or striped streaks."
+   ],
+   "provenanceClass": "observed",
+   "retrieved": "2026-10-18T14:15:04.855Z"
+  },
+  {
+   "id": "uv",
+   "label": "Ultraviolet",
+   "regime": "ultraviolet",
+   "wavelengthLabel": "135–280 nm (GALEX FUV + NUV)",
+   "emMinM": 1.344e-7,
+   "emMaxM": 2.831e-7,
+   "survey": "GALEX GR6/7 All-sky Imaging Survey + other surveys, colour composite FUV (blue), NUV (red)",
+   "instrument": "NASA Galaxy Evolution Explorer (GALEX), 50 cm telescope with FUV/NUV detectors",
+   "hipsId": "CDS/P/GALEXGR6_7/color",
+   "hipsChannels": [],
+   "hipsServiceUrl": "https://alasky.cds.unistra.fr/GALEX/GALEXGR6_7_color",
+   "hipsReleaseDate": "2022-03-30T19:35Z",
+   "files": {
+    "high": {
+     "path": "data/sky/uv/uv_4k.jpg",
+     "bytes": 1567097,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/jpeg"
+    },
+    "low": {
+     "path": "data/sky/uv/uv_1k.jpg",
+     "bytes": 84613,
+     "width": 1024,
+     "height": 512,
+     "mime": "image/jpeg"
+    },
+    "mask": {
+     "path": "data/sky/uv/uv_mask_2k.png",
+     "bytes": 65764,
+     "width": 2048,
+     "height": 1024,
+     "mime": "image/png",
+     "meaning": "8-bit greyscale: 255 = survey data present, 0 = no data (rendered black in the colour images)"
+    }
+   },
+   "credit": "Based on observations made with the NASA Galaxy Evolution Explorer. GALEX was operated for NASA by the California Institute of Technology under NASA contract NAS5-98034. Data from MAST (STScI). HiPS: CDS.",
+   "license": "Public domain (NASA data distributed by STScI/MAST: \"no claim to copyright is being asserted ... may be freely used as in the public domain\"). HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://www.stsci.edu/copyright",
+   "citation": "Martin D. C. et al. 2005, ApJ 619, L1; Bianchi L. et al. 2017, ApJS 230, 24.",
+   "processing": {
+    "source": "hips2fits PNG render of the survey's own colour HiPS (4096x2048), used as delivered.",
+    "stretch": "none by Cosmos (colour composite and stretch as published in the HiPS by its creator)",
+    "colormap": "none (survey RGB composite)",
+    "alpha": "transparent (no-data) pixels composited over black; see mask file",
+    "resampling": "hips2fits reprojection from HEALPix to CAR; 4096 -> 1024 downsampling with Lanczos-3 (sharp)"
+   },
+   "colorScale": null,
+   "coverageFraction": 0.7975,
+   "reveals": "Ultraviolet light is emitted mostly by hot, massive, short-lived young stars and by hot white dwarfs, so it pinpoints recent star formation in nearby galaxies and the hottest stars in our own. Dust absorbs ultraviolet light very strongly, which is one reason the dusty Galactic plane looks dark here.",
+   "caveats": [
+    "Partial sky (~79%): the Galactic plane, the Magellanic Clouds and fields around very bright stars were mostly avoided to protect the detectors; no-data areas are black and flagged in the mask file.",
+    "Where only near-UV data exist (the far-UV detector failed in 2009) the colour is reddish."
+   ],
+   "provenanceClass": "observed",
+   "retrieved": "2026-10-18T14:15:33.511Z"
+  },
+  {
+   "id": "xray",
+   "label": "X-ray (ROSAT)",
+   "regime": "x-ray",
+   "wavelengthLabel": "0.1–2.4 keV (≈0.5–12 nm)",
+   "emMinM": 1.55e-9,
+   "emMaxM": 1.28e-8,
+   "survey": "ROSAT All-Sky Survey (RASS) diffuse maps: soft 0.1–0.4 keV (red) and hard 0.5–2.4 keV (blue)",
+   "instrument": "ROSAT X-ray telescope + Position Sensitive Proportional Counter (PSPC)",
+   "hipsId": "ov-gso/P/RASS/SoftBand",
+   "hipsChannels": [
+    {
+     "role": "red",
+     "hipsId": "ov-gso/P/RASS/SoftBand",
+     "label": "RASS soft band 0.1-0.4 keV"
+    },
+    {
+     "role": "blue",
+     "hipsId": "ov-gso/P/RASS/HardBand",
+     "label": "RASS hard band 0.5-2.4 keV"
+    }
+   ],
+   "hipsServiceUrl": "https://cade.irap.omp.eu/documents/Ancillary/4Aladin/RASS_IM3",
+   "hipsReleaseDate": "2019-10-08T13:01Z",
+   "files": {
+    "high": {
+     "path": "data/sky/xray/xray_4k.jpg",
+     "bytes": 2938561,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/jpeg"
+    },
+    "low": {
+     "path": "data/sky/xray/xray_1k.jpg",
+     "bytes": 81973,
+     "width": 1024,
+     "height": 512,
+     "mime": "image/jpeg"
+    }
+   },
+   "credit": "ROSAT All-Sky Survey (MPE; Voges et al. 1999, Snowden et al. 1997). The ROSAT project was supported by the German Bundesministerium für Bildung und Forschung (BMBF/DLR) and the Max-Planck-Gesellschaft (MPG). HEALPix maps: IRAP/CADE (D. Paradis). HiPS distributed through the CDS/IVOA HiPS network.",
+   "license": "ROSAT survey data are public (MPE/HEASARC archives); free use with acknowledgement.",
+   "licenseUrl": "https://heasarc.gsfc.nasa.gov/docs/rosat/rosat3.html",
+   "citation": "Voges W. et al. 1999, A&A 349, 389; Snowden S. L. et al. 1997, ApJ 485, 125.",
+   "processing": {
+    "source": "hips2fits FITS renders (float) of ov-gso/P/RASS/SoftBand and ov-gso/P/RASS/HardBand at 4096x2048; combined by Cosmos.",
+    "stretch": "red: RASS soft band 0.1-0.4 keV — asinh t = asinh((v - 0) / 0.12) / asinh((2.5 - 0) / 0.12) clipped to [0,1] (HiPS map units (RASS count-rate density, relative)); blue: RASS hard band 0.5-2.4 keV — asinh t = asinh((v - 0) / 0.06) / asinh((1.4 - 0) / 0.06) clipped to [0,1] (HiPS map units (RASS count-rate density, relative)); green = (red + blue) / 2; channel value = round(255 * t)",
+    "colormap": "none (two-band false-colour composite: red = soft, blue = hard, green = their mean)",
+    "resampling": "hips2fits reprojection from HEALPix to CAR; 4096 -> 1024 Lanczos-3 (sharp)",
+    "dataStats": [
+     {
+      "channel": "soft",
+      "unit": "HiPS map units (RASS count-rate density, relative)",
+      "nan": 0,
+      "inf": 0,
+      "min": 0,
+      "p01": 0.0038014,
+      "p50": 0.15115,
+      "p99": 1.1679,
+      "max": 233.66
+     },
+     {
+      "channel": "hard",
+      "unit": "HiPS map units (RASS count-rate density, relative)",
+      "nan": 0,
+      "inf": 0,
+      "min": 0,
+      "p01": 0,
+      "p50": 0.07151,
+      "p99": 0.56662,
+      "max": 688.66
+     }
+    ]
+   },
+   "colorScale": null,
+   "coverageFraction": 1,
+   "reveals": "Soft X-rays come from gas heated to millions of degrees: the expanding shells of supernova remnants such as Vela and the Cygnus Loop, the hot \"Local Bubble\" that surrounds the Sun, superheated gas in clusters of galaxies, and matter falling onto black holes in distant active galaxies. Red marks the very softest X-rays (0.1–0.4 keV), which are absorbed even by thin clouds of gas; blue marks harder X-rays (0.5–2.4 keV) that travel farther.",
+   "caveats": [
+    "Counts-based maps (Poisson noise) at about 2′ native resolution, shown smoothed by resampling; the all-sky survey has strong exposure/scan artefacts: bright fan-shaped streaks converge on the ecliptic poles and dark gaps appear where exposure was low (these are instrumental, not sky structure); soft X-rays are absorbed by neutral Galactic gas, which suppresses the low-energy (red) channel along the plane, so colours are orange/blue rather than uniformly dark."
+   ],
+   "provenanceClass": "observed",
+   "retrieved": "2026-10-18T14:39:23.321Z"
+  },
+  {
+   "id": "xray-erosita",
+   "label": "X-ray (eROSITA, half sky)",
+   "regime": "x-ray",
+   "wavelengthLabel": "0.2–2.0 keV (≈0.6–6 nm)",
+   "emMinM": null,
+   "emMaxM": null,
+   "survey": "eROSITA-DE DR1 (eRASS1) RGB rate image: 0.2–0.5 keV (red), 0.5–1.0 keV (green), 1.0–2.0 keV (blue)",
+   "instrument": "eROSITA X-ray telescope on the Russian–German Spektr-RG (SRG) observatory",
+   "hipsId": "erosita/dr1/rate/rgb",
+   "hipsChannels": [],
+   "hipsServiceUrl": "https://erosita.mpe.mpg.de/erodat/static/hips/eRASS1_RGB_Rate_c010/",
+   "hipsReleaseDate": "2024-01-31T11:00Z",
+   "files": {
+    "high": {
+     "path": "data/sky/xray-erosita/xray-erosita_4k.jpg",
+     "bytes": 1046905,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/jpeg"
+    },
+    "low": {
+     "path": "data/sky/xray-erosita/xray-erosita_1k.jpg",
+     "bytes": 48114,
+     "width": 1024,
+     "height": 512,
+     "mime": "image/jpeg"
+    },
+    "mask": {
+     "path": "data/sky/xray-erosita/xray-erosita_mask_2k.png",
+     "bytes": 9754,
+     "width": 2048,
+     "height": 1024,
+     "mime": "image/png",
+     "meaning": "8-bit greyscale: 255 = survey data present, 0 = no data (rendered black in the colour images)"
+    }
+   },
+   "credit": "This work is based on data from eROSITA, the soft X-ray instrument aboard SRG, a joint Russian-German science mission supported by the Russian Space Agency (Roskosmos), in the interests of the Russian Academy of Sciences represented by its Space Research Institute (IKI), and the Deutsches Zentrum für Luft- und Raumfahrt (DLR). The SRG spacecraft was built by Lavochkin Association (NPOL) and its subcontractors, and is operated by NPOL with support from the Max Planck Institute for Extraterrestrial Physics (MPE). HiPS: MPE (J. Sanders).",
+   "license": "eROSITA-DE DR1 public data release (MPE, 2024-01-31); free use with the acknowledgement above.",
+   "licenseUrl": "https://erosita.mpe.mpg.de/dr1/AllSkySurveyData_dr1/acknowledgement.html",
+   "citation": "Merloni A. et al. 2024, A&A 682, A34; Predehl P. et al. 2021, A&A 647, A1.",
+   "processing": {
+    "source": "hips2fits PNG render of the survey's own colour HiPS (4096x2048), used as delivered.",
+    "stretch": "none by Cosmos (colour composite and stretch as published in the HiPS by its creator)",
+    "colormap": "none (survey RGB composite)",
+    "alpha": "transparent (no-data) pixels composited over black; see mask file",
+    "resampling": "hips2fits reprojection from HEALPix to CAR; 4096 -> 1024 downsampling with Lanczos-3 (sharp)"
+   },
+   "colorScale": null,
+   "coverageFraction": 0.6267,
+   "reveals": "eROSITA mapped the X-ray sky far more sensitively than ROSAT. It reveals the \"eROSITA bubbles\" — enormous lobes of million-degree gas blown out of the centre of the Milky Way — along with supernova remnants, hot galaxy clusters and hundreds of thousands of growing supermassive black holes.",
+   "caveats": [
+    "Only the western Galactic hemisphere (Galactic longitude 180°–360°, the eROSITA-DE share) is public; the other half of the sky is black (no data) and flagged in the mask file."
+   ],
+   "provenanceClass": "observed",
+   "retrieved": "2026-10-18T14:40:30.915Z"
+  },
+  {
+   "id": "gamma",
+   "label": "Gamma rays",
+   "regime": "gamma-ray",
+   "wavelengthLabel": "0.3–300 GeV",
+   "emMinM": 4.1328e-18,
+   "emMaxM": 4.1328e-15,
+   "survey": "Fermi LAT all-sky intensity maps (SkyView), colour composite of three energy bands",
+   "instrument": "NASA Fermi Gamma-ray Space Telescope, Large Area Telescope (LAT)",
+   "hipsId": "CDS/P/Fermi/color",
+   "hipsChannels": [],
+   "hipsServiceUrl": "https://alasky.cds.unistra.fr/Fermi/Color",
+   "hipsReleaseDate": "2019-05-05T06:06Z",
+   "files": {
+    "high": {
+     "path": "data/sky/gamma/gamma_4k.jpg",
+     "bytes": 1545510,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/jpeg"
+    },
+    "low": {
+     "path": "data/sky/gamma/gamma_1k.jpg",
+     "bytes": 58539,
+     "width": 1024,
+     "height": 512,
+     "mime": "image/jpeg"
+    }
+   },
+   "credit": "Fermi LAT data: NASA/DOE/Fermi LAT Collaboration. Maps distributed by SkyView/HEASARC (NASA GSFC). This research has made use of data and/or software provided by the High Energy Astrophysics Science Archive Research Center (HEASARC), which is a service of the Astrophysics Science Division at NASA/GSFC. HiPS: CDS.",
+   "license": "NASA mission data — public domain in the USA; free use with acknowledgement. HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://fermi.gsfc.nasa.gov/ssc/data/policy/",
+   "citation": "Atwood W. B. et al. 2009, ApJ 697, 1071 (Fermi LAT); McGlynn T. et al. 1998 (SkyView).",
+   "processing": {
+    "source": "hips2fits JPG render of the survey's own colour HiPS (4096x2048), used as delivered.",
+    "stretch": "none by Cosmos (colour composite and stretch as published in the HiPS by its creator)",
+    "colormap": "none (survey RGB composite)",
+    "alpha": "no alpha channel",
+    "resampling": "hips2fits reprojection from HEALPix to CAR; 4096 -> 1024 downsampling with Lanczos-3 (sharp)"
+   },
+   "colorScale": null,
+   "coverageFraction": 1,
+   "reveals": "Gamma rays are the most energetic light. The glowing Galactic plane is made by cosmic rays — particles accelerated by exploding stars — smashing into interstellar gas, while the bright dots are pulsars (spinning neutron stars such as Vela, Geminga and the Crab) and blazars: galaxies whose supermassive black holes fire jets almost straight at us.",
+   "caveats": [
+    "Angular resolution depends strongly on energy (about 1° near 300 MeV, ~0.1° above 10 GeV); faint sources look blurred."
+   ],
+   "provenanceClass": "observed",
+   "retrieved": "2026-10-18T14:15:54.727Z"
+  },
+  {
+   "id": "microwave",
+   "label": "Microwave (Planck LFI)",
+   "regime": "microwave",
+   "wavelengthLabel": "30–70 GHz (4.3–10 mm)",
+   "emMinM": 0.0042827494,
+   "emMaxM": 0.009993081933333,
+   "survey": "Planck PR3 (2018) LFI frequency maps, colour composite 30 GHz (red), 44 GHz (green), 70 GHz (blue)",
+   "instrument": "ESA Planck Low Frequency Instrument (LFI)",
+   "hipsId": "CDS/P/PLANCK/R3/LFI/color",
+   "hipsChannels": [],
+   "hipsServiceUrl": "https://alasky.cds.unistra.fr/PLANCK/R3/LFI_Color_30_44_70",
+   "hipsReleaseDate": "2022-11-07T13:38Z",
+   "files": {
+    "high": {
+     "path": "data/sky/microwave/microwave_4k.jpg",
+     "bytes": 735906,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/jpeg"
+    },
+    "low": {
+     "path": "data/sky/microwave/microwave_1k.jpg",
+     "bytes": 58806,
+     "width": 1024,
+     "height": 512,
+     "mime": "image/jpeg"
+    }
+   },
+   "credit": "Based on observations obtained with Planck (http://www.esa.int/Planck), an ESA science mission with instruments and contributions directly funded by ESA Member States, NASA, and Canada. Credit: ESA, Planck Collaboration. HiPS: CDS.",
+   "license": "ESA Planck Legacy Archive data: CC BY-NC 3.0 IGO (ESA Space Science Archives terms; credit \"ESA, Planck Collaboration\"). HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://www.cosmos.esa.int/web/esdc/terms-and-conditions",
+   "citation": "Planck Collaboration 2020, A&A 641, A1 (Planck 2018 results. I).",
+   "processing": {
+    "source": "hips2fits PNG render of the survey's own colour HiPS (4096x2048), used as delivered.",
+    "stretch": "none by Cosmos (colour composite and stretch as published in the HiPS by its creator)",
+    "colormap": "none (survey RGB composite)",
+    "alpha": "transparent (no-data) pixels composited over black",
+    "resampling": "hips2fits reprojection from HEALPix to CAR; 4096 -> 1024 downsampling with Lanczos-3 (sharp)"
+   },
+   "colorScale": null,
+   "coverageFraction": 1,
+   "reveals": "At 30–70 GHz the Milky Way glows with synchrotron radiation from cosmic-ray electrons spiralling in the Galactic magnetic field and with free–free emission from hot ionized gas. Away from the Galactic plane the mottled blue-grey pattern is the Cosmic Microwave Background itself shining through.",
+   "caveats": [
+    "Angular resolution 13′–33′ depending on frequency; the composite colour scale was chosen by CDS."
+   ],
+   "provenanceClass": "observed",
+   "retrieved": "2026-10-18T14:16:30.399Z"
+  },
+  {
+   "id": "submm",
+   "label": "Submillimetre (Planck HFI)",
+   "regime": "microwave",
+   "wavelengthLabel": "353–857 GHz (0.35–0.85 mm)",
+   "emMinM": 0.0003498161703617,
+   "emMaxM": 0.0008492704192635,
+   "survey": "Planck PR3 (2018) HFI frequency maps, colour composite 353 GHz (red), 545 GHz (green), 857 GHz (blue)",
+   "instrument": "ESA Planck High Frequency Instrument (HFI)",
+   "hipsId": "CDS/P/PLANCK/R3/HFI/color",
+   "hipsChannels": [],
+   "hipsServiceUrl": "https://alasky.cds.unistra.fr/PLANCK/R3/HFI_Color_353_545_857",
+   "hipsReleaseDate": "2022-11-07T13:34Z",
+   "files": {
+    "high": {
+     "path": "data/sky/submm/submm_4k.jpg",
+     "bytes": 462984,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/jpeg"
+    },
+    "low": {
+     "path": "data/sky/submm/submm_1k.jpg",
+     "bytes": 39888,
+     "width": 1024,
+     "height": 512,
+     "mime": "image/jpeg"
+    }
+   },
+   "credit": "Based on observations obtained with Planck (http://www.esa.int/Planck), an ESA science mission with instruments and contributions directly funded by ESA Member States, NASA, and Canada. Credit: ESA, Planck Collaboration. HiPS: CDS.",
+   "license": "ESA Planck Legacy Archive data: CC BY-NC 3.0 IGO (ESA Space Science Archives terms; credit \"ESA, Planck Collaboration\"). HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://www.cosmos.esa.int/web/esdc/terms-and-conditions",
+   "citation": "Planck Collaboration 2020, A&A 641, A1 (Planck 2018 results. I).",
+   "processing": {
+    "source": "hips2fits PNG render of the survey's own colour HiPS (4096x2048), used as delivered.",
+    "stretch": "none by Cosmos (colour composite and stretch as published in the HiPS by its creator)",
+    "colormap": "none (survey RGB composite)",
+    "alpha": "transparent (no-data) pixels composited over black",
+    "resampling": "hips2fits reprojection from HEALPix to CAR; 4096 -> 1024 downsampling with Lanczos-3 (sharp)"
+   },
+   "colorScale": null,
+   "coverageFraction": 1,
+   "reveals": "At these short microwave (submillimetre) wavelengths Planck sees the thermal glow of cold interstellar dust at about 20 K throughout the Milky Way — the same dust that blocks visible light — including faint filaments and cirrus clouds far from the Galactic plane.",
+   "caveats": [
+    "Angular resolution about 5′; the composite colour scale was chosen by CDS."
+   ],
+   "provenanceClass": "observed",
+   "retrieved": "2026-10-18T14:17:04.321Z"
+  },
+  {
+   "id": "cmb",
+   "label": "Cosmic Microwave Background",
+   "regime": "microwave",
+   "wavelengthLabel": "30–857 GHz combined (peak ≈ 160 GHz, 1.9 mm)",
+   "emMinM": 0.0003498161703617,
+   "emMaxM": 0.009993081933333,
+   "survey": "Planck PR3 (2018) SMICA CMB temperature map (foreground-cleaned)",
+   "instrument": "ESA Planck LFI + HFI (all nine frequency channels, SMICA component separation)",
+   "hipsId": "CDS/P/PLANCK/R3/CMB",
+   "hipsChannels": [],
+   "hipsServiceUrl": "https://alasky.cds.unistra.fr/PLANCK/R3/CMB-smica-R3",
+   "hipsReleaseDate": "2022-11-04T16:44Z",
+   "files": {
+    "high": {
+     "path": "data/sky/cmb/cmb_4k.jpg",
+     "bytes": 3124169,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/jpeg"
+    },
+    "low": {
+     "path": "data/sky/cmb/cmb_1k.jpg",
+     "bytes": 220983,
+     "width": 1024,
+     "height": 512,
+     "mime": "image/jpeg"
+    },
+    "data16": {
+     "path": "data/sky/cmb/cmb_smica_4k_u16.png",
+     "bytes": 14519896,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/png",
+     "bitDepth": 16,
+     "decode": "dT_uK = (grey - 32768) * 0.03125",
+     "offset": 32768,
+     "ukPerLevel": 0.03125,
+     "representableRangeUk": [
+      -1024,
+      1023.96875
+     ],
+     "clippedPixels": 40
+    },
+    "dataF32": {
+     "path": "data/sky/cmb/cmb_smica_1k_f32.bin",
+     "bytes": 2097152,
+     "width": 1024,
+     "height": 512,
+     "mime": "application/octet-stream",
+     "header": "data/sky/cmb/cmb_smica_1k_f32.json",
+     "unit": "uK"
+    },
+    "dataF32Header": {
+     "path": "data/sky/cmb/cmb_smica_1k_f32.json",
+     "bytes": 671,
+     "mime": "application/json"
+    }
+   },
+   "credit": "Based on observations obtained with Planck (http://www.esa.int/Planck), an ESA science mission with instruments and contributions directly funded by ESA Member States, NASA, and Canada. Credit: ESA, Planck Collaboration. Map: COM_CMB_IQU-smica_2048_R3.00_full (Planck Legacy Archive). HiPS: CDS.",
+   "license": "ESA Planck Legacy Archive data: CC BY-NC 3.0 IGO (ESA Space Science Archives terms; credit \"ESA, Planck Collaboration\"). HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://www.cosmos.esa.int/web/esdc/terms-and-conditions",
+   "citation": "Planck Collaboration 2020, A&A 641, A4 (Planck 2018 results. IV. Diffuse component separation); Planck Collaboration 2020, A&A 641, A1.",
+   "processing": {
+    "source": "hips2fits FITS render (float32, K_CMB) of CDS/P/PLANCK/R3/CMB at 4096x2048; converted to uK (x1e6).",
+    "stretch": "colour JPEG: linear, t = (dT_uK - (-300)) / (300 - (-300)), clipped to [0,1]; 16-bit PNG: linear, dT_uK = (grey - 32768) * 0.03125",
+    "colormap": "rdbu11r: piecewise-linear sRGB interpolation through evenly spaced stops #053061 #2166ac #4393c3 #92c5de #d1e5f0 #f7f7f7 #fddbc7 #f4a582 #d6604d #b2182b #67001f (blue = colder, white = mean, red = warmer)",
+    "resampling": "hips2fits reprojection from HEALPix (Nside 2048) to CAR 4096x2048; 4096 -> 1024 Lanczos-3 for the preview; 4x4 block mean for the Float32 grid",
+    "dataStats": {
+     "unit": "uK",
+     "meanUk": -1.893,
+     "rmsUk": 106.31,
+     "nan": 0,
+     "inf": 0,
+     "min": -1250.7,
+     "p01": -249.01,
+     "p50": -2.1558,
+     "p99": 246.68,
+     "max": 1127.3,
+     "png16ClippedPixels": 40,
+     "colourClippedLowFraction": 0.00254,
+     "colourClippedHighFraction": 0.00238
+    }
+   },
+   "colorScale": {
+    "quantity": "CMB temperature anisotropy dT",
+    "unit": "uK",
+    "stretch": "linear",
+    "min": -300,
+    "max": 300,
+    "colormap": "rdbu11r",
+    "stops": [
+     "#053061",
+     "#2166ac",
+     "#4393c3",
+     "#92c5de",
+     "#d1e5f0",
+     "#f7f7f7",
+     "#fddbc7",
+     "#f4a582",
+     "#d6604d",
+     "#b2182b",
+     "#67001f"
+    ]
+   },
+   "coverageFraction": 1,
+   "reveals": "The Cosmic Microwave Background is the oldest light in the Universe, released about 380,000 years after the Big Bang when the cooling Universe first became transparent. Its temperature is 2.7255 K in every direction to about one part in 100,000; the colours show those tiny differences (blue colder, red warmer, by up to about ±300 µK), the seeds from which galaxies and galaxy clusters later grew.",
+   "caveats": [
+    "Foreground-cleaned with the SMICA method; residual Galactic emission and point sources remain in a thin strip along the Galactic plane.",
+    "The monopole (2.7255 K) and the dipole due to the Sun's motion (±3.36 mK) are removed; values are temperature differences in µK (K_CMB units).",
+    "Effective resolution 5′ FWHM."
+   ],
+   "provenanceClass": "derived",
+   "retrieved": "2026-10-18T14:17:28.120Z"
+  },
+  {
+   "id": "radio-408",
+   "label": "Radio continuum (408 MHz)",
+   "regime": "radio",
+   "wavelengthLabel": "408 MHz (73.5 cm)",
+   "emMinM": 0.731647243441123,
+   "emMaxM": 0.737950665846154,
+   "survey": "Haslam et al. (1982) 408 MHz all-sky survey, destriped and source-subtracted reprocessing by Remazeilles et al. (2015)",
+   "instrument": "Jodrell Bank Mk I (Lovell) 76 m, Effelsberg 100 m and Parkes 64 m radio telescopes",
+   "hipsId": "CDS/P/Haslam408/v2",
+   "hipsChannels": [],
+   "hipsServiceUrl": "https://alasky.cds.unistra.fr/Haslam408_2014",
+   "hipsReleaseDate": "2019-05-05T06:35Z",
+   "files": {
+    "high": {
+     "path": "data/sky/radio-408/radio-408_4k.jpg",
+     "bytes": 264769,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/jpeg"
+    },
+    "low": {
+     "path": "data/sky/radio-408/radio-408_1k.jpg",
+     "bytes": 26210,
+     "width": 1024,
+     "height": 512,
+     "mime": "image/jpeg"
+    }
+   },
+   "credit": "Haslam C. G. T. et al. (1982), reprocessed by Remazeilles M. et al. (2015). Data via LAMBDA (NASA GSFC): we acknowledge the use of the Legacy Archive for Microwave Background Data Analysis (LAMBDA), part of the High Energy Astrophysics Science Archive Center (HEASARC). HiPS: CDS.",
+   "license": "Public research data distributed by NASA LAMBDA; free use with citation. HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://lambda.gsfc.nasa.gov/product/foreground/fg_2014_haslam_408_info.html",
+   "citation": "Haslam C. G. T. et al. 1982, A&AS 47, 1; Remazeilles M. et al. 2015, MNRAS 451, 4311.",
+   "processing": {
+    "source": "hips2fits FITS render (float, K) of the survey HiPS at 4096x2048; colourised by Cosmos.",
+    "stretch": "log10: t = (log10(v) - log10(10)) / (log10(1000) - log10(10)), clipped to [0,1]; v <= 0 -> t = 0",
+    "colormap": "magma11: piecewise-linear sRGB interpolation through evenly spaced stops #000004 #140e36 #3b0f70 #641a80 #8c2981 #b73779 #de4968 #f7705c #fe9f6d #fecf92 #fcfdbf",
+    "resampling": "hips2fits reprojection from HEALPix to CAR; 4096 -> 1024 Lanczos-3 (sharp)",
+    "dataStats": {
+     "unit": "K",
+     "nan": 0,
+     "inf": 0,
+     "min": 10.984,
+     "p01": 14.189,
+     "p50": 24.732,
+     "p99": 170.31,
+     "max": 4857.8,
+     "clippedLowFraction": 0,
+     "clippedHighFraction": 0.00007
+    }
+   },
+   "colorScale": {
+    "quantity": "brightness temperature (K)",
+    "unit": "K",
+    "stretch": "log10",
+    "min": 10,
+    "max": 1000,
+    "colormap": "magma11",
+    "stops": [
+     "#000004",
+     "#140e36",
+     "#3b0f70",
+     "#641a80",
+     "#8c2981",
+     "#b73779",
+     "#de4968",
+     "#f7705c",
+     "#fe9f6d",
+     "#fecf92",
+     "#fcfdbf"
+    ]
+   },
+   "coverageFraction": 1,
+   "reveals": "At 408 MHz the sky glows with synchrotron radiation: electrons travelling at nearly the speed of light spiral around the Milky Way's magnetic field lines. Giant arcs such as the North Polar Spur (Loop I) are the shells of ancient supernova explosions and stellar winds, and the brightest regions trace the spiral arms and the Galactic Centre.",
+   "caveats": [
+    "Low angular resolution (≈56′ FWHM); bright compact radio sources have been subtracted in this reprocessed version."
+   ],
+   "provenanceClass": "observed",
+   "retrieved": "2026-10-18T14:17:58.714Z"
+  },
+  {
+   "id": "radio-hi",
+   "label": "Neutral hydrogen (21 cm)",
+   "regime": "radio",
+   "wavelengthLabel": "1420.4 MHz (21.1 cm HI line)",
+   "emMinM": 0.21,
+   "emMaxM": 0.21,
+   "survey": "HI4PI full-sky HI column density map (EBHIS + GASS)",
+   "instrument": "Effelsberg 100 m (EBHIS, north) and Parkes 64 m (GASS, south) radio telescopes",
+   "hipsId": "CDS/P/HI4PI/NHI",
+   "hipsChannels": [],
+   "hipsServiceUrl": "https://alasky.cds.unistra.fr/HI4PI/P_HI4PI_NHI",
+   "hipsReleaseDate": "2019-05-22T05:04Z",
+   "files": {
+    "high": {
+     "path": "data/sky/radio-hi/radio-hi_4k.jpg",
+     "bytes": 416868,
+     "width": 4096,
+     "height": 2048,
+     "mime": "image/jpeg"
+    },
+    "low": {
+     "path": "data/sky/radio-hi/radio-hi_1k.jpg",
+     "bytes": 42322,
+     "width": 1024,
+     "height": 512,
+     "mime": "image/jpeg"
+    }
+   },
+   "credit": "HI4PI Collaboration (Ben Bekhti N. et al. 2016, A&A 594, A116), based on EBHIS (Effelsberg, MPIfR) and GASS (Parkes, CSIRO) data; data via CDS/VizieR J/A+A/594/A116. HiPS: CDS.",
+   "license": "Public research data (A&A/CDS VizieR catalogue J/A+A/594/A116); free use with citation. HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://cdsarc.cds.unistra.fr/viz-bin/cat/J/A+A/594/A116",
+   "citation": "HI4PI Collaboration: Ben Bekhti N. et al. 2016, A&A 594, A116.",
+   "processing": {
+    "source": "hips2fits FITS render (float, cm^-2) of the survey HiPS at 4096x2048; colourised by Cosmos.",
+    "stretch": "log10: t = (log10(v) - log10(10000000000000000000)) / (log10(3e+22) - log10(10000000000000000000)), clipped to [0,1]; v <= 0 -> t = 0",
+    "colormap": "ice: piecewise-linear sRGB interpolation through evenly spaced stops #000000 #020c1f #061b3d #0b2f63 #11478c #1b63b3 #3383d0 #5ea6e2 #93c8ee #c9e6f7 #ffffff",
+    "resampling": "hips2fits reprojection from HEALPix to CAR; 4096 -> 1024 Lanczos-3 (sharp)",
+    "dataStats": {
+     "unit": "cm^-2",
+     "nan": 0,
+     "inf": 0,
+     "min": -1.4224e+21,
+     "p01": 90059000000000000000,
+     "p50": 607080000000000000000,
+     "p99": 9.9804e+21,
+     "max": 2.3342e+22,
+     "clippedLowFraction": 0,
+     "clippedHighFraction": 0
+    }
+   },
+   "colorScale": {
+    "quantity": "HI column density (atoms per cm²)",
+    "unit": "cm^-2",
+    "stretch": "log10",
+    "min": 10000000000000000000,
+    "max": 3e+22,
+    "colormap": "ice",
+    "stops": [
+     "#000000",
+     "#020c1f",
+     "#061b3d",
+     "#0b2f63",
+     "#11478c",
+     "#1b63b3",
+     "#3383d0",
+     "#5ea6e2",
+     "#93c8ee",
+     "#c9e6f7",
+     "#ffffff"
+    ]
+   },
+   "coverageFraction": 1,
+   "reveals": "Cold and warm neutral hydrogen atoms emit radio waves at exactly 21 cm. This map shows how many hydrogen atoms lie along each line of sight: the thick gas disc of the Milky Way, gas clouds falling onto the Galaxy, and the Magellanic Stream — a trail of gas torn from the Magellanic Clouds.",
+   "caveats": [
+    "Angular resolution 16.2′; column densities assume optically thin emission (underestimated in the densest clouds)."
+   ],
+   "provenanceClass": "derived",
+   "retrieved": "2026-10-18T14:18:37.637Z"
+  }
+ ]
+}

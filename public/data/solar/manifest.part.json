@@ -1,0 +1,625 @@
+{
+  "domain": "solar",
+  "datasets": [
+    {
+      "id": "cneos-cad-close-approaches",
+      "name": "CNEOS Close-Approach Data (CAD) 2026-2036",
+      "organization": "NASA JPL CNEOS / SSD",
+      "purpose": "Planetary-defense lab: upcoming asteroid/comet close approaches to Earth within 0.05 AU",
+      "mechanism": "REST API (JSON) -> compact table",
+      "endpoint": "https://ssd-api.jpl.nasa.gov/cad.api",
+      "query": "date-min=2026-10-16&date-max=2036-10-16&dist-max=0.05&body=Earth&sort=date&diameter=true&fullname=true ; plus des=99942&date-min=2029-01-01&date-max=2029-12-31&dist-max=0.05&body=Earth&diameter=true&fullname=true",
+      "version": "live archive state at retrieval",
+      "retrieved": "2026-10-18T06:07:41.681Z",
+      "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+      "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+      "citation": "NASA/JPL-Caltech Center for Near Earth Object Studies (CNEOS), SSD/CNEOS Close-Approach Data API.",
+      "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+      "fieldsUsed": [
+        "des",
+        "fullname",
+        "cd",
+        "jd",
+        "dist",
+        "dist_min",
+        "dist_max",
+        "v_rel",
+        "h",
+        "diameter",
+        "diameter_sigma",
+        "t_sigma_f"
+      ],
+      "updateCadence": "continuously updated as orbits are refined",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "normalization": "scripts/data/solar/fetch-cad.mjs",
+      "fallback": "Hide the close-approach list; Apophis 2029 record is also embedded in smallbodies.json notes.",
+      "files": [
+        {
+          "path": "data/solar/close-approaches.json",
+          "bytes": 235929,
+          "records": 1441
+        }
+      ],
+      "limitations": "Predicted approaches change as orbits are refined; poorly observed objects have large distMin/distMax spread; diameter is measured only for a minority, otherwise null (H-based estimates are in neos.json).",
+      "provenanceClass": "derived"
+    },
+    {
+      "id": "cneos-sentry",
+      "name": "CNEOS Sentry Impact Risk Table",
+      "organization": "NASA JPL CNEOS",
+      "purpose": "Planetary-defense lab: objects with non-zero computed Earth-impact probability over the next 100 years",
+      "mechanism": "REST API (JSON) summary list",
+      "endpoint": "https://ssd-api.jpl.nasa.gov/sentry.api",
+      "query": null,
+      "version": "live archive state at retrieval",
+      "retrieved": "2026-10-18T06:18:32.199Z",
+      "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+      "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+      "citation": "NASA/JPL-Caltech Center for Near Earth Object Studies (CNEOS), Sentry Impact Risk Table.",
+      "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+      "fieldsUsed": [
+        "des",
+        "fullname",
+        "ip",
+        "ps_cum",
+        "ps_max",
+        "ts_max",
+        "n_imp",
+        "range",
+        "h",
+        "diameter",
+        "mass",
+        "v_inf",
+        "last_obs",
+        "last_obs_jd"
+      ],
+      "updateCadence": "updated as new observations arrive (objects are added and removed)",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "normalization": "scripts/data/solar/fetch-sentry.mjs",
+      "fallback": "Hide the risk table.",
+      "files": [
+        {
+          "path": "data/solar/sentry.json",
+          "bytes": 267059,
+          "records": 2222
+        }
+      ],
+      "limitations": "Impact probabilities are computed from current orbit fits and routinely drop to zero as data improve; a non-zero entry is not a prediction of impact. The Sentry list is a snapshot.",
+      "provenanceClass": "derived"
+    },
+    {
+      "id": "jpl-horizons-spacecraft",
+      "name": "JPL Horizons spacecraft position tracks 2025-2030",
+      "organization": "NASA JPL SSD",
+      "purpose": "Spacecraft search and trajectories (Voyagers, New Horizons, Parker, Juno, Europa Clipper, Psyche, Lucy, Hera, JUICE, BepiColombo, JWST)",
+      "mechanism": "Horizons API EPHEM_TYPE=VECTORS CSV (position only)",
+      "endpoint": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "query": "COMMAND=<naif>&CENTER=500@10 (JWST 500@399)&START_TIME=2025-01-01&STOP_TIME=2030-12-31&STEP_SIZE=<1|5> d&VEC_TABLE=1&REF_SYSTEM=ICRF&REF_PLANE=FRAME&OUT_UNITS=KM-S&TIME_TYPE=TDB&CSV_FORMAT=YES",
+      "version": "Horizons live state (latest spacecraft SPK kernels) at retrieval",
+      "retrieved": "2026-10-18T12:24:41.666Z",
+      "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+      "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+      "citation": "NASA/JPL Horizons On-Line Ephemeris System (https://ssd.jpl.nasa.gov/horizons/). Spacecraft trajectories from mission navigation teams via NAIF SPK kernels.",
+      "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+      "fieldsUsed": [
+        "JDTDB",
+        "X",
+        "Y",
+        "Z"
+      ],
+      "updateCadence": "predicts are updated by flight dynamics teams after trajectory correction maneuvers",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "normalization": "scripts/data/solar/fetch-spacecraft.mjs",
+      "fallback": "Hide spacecraft whose track is missing; never extrapolate.",
+      "files": [
+        {
+          "path": "data/solar/spacecraft.json",
+          "bytes": 912234,
+          "records": 12
+        }
+      ],
+      "limitations": "Future portions are navigation predictions that shift after maneuvers; coarse steps for outer probes (5 d); Parker Solar Probe 1-day samples undersample perihelion passes. Mission status text is editorial and dated 2026-10; verify before presenting as current.",
+      "provenanceClass": "derived"
+    },
+    {
+      "id": "jpl-sbdb-neos-phas",
+      "name": "JPL SBDB near-Earth objects and PHAs",
+      "organization": "NASA JPL SSD / CNEOS",
+      "purpose": "Planetary-defense lab: orbits, sizes and MOIDs of potentially hazardous asteroids and the larger NEAs",
+      "mechanism": "SBDB Query API (two queries) -> JSON",
+      "endpoint": "https://ssd-api.jpl.nasa.gov/sbdb_query.api",
+      "query": "fields=spkid,full_name,pdes,a,e,i,om,w,ma,epoch,tp,per,q,H,diameter,diameter_sigma,albedo,rot_per,moid,class,pha,condition_code,data_arc,n_obs_used,sigma_a,sigma_e,sigma_i,sigma_om,sigma_w,sigma_ma&full-prec=1&sb-kind=a&sb-group=pha  +  fields=spkid,full_name,pdes,a,e,i,om,w,ma,epoch,tp,per,q,H,diameter,diameter_sigma,albedo,rot_per,moid,class,pha,condition_code,data_arc,n_obs_used,sigma_a,sigma_e,sigma_i,sigma_om,sigma_w,sigma_ma&full-prec=1&sb-kind=a&sb-group=neo&sb-cdata={\"AND\":[\"H|LT|18\"]}",
+      "version": "live archive state at retrieval",
+      "retrieved": "2026-10-18T17:45:05.281Z",
+      "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+      "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+      "citation": "NASA/JPL Solar System Dynamics and CNEOS, Small-Body Database Query API.",
+      "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+      "fieldsUsed": [
+        "spkid",
+        "full_name",
+        "pdes",
+        "a",
+        "e",
+        "i",
+        "om",
+        "w",
+        "ma",
+        "epoch",
+        "tp",
+        "per",
+        "q",
+        "H",
+        "diameter",
+        "diameter_sigma",
+        "albedo",
+        "rot_per",
+        "moid",
+        "class",
+        "pha",
+        "condition_code",
+        "data_arc",
+        "n_obs_used",
+        "sigma_a",
+        "sigma_e",
+        "sigma_i",
+        "sigma_om",
+        "sigma_w",
+        "sigma_ma"
+      ],
+      "updateCadence": "continuous (new discoveries daily)",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "normalization": "scripts/data/solar/fetch-neos.mjs",
+      "fallback": "Hide the NEO table; keep notable bodies from smallbodies.json.",
+      "files": [
+        {
+          "path": "data/solar/neos.json",
+          "bytes": 1120330,
+          "records": 3449
+        }
+      ],
+      "limitations": "diameterEstKm is a rough H-based estimate (real albedos span ~0.03-0.5, so diameters are uncertain by about a factor of 2); only a minority have measured diameters. Osculating elements; not a complete NEO catalog (H<18 plus PHAs).",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "jpl-sbdb-notable-small-bodies",
+      "name": "JPL Small-Body Database - notable bodies",
+      "organization": "NASA JPL SSD",
+      "purpose": "Orbits and physical parameters of notable asteroids, comets, interstellar objects and dwarf-planet orbits; planetary-defense lab (Apophis, Didymos, 2024 YR4)",
+      "mechanism": "SBDB API (JSON) per object, phys-par=1&discovery=1",
+      "endpoint": "https://ssd-api.jpl.nasa.gov/sbdb.api",
+      "query": "sstr=<designation>&phys-par=1&discovery=1",
+      "version": "live archive state at retrieval",
+      "retrieved": "2026-10-18T17:44:57.663Z",
+      "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+      "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+      "citation": "NASA/JPL Solar System Dynamics, Small-Body Database (https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html). Dimorphos: Thomas et al. 2023 Nature 616:448; Cheng et al. 2023 Nature 616:457.",
+      "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+      "fieldsUsed": [
+        "object.*",
+        "orbit.elements",
+        "orbit.epoch",
+        "orbit.condition_code",
+        "orbit.data_arc",
+        "orbit.n_obs_used",
+        "orbit.moid",
+        "orbit.soln_date",
+        "phys_par.*",
+        "discovery"
+      ],
+      "updateCadence": "orbit solutions updated as new astrometry arrives",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "normalization": "scripts/data/solar/fetch-smallbodies.mjs + build-smallbodies.mjs",
+      "fallback": "Use bundled snapshot; hide uncertainties if absent.",
+      "files": [
+        {
+          "path": "data/solar/smallbodies.json",
+          "bytes": 32762,
+          "records": 28
+        }
+      ],
+      "limitations": "Osculating elements drift and are valid near their epoch only; low condition-code objects (2024 YR4, 3I) have large uncertainties; hyperbolic orbits need the hyperbolic Kepler equation. Dimorphos mass is an estimate pending Hera.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "jpl-sbdb-numbered-asteroids",
+      "name": "JPL SBDB numbered asteroids (H < 15)",
+      "organization": "NASA JPL SSD",
+      "purpose": "Asteroid belt / NEO / Trojan point cloud rendering",
+      "mechanism": "SBDB Query API -> JSON -> Float32 binary",
+      "endpoint": "https://ssd-api.jpl.nasa.gov/sbdb_query.api",
+      "query": "fields=spkid,a,e,i,om,w,ma,epoch,H,class,pha,neo&sb-kind=a&sb-ns=n&sb-cdata={\"AND\":[\"H|LT|15\"]}",
+      "version": "live archive state at retrieval",
+      "retrieved": "2026-10-18T12:07:36.776Z",
+      "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+      "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+      "citation": "NASA/JPL Solar System Dynamics, Small-Body Database Query API.",
+      "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+      "fieldsUsed": [
+        "spkid",
+        "a",
+        "e",
+        "i",
+        "om",
+        "w",
+        "ma",
+        "epoch",
+        "H",
+        "class"
+      ],
+      "updateCadence": "continuous",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "normalization": "scripts/data/solar/fetch-asteroids.mjs",
+      "fallback": "Render a procedural belt only if the file is missing, labelled illustrative.",
+      "files": [
+        {
+          "path": "data/solar/asteroids.bin",
+          "bytes": 2730780,
+          "records": 75855
+        },
+        {
+          "path": "data/solar/asteroids.json",
+          "bytes": 1227,
+          "records": 1
+        }
+      ],
+      "limitations": "Brightness-limited sample (H<16, roughly D > 1-2 km depending on albedo), not complete; osculating elements at per-body epochs; positions beyond a few years from epoch drift. No names/diameters in the point cloud.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "jpl-ssd-approx-pos",
+      "name": "JPL Approximate Positions of the Planets (Standish) Table 1",
+      "organization": "NASA JPL SSD",
+      "purpose": "Planet Keplerian elements and rates for orbit lines / fallback positions",
+      "mechanism": "HTML <pre> table parse",
+      "endpoint": "https://ssd.jpl.nasa.gov/planets/approx_pos.html",
+      "query": "Table 1 (1800-2050 AD)",
+      "retrieved": "2026-10-16T18:20:44.662Z",
+      "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+      "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+      "citation": "E. M. Standish, Keplerian Elements for Approximate Positions of the Major Planets, NASA/JPL SSD.",
+      "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+      "fieldsUsed": [
+        "a",
+        "e",
+        "I",
+        "L",
+        "long.peri",
+        "long.node",
+        "rates"
+      ],
+      "updateCadence": "static",
+      "normalization": "scripts/data/solar/build-bodies.mjs",
+      "files": [
+        {
+          "path": "data/solar/bodies.json",
+          "bytes": 83740,
+          "records": 8
+        }
+      ],
+      "limitations": "Accuracy of arcminutes to arcseconds-scale only within 1800-2050; Earth row is the Earth-Moon barycentre. Use astronomy-engine for runtime positions.",
+      "version": "live archive state at retrieval",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "fallback": "Use bundled snapshot.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "jpl-ssd-planet-phys-par",
+      "name": "JPL SSD planet and dwarf-planet physical parameters",
+      "organization": "NASA JPL SSD",
+      "purpose": "Radii, mass, density, albedo of planets and dwarf planets",
+      "mechanism": "HTML table scrape (no structured API exists)",
+      "endpoint": "https://ssd.jpl.nasa.gov/planets/phys_par.html",
+      "query": null,
+      "retrieved": "2026-10-16T18:19:53.434Z",
+      "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+      "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+      "citation": "NASA/JPL Solar System Dynamics, Planetary Physical Parameters (Park et al. 2021 for planet masses).",
+      "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+      "fieldsUsed": [
+        "equatorial/mean radius",
+        "mass",
+        "density",
+        "geometric albedo",
+        "sidereal rotation"
+      ],
+      "updateCadence": "irregular",
+      "normalization": "scripts/data/solar/build-bodies.mjs",
+      "files": [
+        {
+          "path": "data/solar/bodies.json",
+          "bytes": 83740,
+          "records": 38
+        }
+      ],
+      "limitations": "Dwarf-planet values have large uncertainties (Eris, Haumea, Makemake).",
+      "version": "live archive state at retrieval",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "fallback": "Use bundled snapshot.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "jpl-ssd-satellite-discovery",
+      "name": "JPL SSD planetary satellite discovery circumstances",
+      "organization": "NASA JPL SSD",
+      "purpose": "Moon discoverer and discovery year",
+      "mechanism": "HTML table scrape",
+      "endpoint": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+      "query": null,
+      "retrieved": "2026-10-16T18:20:09.515Z",
+      "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+      "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+      "citation": "NASA/JPL Solar System Dynamics, Planetary Satellite Discovery Circumstances.",
+      "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+      "fieldsUsed": [
+        "name",
+        "year",
+        "discoverer"
+      ],
+      "updateCadence": "as moons are announced",
+      "normalization": "scripts/data/solar/build-bodies.mjs",
+      "files": [
+        {
+          "path": "data/solar/bodies.json",
+          "bytes": 83740,
+          "records": 24
+        }
+      ],
+      "limitations": "None significant.",
+      "version": "live archive state at retrieval",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "fallback": "Use bundled snapshot.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "jpl-ssd-satellite-mean-elements",
+      "name": "JPL SSD planetary satellite mean orbital elements",
+      "organization": "NASA JPL SSD",
+      "purpose": "Moon orbit lines and Laplace-plane orientation",
+      "mechanism": "HTML table scrape",
+      "endpoint": "https://ssd.jpl.nasa.gov/sats/elem/",
+      "query": null,
+      "retrieved": "2026-10-16T18:20:02.844Z",
+      "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+      "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+      "citation": "NASA/JPL Solar System Dynamics, Planetary Satellite Mean Elements.",
+      "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+      "fieldsUsed": [
+        "a",
+        "e",
+        "omega",
+        "M",
+        "i",
+        "node",
+        "P",
+        "Laplace pole"
+      ],
+      "updateCadence": "irregular",
+      "normalization": "scripts/data/solar/build-bodies.mjs",
+      "files": [
+        {
+          "path": "data/solar/bodies.json",
+          "bytes": 83740,
+          "records": 24
+        }
+      ],
+      "limitations": "Mean elements at epoch 2000-01-01.5 TDB, rounded; not for precise positions.",
+      "version": "live archive state at retrieval",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "fallback": "Use bundled snapshot.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "jpl-ssd-satellite-phys-par",
+      "name": "JPL SSD planetary satellite physical parameters",
+      "organization": "NASA JPL SSD",
+      "purpose": "Moon GM, mean radius, density",
+      "mechanism": "HTML table scrape",
+      "endpoint": "https://ssd.jpl.nasa.gov/sats/phys_par/",
+      "query": null,
+      "retrieved": "2026-10-16T18:19:56.152Z",
+      "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+      "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+      "citation": "NASA/JPL Solar System Dynamics, Planetary Satellite Physical Parameters.",
+      "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+      "fieldsUsed": [
+        "GM",
+        "mean radius",
+        "mean density"
+      ],
+      "updateCadence": "irregular",
+      "normalization": "scripts/data/solar/build-bodies.mjs",
+      "files": [
+        {
+          "path": "data/solar/bodies.json",
+          "bytes": 83740,
+          "records": 24
+        }
+      ],
+      "limitations": "Irregular moons have approximate radii.",
+      "version": "live archive state at retrieval",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "fallback": "Use bundled snapshot.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "naif-gm-de440",
+      "name": "NAIF gm_de440.tpc (planetary GM values)",
+      "organization": "NASA JPL NAIF",
+      "purpose": "GM of Sun and planets",
+      "mechanism": "SPICE text kernel parse",
+      "endpoint": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/gm_de440.tpc",
+      "query": null,
+      "retrieved": "2026-10-16T18:20:41.564Z",
+      "license": "NAIF SPICE rules: kernels on the NAIF server may be downloaded and used by anyone; redistribution of unmodified kernels is permitted; no fees or licensing required (acknowledgement encouraged).",
+      "licenseUrl": "https://naif.jpl.nasa.gov/naif/rules.html",
+      "citation": "Park et al. 2021, The JPL Planetary and Lunar Ephemerides DE440 and DE441, AJ 161:105.",
+      "rateLimits": "not documented",
+      "fieldsUsed": [
+        "BODYn_GM"
+      ],
+      "updateCadence": "with ephemeris releases",
+      "normalization": "scripts/data/solar/build-bodies.mjs",
+      "files": [
+        {
+          "path": "data/solar/bodies.json",
+          "bytes": 83740,
+          "records": 9
+        }
+      ],
+      "limitations": "GM of the Sun is in km^3/s^2 (TDB-compatible units).",
+      "version": "live archive state at retrieval",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "fallback": "Use bundled snapshot.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "naif-pck00011",
+      "name": "NAIF PCK pck00011.tpc (IAU WGCCRE 2015 rotation elements and radii)",
+      "organization": "NASA JPL NAIF",
+      "purpose": "Body pole/prime-meridian rotation models and triaxial radii",
+      "mechanism": "SPICE text kernel parse",
+      "endpoint": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc",
+      "query": null,
+      "retrieved": "2026-10-16T18:20:40.193Z",
+      "license": "NAIF SPICE rules: kernels on the NAIF server may be downloaded and used by anyone; redistribution of unmodified kernels is permitted; no fees or licensing required (acknowledgement encouraged).",
+      "licenseUrl": "https://naif.jpl.nasa.gov/naif/rules.html",
+      "citation": "Archinal et al. 2018, Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015, Celest. Mech. Dyn. Astr. 130:22; kernel by NASA JPL NAIF.",
+      "rateLimits": "not documented",
+      "fieldsUsed": [
+        "BODYn_POLE_RA",
+        "BODYn_POLE_DEC",
+        "BODYn_PM",
+        "BODYn_NUT_PREC_*",
+        "BODYn_RADII"
+      ],
+      "updateCadence": "with IAU reports",
+      "normalization": "scripts/data/solar/build-bodies.mjs",
+      "files": [
+        {
+          "path": "data/solar/bodies.json",
+          "bytes": 83740,
+          "records": 38
+        }
+      ],
+      "limitations": "Mars system requires the pck00011 convention; Eris/Haumea/Makemake and some irregular moons have no solution.",
+      "version": "live archive state at retrieval",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "fallback": "Use bundled snapshot.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "nasa-donki-space-weather",
+      "name": "NASA DONKI solar flares, CMEs and geomagnetic storms (2024-10 to 2026-10)",
+      "organization": "NASA CCMC (Space Weather Database Of Notifications, Knowledge, Information)",
+      "purpose": "Link solar activity to thermospheric heating and orbital-debris decay; Sun inspector",
+      "mechanism": "CCMC DONKI web service (keyless; FLR, CME, GST) -> JSON",
+      "endpoint": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/{FLR|CME|GST}",
+      "query": "startDate=<a>&endDate=<b> (30-day chunks, 2024-10-01..2026-10-17)",
+      "version": "live archive state at retrieval",
+      "retrieved": "2026-10-18T17:49:37.328Z",
+      "license": "NASA-produced content is generally not subject to U.S. copyright (17 U.S.C. 105) and may be used for educational purposes; credit NASA as the source and do not imply endorsement (NASA Media Usage Guidelines).",
+      "licenseUrl": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "citation": "NASA Community Coordinated Modeling Center (CCMC), DONKI database (https://ccmc.gsfc.nasa.gov/DONKI/).",
+      "rateLimits": "Not documented; script makes ~75 requests, 1.5 s apart.",
+      "fieldsUsed": [
+        "flrID",
+        "beginTime",
+        "peakTime",
+        "endTime",
+        "classType",
+        "activeRegionNum",
+        "sourceLocation",
+        "activityID",
+        "startTime",
+        "cmeAnalyses.*",
+        "gstID",
+        "allKpIndex"
+      ],
+      "updateCadence": "continuous",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "normalization": "scripts/data/solar/fetch-space-weather.mjs",
+      "fallback": "Hide the space-weather timeline.",
+      "files": [
+        {
+          "path": "data/solar/space-weather.json",
+          "bytes": 1769104,
+          "records": 4408
+        }
+      ],
+      "limitations": "DONKI is a notification database curated by human forecasters: CME speed/type depend on the chosen analysis and some CMEs have none; flare class is the GOES-reported peak. Retrieved via the keyless ccmc.gsfc.nasa.gov web service.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "noaa-swpc-solar-cycle-indices",
+      "name": "NOAA SWPC observed solar cycle indices (sunspot number, F10.7)",
+      "organization": "NOAA Space Weather Prediction Center",
+      "purpose": "Solar-cycle context (cycle 25) for thermospheric drag and debris decay",
+      "mechanism": "JSON file",
+      "endpoint": "https://services.swpc.noaa.gov/json/solar-cycle/observed-solar-cycle-indices.json",
+      "query": null,
+      "version": "live archive state at retrieval",
+      "retrieved": "2026-10-18T13:53:31.436Z",
+      "license": "U.S. Government work (NOAA/NWS); public domain, no restrictions stated; SWPC data usage guidance requests attribution.",
+      "licenseUrl": "https://www.swpc.noaa.gov/content/data-access",
+      "citation": "NOAA Space Weather Prediction Center; sunspot numbers originate from SILSO/Royal Observatory of Belgium.",
+      "rateLimits": "not documented (single static file)",
+      "fieldsUsed": [
+        "time-tag",
+        "ssn",
+        "smoothed_ssn",
+        "f10.7",
+        "smoothed_f10.7"
+      ],
+      "updateCadence": "monthly",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "normalization": "scripts/data/solar/fetch-space-weather.mjs",
+      "fallback": "Hide the cycle chart.",
+      "files": [
+        {
+          "path": "data/solar/space-weather.json",
+          "bytes": 1769104,
+          "records": 921
+        }
+      ],
+      "limitations": "Monthly means from 1950 only (source starts 1749). F10.7 pre-1947 not available. Last months provisional.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "nssdca-planetary-fact-sheets",
+      "name": "NASA NSSDCA Planetary Fact Sheets",
+      "organization": "NASA GSFC NSSDCA",
+      "purpose": "Polar radius, Bond albedo, obliquity, temperatures, atmosphere composition",
+      "mechanism": "HTML table scrape (no API)",
+      "endpoint": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/",
+      "query": null,
+      "retrieved": "2026-10-16T18:22:19.156Z",
+      "license": "NASA-produced content is generally not subject to U.S. copyright (17 U.S.C. 105) and may be used for educational purposes; credit NASA as the source and do not imply endorsement (NASA Media Usage Guidelines).",
+      "licenseUrl": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "citation": "NASA Goddard Space Flight Center, NSSDCA Planetary Fact Sheets (D. R. Williams).",
+      "rateLimits": "not documented",
+      "fieldsUsed": [
+        "Polar radius",
+        "Bond albedo",
+        "Obliquity to orbit",
+        "Average temperature",
+        "Surface pressure",
+        "Atmospheric composition"
+      ],
+      "updateCadence": "infrequent",
+      "normalization": "scripts/data/solar/build-bodies.mjs",
+      "files": [
+        {
+          "path": "data/solar/bodies.json",
+          "bytes": 83740,
+          "records": 10
+        }
+      ],
+      "limitations": "Rounded values; gas giants have no surface (1-bar level used). Titan atmosphere pressure comes from the literature (Fulchignoni et al. 2005).",
+      "version": "live archive state at retrieval",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "fallback": "Use bundled snapshot.",
+      "provenanceClass": "observed"
+    }
+  ]
+}

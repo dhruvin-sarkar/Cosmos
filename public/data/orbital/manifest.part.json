@@ -1,0 +1,172 @@
+{
+  "domain": "orbital",
+  "datasets": [
+    {
+      "id": "celestrak-gp-omm",
+      "name": "CelesTrak GP mean element sets (CCSDS OMM keywords, CSV): published groups, special data sets and NAME searches",
+      "organization": "CelesTrak (T.S. Kelso); data from U.S. Space Force 18th/19th Space Defense Squadrons via Space-Track.org",
+      "purpose": "SGP4 mean elements for every tracked on-orbit object rendered and propagated in the Earth orbital-environment layer; CelesTrak group memberships for filters (stations, constellations, GNSS, GEO, debris clouds, ...).",
+      "mechanism": "HTTPS GET gp.php?{GROUP|SPECIAL|NAME}=...&FORMAT=CSV (OMM keywords, 9-digit-safe) -> merged by NORAD_CAT_ID (latest EPOCH wins, group tags unioned) -> catalog.json rows with elementSource=\"celestrak-gp\".",
+      "endpoint": "https://celestrak.org/NORAD/elements/gp.php",
+      "query": "GROUP={active,fengyun-1c-debris,cosmos-2251-debris,iridium-33-debris,analyst,last-30-days,stations,visual,weather,resource,sar,sarsat,dmc,tdrss,argos,planet,spire,geo,intelsat,ses,eutelsat,telesat,oneweb,qianfan,hulianwang,kuiper,iridium-NEXT,orbcomm,globalstar,amateur,satnogs,x-comm,other-comm,gnss,gps-ops,glo-ops,galileo,beidou,sbas,science,geodetic,engineering,education,military,radar,cubesat}&FORMAT=CSV (46 requests); SPECIAL={GPZ,GPZ-PLUS,DECAYING}&FORMAT=CSV; NAME=DEB&FORMAT=CSV; NAME=R/B&FORMAT=CSV. Starlink group intentionally not downloaded (subset of active per CelesTrak).",
+      "version": "live archive state at retrieval (GP downloads 2026-10-16T18:29:34.217Z .. 2026-10-17T06:50:38.227Z; CelesTrak GP update cycle current as of 2026-10-16 18:05:42 UTC)",
+      "retrieved": "2026-10-17T06:50:38.227Z",
+      "license": "No formal open-data licence. CelesTrak makes the data freely available to all users subject to its usage policy (https://celestrak.org/usage-policy.php). The GP/OMM element sets and SATCAT are \"basic SSA data\" originating from USSPACECOM (U.S. Space Force 18th/19th Space Defense Squadrons) via Space-Track.org, for which USSPACECOM grants \"express blanket approval for transfer/redistribution of basic SSA data ... conditioned on appropriate citation\" (Space-Track User Agreement, section \"Redistribution of Basic SSA Information\").",
+      "licenseUrl": "https://celestrak.org/usage-policy.php",
+      "citation": "Orbital data: CelesTrak (Dr T.S. Kelso, https://celestrak.org) - GP element sets and SATCAT; source data: U.S. Space Force 18th & 19th Space Defense Squadrons / USSPACECOM via Space-Track.org.",
+      "rateLimits": "CelesTrak usage policy (2026-05-22): download each data set at most once per update (GP every 2 h, SupGP 2 h, SATCAT 1-2x per day); since 2026-03-26 a repeat request for GP Active/Starlink before the next update returns HTTP 403; stop querying on any non-200 (301/403/404/5xx); >50 HTTP errors in 2 h or >100 MB/day may get the IP firewalled; directory/query pages at most once per hour. No per-second limit documented (this pipeline waits 2.5 s between requests).",
+      "fieldsUsed": [
+        "OBJECT_NAME",
+        "OBJECT_ID",
+        "EPOCH",
+        "MEAN_MOTION",
+        "ECCENTRICITY",
+        "INCLINATION",
+        "RA_OF_ASC_NODE",
+        "ARG_OF_PERICENTER",
+        "MEAN_ANOMALY",
+        "NORAD_CAT_ID",
+        "BSTAR",
+        "MEAN_MOTION_DOT",
+        "MEAN_MOTION_DDOT",
+        "EPHEMERIS_TYPE",
+        "CLASSIFICATION_TYPE"
+      ],
+      "updateCadence": "Upstream refresh every 2 h. Cosmos snapshot refreshed manually: node scripts/data/orbital/fetch.mjs --refresh && node scripts/data/orbital/build.mjs (never more than once per upstream update).",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "normalization": "scripts/data/orbital/build.mjs",
+      "fallback": "If catalog.json is missing or fails to parse, hide the orbital-object layer and show \"orbital catalog unavailable\" (never synthesize objects). Per object: hasElements=false -> render from SATCAT shape with illustrative phase and label it reconstructed; elementSource=null -> list only, do not render.",
+      "files": [
+        {
+          "path": "data/orbital/catalog.json",
+          "bytes": 9106711,
+          "records": 35652
+        }
+      ],
+      "limitations": "GP elements are SGP4 mean elements (TEME, UTC epochs) with ~1 km accuracy at epoch degrading by km/day; ages differ per object (median 1.14 d at retrieval). 3813 of 35652 on-orbit objects have no public GP in the downloaded sets (no group covers inactive payloads; ~800 objects are NEA \"no elements available\", e.g. classified; others have no current GP at CelesTrak) and fall back to SATCAT shape. 594 analyst objects (uncorrelated tracks, numbers 8xxxx / 2xxxxx) are included as class \"unknown\". The tracked catalogue (~10 cm LEO / ~1 m GEO detection limits) is a small fraction of the real debris population (ESA MASTER-8: ~1.5 million objects 1-10 cm).",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "celestrak-satcat",
+      "name": "CelesTrak Satellite Catalog (SATCAT), full CSV",
+      "organization": "CelesTrak (T.S. Kelso); catalog maintained by U.S. Space Force 18th SDS, with CelesTrak corrections",
+      "purpose": "Authoritative list of on-orbit objects (no decay date, Earth-centred): object class, owner, launch date/site, RCS, operational status, docking; orbit shape (apogee/perigee/inclination/period) for objects without GP elements; population statistics by class/regime/altitude shell.",
+      "mechanism": "HTTPS GET of the static full-catalog CSV -> filter DECAY_DATE empty and ORBIT_CENTER = EA (or docked to an Earth-orbiting host) -> joined with GP by NORAD_CAT_ID.",
+      "endpoint": "https://celestrak.org/pub/satcat.csv",
+      "query": null,
+      "version": "SATCAT file Last-Modified 2026-10-15T20:56:28.000Z (71073 records incl. decayed; official catalog then at 101074)",
+      "retrieved": "2026-10-16T18:29:27.616Z",
+      "license": "No formal open-data licence. CelesTrak makes the data freely available to all users subject to its usage policy (https://celestrak.org/usage-policy.php). The GP/OMM element sets and SATCAT are \"basic SSA data\" originating from USSPACECOM (U.S. Space Force 18th/19th Space Defense Squadrons) via Space-Track.org, for which USSPACECOM grants \"express blanket approval for transfer/redistribution of basic SSA data ... conditioned on appropriate citation\" (Space-Track User Agreement, section \"Redistribution of Basic SSA Information\").",
+      "licenseUrl": "https://celestrak.org/usage-policy.php",
+      "citation": "Orbital data: CelesTrak (Dr T.S. Kelso, https://celestrak.org) - GP element sets and SATCAT; source data: U.S. Space Force 18th & 19th Space Defense Squadrons / USSPACECOM via Space-Track.org.",
+      "rateLimits": "CelesTrak usage policy (2026-05-22): download each data set at most once per update (GP every 2 h, SupGP 2 h, SATCAT 1-2x per day); since 2026-03-26 a repeat request for GP Active/Starlink before the next update returns HTTP 403; stop querying on any non-200 (301/403/404/5xx); >50 HTTP errors in 2 h or >100 MB/day may get the IP firewalled; directory/query pages at most once per hour. No per-second limit documented (this pipeline waits 2.5 s between requests).",
+      "fieldsUsed": [
+        "OBJECT_NAME",
+        "OBJECT_ID",
+        "NORAD_CAT_ID",
+        "OBJECT_TYPE",
+        "OPS_STATUS_CODE",
+        "OWNER",
+        "LAUNCH_DATE",
+        "LAUNCH_SITE",
+        "DECAY_DATE",
+        "PERIOD",
+        "INCLINATION",
+        "APOGEE",
+        "PERIGEE",
+        "RCS",
+        "DATA_STATUS_CODE",
+        "ORBIT_CENTER",
+        "ORBIT_TYPE"
+      ],
+      "updateCadence": "Upstream updated manually 1-2x per day; Cosmos snapshot refreshed manually with the GP data.",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "normalization": "scripts/data/orbital/build.mjs",
+      "fallback": "Without SATCAT the app cannot show owner/class/launch metadata; render GP objects with class from name heuristics only and flag metadata as unavailable.",
+      "files": [
+        {
+          "path": "data/orbital/catalog.json",
+          "bytes": 9106711,
+          "records": 35652
+        },
+        {
+          "path": "data/orbital/summary.json",
+          "bytes": 18938,
+          "records": null
+        }
+      ],
+      "limitations": "SATCAT apogee/perigee/period/inclination are rounded (km, 0.01 deg/min) and can be stale for objects without current elements. RCS (m^2) is missing for ~58% of on-orbit objects (rcsSize null). OWNER is the SATCAT source code (country/organisation), not necessarily the operator. Analyst objects are not in SATCAT.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "celestrak-satcat-code-tables",
+      "name": "CelesTrak SATCAT source (owner) and launch-site code tables",
+      "organization": "CelesTrak (T.S. Kelso)",
+      "purpose": "Human-readable names for SATCAT OWNER and LAUNCH_SITE codes in the inspector and filters.",
+      "mechanism": "HTTPS GET of two HTML pages (no structured version exists) -> two-column table parse -> lookups.json (with locally defined status/class/regime/group-tag tables).",
+      "endpoint": "https://celestrak.org/satcat/sources.php",
+      "query": "https://celestrak.org/satcat/sources.php ; https://celestrak.org/satcat/launchsites.php",
+      "version": "live page state at retrieval",
+      "retrieved": "2026-10-16T18:32:08.175Z",
+      "license": "No formal open-data licence. CelesTrak makes the data freely available to all users subject to its usage policy (https://celestrak.org/usage-policy.php). The GP/OMM element sets and SATCAT are \"basic SSA data\" originating from USSPACECOM (U.S. Space Force 18th/19th Space Defense Squadrons) via Space-Track.org, for which USSPACECOM grants \"express blanket approval for transfer/redistribution of basic SSA data ... conditioned on appropriate citation\" (Space-Track User Agreement, section \"Redistribution of Basic SSA Information\").",
+      "licenseUrl": "https://celestrak.org/usage-policy.php",
+      "citation": "Orbital data: CelesTrak (Dr T.S. Kelso, https://celestrak.org) - GP element sets and SATCAT; source data: U.S. Space Force 18th & 19th Space Defense Squadrons / USSPACECOM via Space-Track.org.",
+      "rateLimits": "CelesTrak usage policy (2026-05-22): download each data set at most once per update (GP every 2 h, SupGP 2 h, SATCAT 1-2x per day); since 2026-03-26 a repeat request for GP Active/Starlink before the next update returns HTTP 403; stop querying on any non-200 (301/403/404/5xx); >50 HTTP errors in 2 h or >100 MB/day may get the IP firewalled; directory/query pages at most once per hour. No per-second limit documented (this pipeline waits 2.5 s between requests).",
+      "fieldsUsed": [
+        "Source Code",
+        "Source Description",
+        "Launch Site Code",
+        "Launch Site Description"
+      ],
+      "updateCadence": "Rarely changes; refresh at most weekly.",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "normalization": "scripts/data/orbital/build.mjs",
+      "fallback": "Show the raw code (e.g. \"PRC\", \"AFETR\") when a name is missing.",
+      "files": [
+        {
+          "path": "data/orbital/lookups.json",
+          "bytes": 13548,
+          "records": 174
+        }
+      ],
+      "limitations": "Parsed from HTML; text kept as published (including CelesTrak spelling). Some codes used in SATCAT may be absent from the tables.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "orbital-population-statistics",
+      "name": "Derived on-orbit population statistics (class, regime, 50-km shells, spatial density, notable objects)",
+      "organization": "Cosmos / AstroNexus (derived from CelesTrak GP + SATCAT)",
+      "purpose": "Kessler / debris laboratory: real-catalog shell populations and spatial densities; HUD counts; notable-object shortcuts.",
+      "mechanism": "Computed locally by build.mjs from the catalog rows (no separate download): regime classification, mean-altitude histogram, residence-time-weighted shell occupancy and spatial density; external reference figures (ESA, CelesTrak boxscore) quoted for context.",
+      "endpoint": "https://celestrak.org/pub/satcat.csv",
+      "query": null,
+      "version": "derived from the snapshot of 2026-10-17T06:50:38.227Z",
+      "retrieved": "2026-10-17T06:50:38.227Z",
+      "license": "No formal open-data licence. CelesTrak makes the data freely available to all users subject to its usage policy (https://celestrak.org/usage-policy.php). The GP/OMM element sets and SATCAT are \"basic SSA data\" originating from USSPACECOM (U.S. Space Force 18th/19th Space Defense Squadrons) via Space-Track.org, for which USSPACECOM grants \"express blanket approval for transfer/redistribution of basic SSA data ... conditioned on appropriate citation\" (Space-Track User Agreement, section \"Redistribution of Basic SSA Information\"). Derived statistics: cite as below.",
+      "licenseUrl": "https://celestrak.org/usage-policy.php",
+      "citation": "Orbital data: CelesTrak (Dr T.S. Kelso, https://celestrak.org) - GP element sets and SATCAT; source data: U.S. Space Force 18th & 19th Space Defense Squadrons / USSPACECOM via Space-Track.org. Statistics computed by the Cosmos/AstroNexus project. Context figures: ESA Space Debris Office (sdup.esoc.esa.int/discosweb/statistics, 2026-10-14) and CelesTrak SATCAT boxscore (2026-10-15).",
+      "rateLimits": "not applicable (local computation)",
+      "fieldsUsed": [
+        "objectClass",
+        "isActive",
+        "perigeeKm",
+        "apogeeKm",
+        "inclinationDeg",
+        "groups"
+      ],
+      "updateCadence": "Regenerated with every build.",
+      "cachePolicy": "versioned offline snapshot; optional online refresh",
+      "normalization": "scripts/data/orbital/build.mjs",
+      "fallback": "If summary.json is missing, the app may recompute counts from catalog.json; hide shell-density charts otherwise.",
+      "files": [
+        {
+          "path": "data/orbital/summary.json",
+          "bytes": 18938,
+          "records": null
+        }
+      ],
+      "limitations": "Shell statistics use mean (not osculating) apsides and a two-body residence-time model; satcat-shape rows use rounded SATCAT apsides. Only the tracked public catalogue is counted (objects >~10 cm in LEO); real densities including untracked debris are far higher.",
+      "provenanceClass": "derived"
+    }
+  ]
+}

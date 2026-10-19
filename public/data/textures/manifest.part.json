@@ -1,0 +1,549 @@
+{
+ "domain": "textures",
+ "datasets": [
+  {
+   "id": "textures-earth-blue-marble-ng",
+   "name": "NASA Blue Marble: Next Generation (Dec 2004), Earth day colour",
+   "organization": "NASA Earth Observatory",
+   "purpose": "Earth day-side albedo map",
+   "mechanism": "HTTP GET JPEG 21600x10800 -> sharp resize",
+   "endpoint": "https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74218/world.200412.3x21600x10800.jpg",
+   "query": null,
+   "version": "Blue Marble NG, December 2004 monthly composite",
+   "retrieved": "2026-10-18T12:18:34.475Z",
+   "license": "Public domain (NASA)",
+   "licenseUrl": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+   "citation": "NASA Earth Observatory (Reto Stockli, Robert Simmon), Blue Marble: Next Generation",
+   "rateLimits": "not documented",
+   "fieldsUsed": [
+    "RGB"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-earth.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/earth/day_8k.jpg",
+     "bytes": 2563842,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/day_4k.jpg",
+     "bytes": 726894,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/day_2k.jpg",
+     "bytes": 207981,
+     "records": 1
+    }
+   ],
+   "limitations": "Single monthly composite: seasonal snow of Dec 2004; no cloud; 500 m/px source downsampled.",
+   "provenanceClass": "observed"
+  },
+  {
+   "id": "textures-earth-black-marble-2016",
+   "name": "NASA Black Marble 2016 (VIIRS) via GIBS, Earth night lights",
+   "organization": "NASA EOSDIS GIBS / NASA GSFC",
+   "purpose": "Earth night-side emissive map",
+   "mechanism": "OGC WMS 1.1.1 GetMap (VIIRS_Black_Marble, time 2016-01-01) 8192x4096 PNG -> lights-only processing",
+   "endpoint": "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi",
+   "query": "LAYERS=VIIRS_Black_Marble&SRS=EPSG:4326&BBOX=-180,-90,180,90&WIDTH=8192&HEIGHT=4096&TIME=2016-01-01",
+   "version": "Black Marble 2016 annual composite as served by GIBS",
+   "retrieved": "2026-10-18T12:19:08.896Z",
+   "license": "NASA EOSDIS open data (public domain; acknowledge NASA/GIBS)",
+   "licenseUrl": "https://www.earthdata.nasa.gov/engage/open-data-services-and-software/data-and-information-policy",
+   "citation": "We acknowledge the use of imagery provided by services from NASA GIBS, part of NASA ESDIS. Black Marble: NASA Earth Observatory / NOAA NGDC",
+   "rateLimits": "GIBS: not documented; single request used",
+   "fieldsUsed": [
+    "RGB"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-earth.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/earth/night_8k.jpg",
+     "bytes": 990002,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/night_4k.jpg",
+     "bytes": 276351,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/night_2k.jpg",
+     "bytes": 76925,
+     "records": 1
+    }
+   ],
+   "limitations": "Base tint of GIBS rendering removed (derived lights-only emissive); absolute radiance not preserved; 8192 px is oversampled from ~500 m tiles.",
+   "provenanceClass": "derived"
+  },
+  {
+   "id": "textures-earth-clouds-sss",
+   "name": "Solar System Scope Earth cloud map",
+   "organization": "Solar System Scope / INOVE",
+   "purpose": "Earth cloud layer (alpha/opacity)",
+   "mechanism": "HTTP GET 8k_earth_clouds.jpg -> greyscale",
+   "endpoint": "https://www.solarsystemscope.com/textures/download/8k_earth_clouds.jpg",
+   "query": null,
+   "version": "site snapshot",
+   "retrieved": "2026-10-18T12:19:17.402Z",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+   "citation": "Solar System Scope / INOVE (textures based on NASA imagery)",
+   "rateLimits": "not documented",
+   "fieldsUsed": [
+    "luminance"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-earth.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/earth/clouds_8k.jpg",
+     "bytes": 7178322,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/clouds_4k.jpg",
+     "bytes": 1981531,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/clouds_2k.jpg",
+     "bytes": 498589,
+     "records": 1
+    }
+   ],
+   "limitations": "Static composite, not real weather; bright polar bands are source artefacts.",
+   "provenanceClass": "illustrative"
+  },
+  {
+   "id": "textures-earth-etopo2022",
+   "name": "NOAA ETOPO 2022 60 arc-second surface elevation -> ocean mask, height, normal",
+   "organization": "NOAA National Centers for Environmental Information",
+   "purpose": "Earth specular (ocean) mask, height/bump and normal map",
+   "mechanism": "OPeNDAP .dods (z[lat][lon], stride 2 = 10800x5400) -> area resample -> derived maps",
+   "endpoint": "https://www.ngdc.noaa.gov/thredds/dodsC/global/ETOPO2022/60s/60s_surface_elev_netcdf/ETOPO_2022_v1_60s_N90W180_surface.nc",
+   "query": "z.z[0:2:10798][0:2:21598] in 6 latitude chunks",
+   "version": "ETOPO 2022 v1",
+   "retrieved": "2026-10-18T12:34:13.733Z",
+   "license": "Public domain (NOAA NCEI)",
+   "licenseUrl": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
+   "citation": "NOAA National Centers for Environmental Information. 2022: ETOPO 2022 15 Arc-Second Global Relief Model. doi:10.25921/fd45-gt74",
+   "rateLimits": "not documented",
+   "fieldsUsed": [
+    "z (surface elevation, m)"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-earth.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/earth/height_4k.png",
+     "bytes": 1720974,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/height_2k.png",
+     "bytes": 479982,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/normal_8k.webp",
+     "bytes": 10858914,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/normal_4k.png",
+     "bytes": 2114270,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/normal_2k.png",
+     "bytes": 541363,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/specular_8k.png",
+     "bytes": 550359,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/specular_4k.png",
+     "bytes": 239461,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/specular_2k.png",
+     "bytes": 99732,
+     "records": 1
+    }
+   ],
+   "limitations": "Stride-2 subsample of the 60\" grid (~3.7 km); normal slope exaggerated x6; ocean mask = z<0 (includes Caspian/Dead Sea depressions); bathymetry not used for normals.",
+   "provenanceClass": "derived"
+  },
+  {
+   "id": "textures-earth-epic",
+   "name": "DSCOVR EPIC natural colour images",
+   "organization": "NASA GSFC / NOAA DSCOVR EPIC team",
+   "purpose": "\"Earth from L1\" observation card",
+   "mechanism": "REST JSON list + JPEG archive",
+   "endpoint": "https://epic.gsfc.nasa.gov/api/natural",
+   "query": "latest day, 3 images spread in longitude",
+   "version": "L1B v04",
+   "retrieved": "2026-10-18T13:27:51.990Z",
+   "license": "Public domain (NASA)",
+   "licenseUrl": "https://epic.gsfc.nasa.gov/about/api",
+   "citation": "DSCOVR EPIC / NASA",
+   "rateLimits": "not documented",
+   "fieldsUsed": [
+    "image",
+    "centroid_coordinates",
+    "dscovr_j2000_position",
+    "sun_j2000_position",
+    "lunar_j2000_position",
+    "attitude_quaternions",
+    "date"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-epic.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/earth/epic/epic_1b_20261016163933_2048.jpg",
+     "bytes": 273022,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/epic/epic_1b_20261016111527_2048.jpg",
+     "bytes": 263014,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/epic/epic_1b_20261016040317_2048.jpg",
+     "bytes": 268476,
+     "records": 1
+    }
+   ],
+   "limitations": "Snapshot of one day; positions are geocentric J2000 in km.",
+   "provenanceClass": "observed"
+  },
+  {
+   "id": "textures-usgs-planetary-wms",
+   "name": "USGS Astrogeology planetary WMS global mosaics",
+   "organization": "USGS Astrogeology Science Center (NASA mission data)",
+   "purpose": "Global surface maps: Moon, Mars, Mercury, Venus surface, Io, Europa, Ganymede, Callisto, Titan, Enceladus, Triton, Pluto, Charon",
+   "mechanism": "OGC WMS 1.1.1 GetMap EPSG:4326 4096x2048 PNG",
+   "endpoint": "https://planetarymaps.usgs.gov/cgi-bin/mapserv",
+   "query": "see per-body endpoint in index.json credits / records",
+   "version": "live archive state at retrieval",
+   "retrieved": "2026-10-18T11:19:18.193Z",
+   "license": "Public domain (U.S. Government works; NASA/USGS)",
+   "licenseUrl": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+   "citation": "USGS Astrogeology Science Center / NASA mission teams (see credits in index.json)",
+   "rateLimits": "not documented (requests throttled to >=1 s per host)",
+   "fieldsUsed": [
+    "image layer"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-wms.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/callisto/color_4k.jpg",
+     "bytes": 1081642,
+     "records": 1
+    },
+    {
+     "path": "textures/callisto/color_1k.jpg",
+     "bytes": 70019,
+     "records": 1
+    },
+    {
+     "path": "textures/charon/color_4k.jpg",
+     "bytes": 710963,
+     "records": 1
+    },
+    {
+     "path": "textures/charon/color_1k.jpg",
+     "bytes": 63008,
+     "records": 1
+    },
+    {
+     "path": "textures/enceladus/color_4k.jpg",
+     "bytes": 2022155,
+     "records": 1
+    },
+    {
+     "path": "textures/enceladus/color_1k.jpg",
+     "bytes": 143575,
+     "records": 1
+    },
+    {
+     "path": "textures/europa/color_4k.jpg",
+     "bytes": 1335589,
+     "records": 1
+    },
+    {
+     "path": "textures/europa/color_1k.jpg",
+     "bytes": 91858,
+     "records": 1
+    },
+    {
+     "path": "textures/ganymede/color_4k.jpg",
+     "bytes": 1060254,
+     "records": 1
+    },
+    {
+     "path": "textures/ganymede/color_1k.jpg",
+     "bytes": 69242,
+     "records": 1
+    },
+    {
+     "path": "textures/io/color_4k.jpg",
+     "bytes": 1091120,
+     "records": 1
+    },
+    {
+     "path": "textures/io/color_1k.jpg",
+     "bytes": 80796,
+     "records": 1
+    },
+    {
+     "path": "textures/mars/color_4k.jpg",
+     "bytes": 1700379,
+     "records": 1
+    },
+    {
+     "path": "textures/mars/color_1k.jpg",
+     "bytes": 105641,
+     "records": 1
+    },
+    {
+     "path": "textures/mars/normal_4k.png",
+     "bytes": 6290412,
+     "records": 1
+    },
+    {
+     "path": "textures/mars/normal_1k.png",
+     "bytes": 445975,
+     "records": 1
+    },
+    {
+     "path": "textures/mercury/color_4k.jpg",
+     "bytes": 1958501,
+     "records": 1
+    },
+    {
+     "path": "textures/mercury/color_1k.jpg",
+     "bytes": 97257,
+     "records": 1
+    },
+    {
+     "path": "textures/moon/color_4k.jpg",
+     "bytes": 2206178,
+     "records": 1
+    },
+    {
+     "path": "textures/moon/color_1k.jpg",
+     "bytes": 133122,
+     "records": 1
+    },
+    {
+     "path": "textures/moon/normal_4k.png",
+     "bytes": 6798625,
+     "records": 1
+    },
+    {
+     "path": "textures/moon/normal_1k.png",
+     "bytes": 491382,
+     "records": 1
+    },
+    {
+     "path": "textures/pluto/color_4k.jpg",
+     "bytes": 921201,
+     "records": 1
+    },
+    {
+     "path": "textures/pluto/color_1k.jpg",
+     "bytes": 70870,
+     "records": 1
+    },
+    {
+     "path": "textures/titan/color_4k.jpg",
+     "bytes": 881817,
+     "records": 1
+    },
+    {
+     "path": "textures/titan/color_1k.jpg",
+     "bytes": 72981,
+     "records": 1
+    },
+    {
+     "path": "textures/triton/color_4k.jpg",
+     "bytes": 546859,
+     "records": 1
+    },
+    {
+     "path": "textures/triton/color_1k.jpg",
+     "bytes": 53030,
+     "records": 1
+    },
+    {
+     "path": "textures/venus/surface_4k.jpg",
+     "bytes": 1988086,
+     "records": 1
+    },
+    {
+     "path": "textures/venus/surface_1k.jpg",
+     "bytes": 151525,
+     "records": 1
+    }
+   ],
+   "limitations": "Server-resampled; Pluto/Charon/Triton far sides unobserved and Europa/Ganymede/Callisto polar gaps are filled with smooth interpolation (illustrative); Moon/Mercury/Pluto/Charon/Enceladus are greyscale; Venus colour is artificial; Moon has no bump map in this build. Moon/Mars normal maps are derived from 8-bit grey elevation stretches (approximate heights). Triton/Pluto/Charon unobserved regions are faded to mean colour; coverage masks provided.",
+   "provenanceClass": "observed"
+  },
+  {
+   "id": "textures-nasa-treks-dawn",
+   "name": "NASA Solar System Treks Dawn FC mosaics (Ceres, Vesta)",
+   "organization": "NASA JPL / Solar System Treks; DLR; MPS",
+   "purpose": "Ceres and Vesta global maps",
+   "mechanism": "OGC WMTS tiles (level 3, 16x8) mosaic",
+   "endpoint": "https://trek.nasa.gov/tiles/",
+   "query": "see per-body endpoint in index.json credits / records",
+   "version": "live archive state at retrieval",
+   "retrieved": "2026-10-18T12:57:51.971Z",
+   "license": "Public domain (NASA); credit NASA/JPL-Caltech/UCLA/MPS/DLR/IDA",
+   "licenseUrl": "https://trek.nasa.gov/",
+   "citation": "NASA/JPL-Caltech/UCLA/MPS/DLR/IDA via NASA Solar System Treks",
+   "rateLimits": "not documented (requests throttled to >=1 s per host)",
+   "fieldsUsed": [
+    "image layer"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-treks.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/ceres/color_4k.jpg",
+     "bytes": 2476692,
+     "records": 1
+    },
+    {
+     "path": "textures/ceres/color_1k.jpg",
+     "bytes": 156836,
+     "records": 1
+    },
+    {
+     "path": "textures/vesta/color_4k.jpg",
+     "bytes": 1352704,
+     "records": 1
+    },
+    {
+     "path": "textures/vesta/color_1k.jpg",
+     "bytes": 97294,
+     "records": 1
+    }
+   ],
+   "limitations": "Greyscale only; Vesta north polar night painted black in source and filled by smooth interpolation.",
+   "provenanceClass": "observed"
+  },
+  {
+   "id": "textures-sss-planets",
+   "name": "Solar System Scope planet textures (Venus atmosphere, Jupiter, Saturn, Saturn rings, Uranus, Neptune)",
+   "organization": "Solar System Scope / INOVE",
+   "purpose": "Cloud-top textures for bodies without surface maps",
+   "mechanism": "HTTP GET JPEG/PNG",
+   "endpoint": "https://www.solarsystemscope.com/textures/",
+   "query": "see per-body endpoint in index.json credits / records",
+   "version": "live archive state at retrieval",
+   "retrieved": "2026-10-18T12:53:57.525Z",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+   "citation": "Solar System Scope / INOVE (textures based on NASA spacecraft imagery)",
+   "rateLimits": "not documented (requests throttled to >=1 s per host)",
+   "fieldsUsed": [
+    "image layer"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-sss.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/jupiter/color_4k.jpg",
+     "bytes": 624638,
+     "records": 1
+    },
+    {
+     "path": "textures/jupiter/color_1k.jpg",
+     "bytes": 64289,
+     "records": 1
+    },
+    {
+     "path": "textures/neptune/color_2k.jpg",
+     "bytes": 39888,
+     "records": 1
+    },
+    {
+     "path": "textures/neptune/color_1k.jpg",
+     "bytes": 13615,
+     "records": 1
+    },
+    {
+     "path": "textures/saturn/color_4k.jpg",
+     "bytes": 230472,
+     "records": 1
+    },
+    {
+     "path": "textures/saturn/color_1k.jpg",
+     "bytes": 23941,
+     "records": 1
+    },
+    {
+     "path": "textures/saturn/rings_8k.png",
+     "bytes": 6848,
+     "records": 1
+    },
+    {
+     "path": "textures/saturn/rings_2k.png",
+     "bytes": 2753,
+     "records": 1
+    },
+    {
+     "path": "textures/uranus/color_2k.jpg",
+     "bytes": 16615,
+     "records": 1
+    },
+    {
+     "path": "textures/uranus/color_1k.jpg",
+     "bytes": 6793,
+     "records": 1
+    },
+    {
+     "path": "textures/venus/atmosphere_4k.jpg",
+     "bytes": 269749,
+     "records": 1
+    },
+    {
+     "path": "textures/venus/atmosphere_1k.jpg",
+     "bytes": 26797,
+     "records": 1
+    }
+   ],
+   "limitations": "Artistic, not epoch-specific; Uranus/Neptune source only 2048x1024; ring radial range assumed 74,500-140,220 km.",
+   "provenanceClass": "illustrative"
+  }
+ ]
+}

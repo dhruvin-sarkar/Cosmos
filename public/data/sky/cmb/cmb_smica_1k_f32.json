@@ -1,0 +1,19 @@
+{
+ "schemaVersion": 1,
+ "generated": "2026-10-18T14:17:34.842Z",
+ "file": "cmb_smica_1k_f32.bin",
+ "encoding": "little-endian IEEE-754 Float32, no header, row-major",
+ "width": 1024,
+ "height": 512,
+ "count": 524288,
+ "stride": 1,
+ "fields": [
+  "deltaT_uK"
+ ],
+ "units": {
+  "deltaT_uK": "microkelvin (K_CMB thermodynamic temperature difference from the 2.7255 K mean)"
+ },
+ "layout": "index = y*1024 + x; pixel centre RA = 360*(x+0.5)/1024 deg, Dec = 90 - 180*(y+0.5)/512 deg (ICRS); row 0 = north",
+ "derivation": "mean of 4x4 blocks of the 4096x2048 hips2fits FITS render of CDS/P/PLANCK/R3/CMB",
+ "nullPolicy": "no missing values (full-sky map); NaN never written"
+}

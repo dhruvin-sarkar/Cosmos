@@ -1,0 +1,2804 @@
+{
+ "schemaVersion": 1,
+ "generated": "2026-10-18T19:22:00.201Z",
+ "datasets": {
+  "exoplanets-pscomppars": {
+   "id": "exoplanets-pscomppars",
+   "name": "NASA Exoplanet Archive: Planetary Systems Composite Parameters (PSCompPars), all confirmed planets, with default-parameter-set provenance from the Planetary Systems (PS) table",
+   "organization": "NASA Exoplanet Archive, operated by Caltech/IPAC (NExScI) for the NASA Exoplanet Exploration Program",
+   "purpose": "Exoplanet layer, planet/system info panels and habitability-lab inputs: one row per confirmed planet with orbit, radius, mass, density, insolation, equilibrium temperature, host-star parameters, discovery data, uncertainties, limit flags and per-parameter literature references.",
+   "mechanism": "IVOA TAP sync, ADQL -> JSON (format=json); raw responses cached gzip-compressed in data-raw/exoplanets; normalised to compact {fields, rows} JSON",
+   "endpoint": "https://exoplanetarchive.ipac.caltech.edu/TAP/sync",
+   "query": "select pl_name,pl_letter,hostname,sy_snum,sy_pnum,sy_mnum,cb_flag,pl_controv_flag,discoverymethod,disc_year,disc_facility,disc_refname,pl_orbper,pl_orbpererr1,pl_orbpererr2,pl_orbperlim,pl_orbper_reflink,pl_orbsmax,pl_orbsmaxerr1,pl_orbsmaxerr2,pl_orbsmaxlim,pl_orbsmax_reflink,pl_orbeccen,pl_orbeccenerr1,pl_orbeccenerr2,pl_orbeccenlim,pl_orbeccen_reflink,pl_orbincl,pl_orbinclerr1,pl_orbinclerr2,pl_orbincllim,pl_orbincl_reflink,pl_orblper,pl_orblpererr1,pl_orblpererr2,pl_orblperlim,pl_orblper_reflink,pl_tranmid,pl_tranmiderr1,pl_tranmiderr2,pl_tranmidlim,pl_tranmid_reflink,pl_rade,pl_radeerr1,pl_radeerr2,pl_radelim,pl_rade_reflink,pl_bmasse,pl_bmasseerr1,pl_bmasseerr2,pl_bmasselim,pl_bmasse_reflink,pl_dens,pl_denserr1,pl_denserr2,pl_denslim,pl_dens_reflink,pl_insol,pl_insolerr1,pl_insolerr2,pl_insollim,pl_insol_reflink,pl_eqt,pl_eqterr1,pl_eqterr2,pl_eqtlim,pl_eqt_reflink,st_teff,st_tefferr1,st_tefferr2,st_tefflim,st_teff_reflink,st_rad,st_raderr1,st_raderr2,st_radlim,st_rad_reflink,st_mass,st_masserr1,st_masserr2,st_masslim,st_mass_reflink,st_lum,st_lumerr1,st_lumerr2,st_lumlim,st_lum_reflink,st_met,st_meterr1,st_meterr2,st_metlim,st_met_reflink,st_age,st_ageerr1,st_ageerr2,st_agelim,st_age_reflink,st_logg,st_loggerr1,st_loggerr2,st_logglim,st_logg_reflink,sy_dist,sy_disterr1,sy_disterr2,sy_dist_reflink,sy_plx,sy_plxerr1,sy_plxerr2,sy_plx_reflink,sy_vmag,sy_vmagerr1,sy_vmagerr2,sy_vmag_reflink,sy_kmag,sy_kmagerr1,sy_kmagerr2,sy_kmag_reflink,sy_gaiamag,sy_gaiamagerr1,sy_gaiamagerr2,sy_gaiamag_reflink,pl_tranmid_systemref,pl_bmassprov,st_spectype,st_spectype_reflink,st_metratio,ra,dec,ra_reflink,sy_pmra,sy_pmraerr1,sy_pmraerr2,sy_pmdec,sy_pmdecerr1,sy_pmdecerr2,sy_pm,sy_pm_reflink,hd_name,hip_name,tic_id,gaia_dr3_id,pl_radj,pl_bmassj from pscomppars ;; select pl_name,hostname,default_flag,soltype,pl_refname,st_refname,sy_refname,pl_pubdate,releasedate,rowupdate from ps where default_flag=1 ;; select count(*) as n from ps where default_flag=1",
+   "version": "live archive state at retrieval (latest PS default-row release date 2026-10-15; 6451 confirmed planets = count(*) from ps where default_flag=1)",
+   "retrieved": "2026-10-16T18:28:50.774Z",
+   "license": "No explicit licence is published by the NASA Exoplanet Archive. The data are publicly and freely accessible (NASA-funded archive operated by Caltech/IPAC); the archive requests its standard acknowledgement, citation of Christiansen et al. (2025) and the table DOIs, and credit to the original literature references (linked per parameter in references.json). No redistribution restriction is documented; this snapshot is redistributed unmodified in value for non-commercial educational display with full attribution.",
+   "licenseUrl": "https://exoplanetarchive.ipac.caltech.edu/docs/acknowledge.html",
+   "citation": "This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program. Please cite Christiansen, J. L., et al. 2025, \"The NASA Exoplanet Archive and Exoplanet Follow-up Observing Program: Data, Tools, and Usage\", Planetary Science Journal, 6, 186, doi:10.3847/PSJ/ade3c2; PSCompPars doi:10.26133/NEA13; PS doi:10.26133/NEA12; and credit the original literature references listed in references.json.",
+   "rateLimits": "Not documented by the archive (TAP documentation states no limit). This pipeline makes 8 TAP sync requests per refresh, >= 1.5 s apart, with User-Agent identification.",
+   "fieldsUsed": [
+    "pscomppars.pl_name",
+    "pscomppars.pl_letter",
+    "pscomppars.hostname",
+    "pscomppars.sy_snum",
+    "pscomppars.sy_pnum",
+    "pscomppars.sy_mnum",
+    "pscomppars.cb_flag",
+    "pscomppars.pl_controv_flag",
+    "pscomppars.discoverymethod",
+    "pscomppars.disc_year",
+    "pscomppars.disc_facility",
+    "pscomppars.disc_refname",
+    "pscomppars.pl_orbper",
+    "pscomppars.pl_orbpererr1",
+    "pscomppars.pl_orbpererr2",
+    "pscomppars.pl_orbperlim",
+    "pscomppars.pl_orbper_reflink",
+    "pscomppars.pl_orbsmax",
+    "pscomppars.pl_orbsmaxerr1",
+    "pscomppars.pl_orbsmaxerr2",
+    "pscomppars.pl_orbsmaxlim",
+    "pscomppars.pl_orbsmax_reflink",
+    "pscomppars.pl_orbeccen",
+    "pscomppars.pl_orbeccenerr1",
+    "pscomppars.pl_orbeccenerr2",
+    "pscomppars.pl_orbeccenlim",
+    "pscomppars.pl_orbeccen_reflink",
+    "pscomppars.pl_orbincl",
+    "pscomppars.pl_orbinclerr1",
+    "pscomppars.pl_orbinclerr2",
+    "pscomppars.pl_orbincllim",
+    "pscomppars.pl_orbincl_reflink",
+    "pscomppars.pl_orblper",
+    "pscomppars.pl_orblpererr1",
+    "pscomppars.pl_orblpererr2",
+    "pscomppars.pl_orblperlim",
+    "pscomppars.pl_orblper_reflink",
+    "pscomppars.pl_tranmid",
+    "pscomppars.pl_tranmiderr1",
+    "pscomppars.pl_tranmiderr2",
+    "pscomppars.pl_tranmidlim",
+    "pscomppars.pl_tranmid_reflink",
+    "pscomppars.pl_rade",
+    "pscomppars.pl_radeerr1",
+    "pscomppars.pl_radeerr2",
+    "pscomppars.pl_radelim",
+    "pscomppars.pl_rade_reflink",
+    "pscomppars.pl_bmasse",
+    "pscomppars.pl_bmasseerr1",
+    "pscomppars.pl_bmasseerr2",
+    "pscomppars.pl_bmasselim",
+    "pscomppars.pl_bmasse_reflink",
+    "pscomppars.pl_dens",
+    "pscomppars.pl_denserr1",
+    "pscomppars.pl_denserr2",
+    "pscomppars.pl_denslim",
+    "pscomppars.pl_dens_reflink",
+    "pscomppars.pl_insol",
+    "pscomppars.pl_insolerr1",
+    "pscomppars.pl_insolerr2",
+    "pscomppars.pl_insollim",
+    "pscomppars.pl_insol_reflink",
+    "pscomppars.pl_eqt",
+    "pscomppars.pl_eqterr1",
+    "pscomppars.pl_eqterr2",
+    "pscomppars.pl_eqtlim",
+    "pscomppars.pl_eqt_reflink",
+    "pscomppars.st_teff",
+    "pscomppars.st_tefferr1",
+    "pscomppars.st_tefferr2",
+    "pscomppars.st_tefflim",
+    "pscomppars.st_teff_reflink",
+    "pscomppars.st_rad",
+    "pscomppars.st_raderr1",
+    "pscomppars.st_raderr2",
+    "pscomppars.st_radlim",
+    "pscomppars.st_rad_reflink",
+    "pscomppars.st_mass",
+    "pscomppars.st_masserr1",
+    "pscomppars.st_masserr2",
+    "pscomppars.st_masslim",
+    "pscomppars.st_mass_reflink",
+    "pscomppars.st_lum",
+    "pscomppars.st_lumerr1",
+    "pscomppars.st_lumerr2",
+    "pscomppars.st_lumlim",
+    "pscomppars.st_lum_reflink",
+    "pscomppars.st_met",
+    "pscomppars.st_meterr1",
+    "pscomppars.st_meterr2",
+    "pscomppars.st_metlim",
+    "pscomppars.st_met_reflink",
+    "pscomppars.st_age",
+    "pscomppars.st_ageerr1",
+    "pscomppars.st_ageerr2",
+    "pscomppars.st_agelim",
+    "pscomppars.st_age_reflink",
+    "pscomppars.st_logg",
+    "pscomppars.st_loggerr1",
+    "pscomppars.st_loggerr2",
+    "pscomppars.st_logglim",
+    "pscomppars.st_logg_reflink",
+    "pscomppars.sy_dist",
+    "pscomppars.sy_disterr1",
+    "pscomppars.sy_disterr2",
+    "pscomppars.sy_dist_reflink",
+    "pscomppars.sy_vmag",
+    "pscomppars.sy_vmagerr1",
+    "pscomppars.sy_vmagerr2",
+    "pscomppars.sy_vmag_reflink",
+    "pscomppars.sy_kmag",
+    "pscomppars.sy_kmagerr1",
+    "pscomppars.sy_kmagerr2",
+    "pscomppars.sy_kmag_reflink",
+    "pscomppars.pl_tranmid_systemref",
+    "pscomppars.pl_bmassprov",
+    "pscomppars.st_spectype",
+    "pscomppars.st_spectype_reflink",
+    "pscomppars.st_metratio",
+    "pscomppars.ra",
+    "pscomppars.dec",
+    "pscomppars.ra_reflink",
+    "pscomppars.hd_name",
+    "pscomppars.hip_name",
+    "pscomppars.gaia_dr3_id",
+    "ps.pl_name",
+    "ps.hostname",
+    "ps.default_flag",
+    "ps.soltype",
+    "ps.pl_refname",
+    "ps.st_refname",
+    "ps.sy_refname",
+    "ps.pl_pubdate",
+    "ps.releasedate",
+    "ps.rowupdate"
+   ],
+   "updateCadence": "Archive is updated weekly (Thursday news/update cycle); this snapshot is refreshed on demand with `node scripts/data/exoplanets/run.mjs --refresh`",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/exoplanets/build.mjs",
+   "fallback": "If planets.json is missing or invalid: hide the exoplanet layer and catalogue presets of the habitability lab and show \"exoplanet catalogue unavailable\"; the lab may still run on user-entered parameters labelled illustrative. Never substitute invented values.",
+   "files": [
+    {
+     "path": "data/exoplanets/planets.json",
+     "bytes": 4583641,
+     "records": 6451
+    },
+    {
+     "path": "data/exoplanets/references.json",
+     "bytes": 305975,
+     "records": 2456
+    }
+   ],
+   "limitations": "Composite table: a planet's parameters may come from different references and need not be self-consistent (use the PS table for a single consistent solution). pl_eqt assumptions (Bond albedo, heat redistribution) differ by reference: 1090 values were calculated by the archive (zero albedo, full redistribution, no uncertainties), others come from papers or catalogues such as the Kepler DR25 KOI table. 3035 masses (pl_bmassprov = 'M-R relationship') are archive estimates from the Chen & Kipping (2017) mass-radius relation, not measurements; pl_bmasse may be a minimum mass (Msini). Archive-calculated values carry no uncertainties. Positions are ICRS at the source epoch (J2015.5 for TIC v8), not propagated. pl_tranmid time standards vary (see pl_tranmid_systemref). Limit-flag semantics (1 = upper limit, -1 = lower limit) were verified empirically (archive docs do not state them); one row carries an undocumented pl_denslim value of 9.",
+   "provenanceClass": "observed",
+   "domain": "exoplanets"
+  },
+  "exoplanets-host-systems": {
+   "id": "exoplanets-host-systems",
+   "name": "Exoplanet host systems (one record per host star) derived from the PSCompPars snapshot",
+   "organization": "Derived by the Cosmos/AstroNexus project from NASA Exoplanet Archive data (Caltech/IPAC)",
+   "purpose": "Place exoplanet host stars in the 3D star field (ICRS Cartesian parsecs), host-level stellar parameters for system views and the habitability lab, and the index of each host's planets in planets.json.",
+   "mechanism": "Offline aggregation of the PSCompPars snapshot by hostname + spherical-to-Cartesian conversion (x = d cos(dec) cos(ra), y = d cos(dec) sin(ra), z = d sin(dec))",
+   "endpoint": "https://exoplanetarchive.ipac.caltech.edu/TAP/sync",
+   "query": "select pl_name,pl_letter,hostname,sy_snum,sy_pnum,sy_mnum,cb_flag,pl_controv_flag,discoverymethod,disc_year,disc_facility,disc_refname,pl_orbper,pl_orbpererr1,pl_orbpererr2,pl_orbperlim,pl_orbper_reflink,pl_orbsmax,pl_orbsmaxerr1,pl_orbsmaxerr2,pl_orbsmaxlim,pl_orbsmax_reflink,pl_orbeccen,pl_orbeccenerr1,pl_orbeccenerr2,pl_orbeccenlim,pl_orbeccen_reflink,pl_orbincl,pl_orbinclerr1,pl_orbinclerr2,pl_orbincllim,pl_orbincl_reflink,pl_orblper,pl_orblpererr1,pl_orblpererr2,pl_orblperlim,pl_orblper_reflink,pl_tranmid,pl_tranmiderr1,pl_tranmiderr2,pl_tranmidlim,pl_tranmid_reflink,pl_rade,pl_radeerr1,pl_radeerr2,pl_radelim,pl_rade_reflink,pl_bmasse,pl_bmasseerr1,pl_bmasseerr2,pl_bmasselim,pl_bmasse_reflink,pl_dens,pl_denserr1,pl_denserr2,pl_denslim,pl_dens_reflink,pl_insol,pl_insolerr1,pl_insolerr2,pl_insollim,pl_insol_reflink,pl_eqt,pl_eqterr1,pl_eqterr2,pl_eqtlim,pl_eqt_reflink,st_teff,st_tefferr1,st_tefferr2,st_tefflim,st_teff_reflink,st_rad,st_raderr1,st_raderr2,st_radlim,st_rad_reflink,st_mass,st_masserr1,st_masserr2,st_masslim,st_mass_reflink,st_lum,st_lumerr1,st_lumerr2,st_lumlim,st_lum_reflink,st_met,st_meterr1,st_meterr2,st_metlim,st_met_reflink,st_age,st_ageerr1,st_ageerr2,st_agelim,st_age_reflink,st_logg,st_loggerr1,st_loggerr2,st_logglim,st_logg_reflink,sy_dist,sy_disterr1,sy_disterr2,sy_dist_reflink,sy_plx,sy_plxerr1,sy_plxerr2,sy_plx_reflink,sy_vmag,sy_vmagerr1,sy_vmagerr2,sy_vmag_reflink,sy_kmag,sy_kmagerr1,sy_kmagerr2,sy_kmag_reflink,sy_gaiamag,sy_gaiamagerr1,sy_gaiamagerr2,sy_gaiamag_reflink,pl_tranmid_systemref,pl_bmassprov,st_spectype,st_spectype_reflink,st_metratio,ra,dec,ra_reflink,sy_pmra,sy_pmraerr1,sy_pmraerr2,sy_pmdec,sy_pmdecerr1,sy_pmdecerr2,sy_pm,sy_pm_reflink,hd_name,hip_name,tic_id,gaia_dr3_id,pl_radj,pl_bmassj from pscomppars",
+   "version": "derived from the PSCompPars snapshot retrieved 2026-10-16T18:28:50.774Z",
+   "retrieved": "2026-10-16T18:28:50.774Z",
+   "license": "No explicit licence is published by the NASA Exoplanet Archive. The data are publicly and freely accessible (NASA-funded archive operated by Caltech/IPAC); the archive requests its standard acknowledgement, citation of Christiansen et al. (2025) and the table DOIs, and credit to the original literature references (linked per parameter in references.json). No redistribution restriction is documented; this snapshot is redistributed unmodified in value for non-commercial educational display with full attribution.",
+   "licenseUrl": "https://exoplanetarchive.ipac.caltech.edu/docs/acknowledge.html",
+   "citation": "This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program. Please cite Christiansen, J. L., et al. 2025, \"The NASA Exoplanet Archive and Exoplanet Follow-up Observing Program: Data, Tools, and Usage\", Planetary Science Journal, 6, 186, doi:10.3847/PSJ/ade3c2; PSCompPars doi:10.26133/NEA13; PS doi:10.26133/NEA12; and credit the original literature references listed in references.json.",
+   "rateLimits": "Not documented by the archive (TAP documentation states no limit). This pipeline makes 8 TAP sync requests per refresh, >= 1.5 s apart, with User-Agent identification.",
+   "fieldsUsed": [
+    "pscomppars.hostname",
+    "pscomppars.ra",
+    "pscomppars.dec",
+    "pscomppars.ra_reflink",
+    "pscomppars.sy_dist",
+    "pscomppars.sy_disterr1",
+    "pscomppars.sy_disterr2",
+    "pscomppars.sy_dist_reflink",
+    "pscomppars.sy_vmag",
+    "pscomppars.sy_vmagerr1",
+    "pscomppars.sy_vmagerr2",
+    "pscomppars.sy_vmag_reflink",
+    "pscomppars.sy_kmag",
+    "pscomppars.sy_kmagerr1",
+    "pscomppars.sy_kmagerr2",
+    "pscomppars.sy_kmag_reflink",
+    "pscomppars.st_spectype",
+    "pscomppars.st_spectype_reflink",
+    "pscomppars.st_teff",
+    "pscomppars.st_tefferr1",
+    "pscomppars.st_tefferr2",
+    "pscomppars.st_tefflim",
+    "pscomppars.st_teff_reflink",
+    "pscomppars.st_rad",
+    "pscomppars.st_raderr1",
+    "pscomppars.st_raderr2",
+    "pscomppars.st_radlim",
+    "pscomppars.st_rad_reflink",
+    "pscomppars.st_mass",
+    "pscomppars.st_masserr1",
+    "pscomppars.st_masserr2",
+    "pscomppars.st_masslim",
+    "pscomppars.st_mass_reflink",
+    "pscomppars.st_lum",
+    "pscomppars.st_lumerr1",
+    "pscomppars.st_lumerr2",
+    "pscomppars.st_lumlim",
+    "pscomppars.st_lum_reflink",
+    "pscomppars.st_met",
+    "pscomppars.st_meterr1",
+    "pscomppars.st_meterr2",
+    "pscomppars.st_metlim",
+    "pscomppars.st_met_reflink",
+    "pscomppars.st_age",
+    "pscomppars.st_ageerr1",
+    "pscomppars.st_ageerr2",
+    "pscomppars.st_agelim",
+    "pscomppars.st_age_reflink",
+    "pscomppars.st_logg",
+    "pscomppars.st_loggerr1",
+    "pscomppars.st_loggerr2",
+    "pscomppars.st_logglim",
+    "pscomppars.st_logg_reflink",
+    "pscomppars.st_metratio",
+    "pscomppars.hd_name",
+    "pscomppars.hip_name",
+    "pscomppars.gaia_dr3_id",
+    "pscomppars.sy_snum",
+    "pscomppars.sy_pnum",
+    "pscomppars.sy_mnum"
+   ],
+   "updateCadence": "Regenerated whenever planets.json is rebuilt",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/exoplanets/build.mjs",
+   "fallback": "If systems.json is missing: hosts can be rebuilt client-side by grouping planets.json rows on hostname and converting ra/dec/sy_dist; if both files are missing hide the exoplanet layer.",
+   "files": [
+    {
+     "path": "data/exoplanets/systems.json",
+     "bytes": 1885428,
+     "records": 4847
+    }
+   ],
+   "limitations": "xPc/yPc/zPc are derived (not observed) and inherit the archive distance uncertainties; 28 hosts have no distance (null coordinates). Host stellar values follow a documented selection rule because composite rows of the same host can disagree (222 hosts; listed per host in stVarying). Positions are at the source epoch (posEpochJyr), not propagated. Distances for microlensing hosts are model-dependent with large uncertainties.",
+   "provenanceClass": "derived",
+   "domain": "exoplanets"
+  },
+  "ungc-local-volume": {
+   "retrieved": "2026-10-18T19:16:37.982Z",
+   "provenanceClass": "observed",
+   "id": "ungc-local-volume",
+   "name": "Updated Nearby Galaxy Catalog (UNGC)",
+   "organization": "Karachentsev, Makarov & Kaisina (SAO RAS) via CDS VizieR",
+   "purpose": "Local-volume galaxy impostors (~11 Mpc) with positions, distances, sizes, inclinations, velocities",
+   "mechanism": "VizieR ASU TSV (J/AJ/145/101/catalog) -> JSON table",
+   "endpoint": "https://vizier.cds.unistra.fr/viz-bin/asu-tsv",
+   "query": "-source=J/AJ/145/101/catalog&-out.add=_RAJ,_DEJ&-oc.form=d&-out=Name,a26,Bmag,Kmag,W50,TT,Mcl,Tdw,HRV,Dist,A26,i,M26,MHI,l_MHI,Vlg,Ti1,SimbadName,NEDname&-out.max=unlimited",
+   "version": "J/AJ/145/101 (Karachentsev et al. 2013)",
+   "license": "CDS VizieR catalogue data: free scientific use with acknowledgement of the original paper and CDS.",
+   "licenseUrl": "https://cds.unistra.fr/vizier-org/licences_vizier.html",
+   "citation": "Karachentsev, Makarov & Kaisina 2013, AJ 145, 101; data via VizieR (Ochsenbein et al. 2000, A&AS 143, 23).",
+   "rateLimits": "not documented (queried once, cached)",
+   "fieldsUsed": [
+    "Name",
+    "RAJ2000",
+    "DEJ2000",
+    "a26",
+    "Bmag",
+    "Kmag",
+    "W50",
+    "TT",
+    "Mcl",
+    "HRV",
+    "Dist",
+    "A26",
+    "i",
+    "M26",
+    "MHI",
+    "Vlg",
+    "Ti1",
+    "SimbadName",
+    "NEDname"
+   ],
+   "updateCadence": "static (published 2013)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/galaxies/fetch-local.mjs",
+   "fallback": "Render only the famous.json galaxies",
+   "files": [
+    {
+     "path": "data/galaxies/local.json",
+     "bytes": 103559,
+     "records": 869
+    }
+   ],
+   "limitations": "Distances have heterogeneous methods (TRGB, Cepheids, SBF, Tully-Fisher, velocity) and no per-object error in this table; absMagB derived from apparent B without extinction correction; logMstar assumes M/L_K=0.6 (illustrative); no group membership (tidalIndex only).",
+   "domain": "galaxies"
+  },
+  "galaxies-famous-curated": {
+   "retrieved": "2026-10-18T19:19:59.527Z",
+   "provenanceClass": "observed",
+   "id": "galaxies-famous-curated",
+   "name": "Curated famous galaxies",
+   "organization": "Cosmos project (literature compilation)",
+   "purpose": "Orientation, size and distance for the rich procedural reconstructions",
+   "mechanism": "hand-entered literature values; UNGC positions where available",
+   "endpoint": "literature (per-row references in the file)",
+   "query": null,
+   "version": "compiled 2026-10",
+   "license": "Facts from published papers, cited per row; compilation CC0.",
+   "licenseUrl": null,
+   "citation": "See distRef / orientationRef / bhRef per row (McConnachie 2012; Karachentsev+2013; Pietrzynski+2019; EHT 2019; others).",
+   "rateLimits": "n/a",
+   "fieldsUsed": [],
+   "updateCadence": "static",
+   "cachePolicy": "bundled",
+   "normalization": "scripts/data/galaxies/build-curated.mjs",
+   "fallback": "use local.json rows",
+   "files": [
+    {
+     "path": "data/galaxies/famous.json",
+     "bytes": 8747,
+     "records": 37
+    }
+   ],
+   "limitations": "Inclination/PA are single literature values (mixed methods); null where not reliably known. Not re-verified against the original papers in this run beyond recall - treat as best-effort.",
+   "domain": "galaxies"
+  },
+  "galaxies-structures-curated": {
+   "retrieved": "2026-10-18T19:19:59.527Z",
+   "provenanceClass": "derived",
+   "id": "galaxies-structures-curated",
+   "name": "Groups, clusters, superclusters and voids",
+   "organization": "Cosmos project (literature compilation)",
+   "purpose": "Labels for large-scale structure at multiple scales",
+   "mechanism": "hand-entered literature values",
+   "endpoint": "literature (refs per row)",
+   "query": null,
+   "version": "compiled 2026-10",
+   "license": "Facts from published papers, cited per row; compilation CC0.",
+   "licenseUrl": null,
+   "citation": "See refs per row (Abell 1958; Tully+2014; Kraan-Korteweg+1996; Geller & Huchra 1989; Gott+2005; ...)",
+   "rateLimits": "n/a",
+   "fieldsUsed": [],
+   "updateCadence": "static",
+   "cachePolicy": "bundled",
+   "normalization": "scripts/data/galaxies/build-curated.mjs",
+   "fallback": "hide labels",
+   "files": [
+    {
+     "path": "data/galaxies/structures.json",
+     "bytes": 5114,
+     "records": 19
+    }
+   ],
+   "limitations": "Centres of voids, superclusters and walls are approximate (positionQuality=\"approximate\"); membership counts are indicative. Distances from redshift use the Planck18 comoving distance.",
+   "domain": "galaxies"
+  },
+  "galaxies-2mrs": {
+   "retrieved": "2026-10-17T06:19:11.337Z",
+   "provenanceClass": "observed",
+   "id": "galaxies-2mrs",
+   "name": "2MASS Redshift Survey (2MRS)",
+   "organization": "Huchra et al. (CfA/2MASS) via CDS VizieR",
+   "purpose": "Local cosmic-web point cloud (z<~0.1)",
+   "mechanism": "VizieR ASU TSV (J/ApJS/199/26/table3) -> comoving Cartesian Float32",
+   "endpoint": "https://vizier.cds.unistra.fr/viz-bin/asu-tsv",
+   "query": "-source=J/ApJS/199/26/table3&-out=ID,GLON,GLAT,Kcmag,e_Kcmag,Ktmag,type,cz,e_cz,n_cz,r_cz&-out.max=unlimited",
+   "version": "J/ApJS/199/26",
+   "license": "CDS VizieR catalogue data: free scientific use with acknowledgement of the original paper and CDS.",
+   "licenseUrl": "https://cds.unistra.fr/vizier-org/licences_vizier.html",
+   "citation": "Huchra et al. 2012, ApJS 199, 26; Skrutskie et al. 2006 (2MASS); data via VizieR.",
+   "rateLimits": "not documented (queried once, cached)",
+   "fieldsUsed": [
+    "ID",
+    "GLON",
+    "GLAT",
+    "Kcmag",
+    "Ktmag",
+    "cz"
+   ],
+   "updateCadence": "static",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/galaxies/fetch-2mrs.mjs",
+   "fallback": "use the deep DESI sample only",
+   "files": [
+    {
+     "path": "data/galaxies/cosmicweb-2mrs.bin",
+     "bytes": 870160,
+     "records": 43508
+    },
+    {
+     "path": "data/galaxies/cosmicweb-2mrs.json",
+     "bytes": 4736
+    },
+    {
+     "path": "data/galaxies/cosmicweb-2mrs-meta.json",
+     "bytes": 1526494
+    }
+   ],
+   "limitations": "Zone of Avoidance (|b|<5 deg) empty; redshift-space distortions (fingers of God); distances from CMB-frame redshift, unreliable below z~0.003 (peculiar velocities); magnitude-limited (Ks<=11.75).",
+   "domain": "galaxies"
+  },
+  "galaxies-desi-dr1-bgs": {
+   "retrieved": "2026-10-17T06:38:00Z",
+   "provenanceClass": "observed",
+   "id": "galaxies-desi-dr1-bgs",
+   "name": "DESI DR1 BGS Bright clustering catalogue (sampled)",
+   "organization": "DESI Collaboration / NOIRLab-LBNL",
+   "purpose": "Deep cosmic-web reveal (0.01<z<0.6, ~1.8 M galaxies)",
+   "mechanism": "HTTP download of LSS clustering .dat FITS (NGC+SGC) -> comoving Cartesian Float32, random subsample",
+   "endpoint": "https://data.desi.lbl.gov/public/dr1/survey/catalogs/dr1/LSS/iron/LSScats/v1.5/",
+   "query": "BGS_BRIGHT_{NGC,SGC}_clustering.dat.fits columns RA,DEC,Z,flux_{g,r,z}_dered",
+   "version": "DESI DR1 (iron) LSS catalogs v1.5",
+   "license": "DESI DR1 public data: Creative Commons Attribution 4.0 (CC BY 4.0) per the DESI DR1 data-release terms (https://data.desi.lbl.gov/doc/acknowledgments/); acknowledge DESI as requested.",
+   "licenseUrl": "https://data.desi.lbl.gov/doc/acknowledgments/",
+   "citation": "DESI Collaboration et al. 2026, AJ 171, 285 (Data Release 1 of DESI); Ross et al. 2025, JCAP 01, 125. This research used data obtained with the Dark Energy Spectroscopic Instrument (DESI); see https://data.desi.lbl.gov/doc/acknowledgments/.",
+   "rateLimits": "not documented (4 files downloaded, SHA-256 verified)",
+   "fieldsUsed": [
+    "RA",
+    "DEC",
+    "Z",
+    "flux_g_dered",
+    "flux_r_dered",
+    "flux_z_dered"
+   ],
+   "updateCadence": "per data release",
+   "cachePolicy": "versioned offline snapshot",
+   "normalization": "scripts/data/galaxies/fetch-desi.mjs",
+   "fallback": "use 2MRS cloud",
+   "files": [
+    {
+     "path": "data/galaxies/cosmicweb-deep.bin",
+     "bytes": 36000000,
+     "records": 1800000
+    },
+    {
+     "path": "data/galaxies/cosmicweb-deep.json",
+     "bytes": 9351
+    }
+   ],
+   "limitations": "Partial sky (two caps -> wedges); clustering weights/completeness not applied; random subsample 45.5%; redshift-space distortions; BGS colour field is g-r AB (see header).",
+   "domain": "galaxies"
+  },
+  "galaxies-desi-dr1-lrg": {
+   "retrieved": "2026-10-17T06:39:00Z",
+   "provenanceClass": "observed",
+   "id": "galaxies-desi-dr1-lrg",
+   "name": "DESI DR1 LRG clustering catalogue (sampled)",
+   "organization": "DESI Collaboration / NOIRLab-LBNL",
+   "purpose": "Deeper cosmic-web layer (0.4<z<1.1 luminous red galaxies)",
+   "mechanism": "HTTP download of LSS clustering .dat FITS (NGC+SGC) -> comoving Cartesian Float32, random subsample",
+   "endpoint": "https://data.desi.lbl.gov/public/dr1/survey/catalogs/dr1/LSS/iron/LSScats/v1.5/",
+   "query": "LRG_{NGC,SGC}_clustering.dat.fits columns RA,DEC,Z",
+   "version": "DESI DR1 (iron) LSS catalogs v1.5",
+   "license": "DESI DR1 public data: Creative Commons Attribution 4.0 (CC BY 4.0) per the DESI DR1 data-release terms (https://data.desi.lbl.gov/doc/acknowledgments/); acknowledge DESI as requested.",
+   "licenseUrl": "https://data.desi.lbl.gov/doc/acknowledgments/",
+   "citation": "DESI Collaboration et al. 2026, AJ 171, 285 (Data Release 1 of DESI); Ross et al. 2025, JCAP 01, 125. This research used data obtained with the Dark Energy Spectroscopic Instrument (DESI); see https://data.desi.lbl.gov/doc/acknowledgments/.",
+   "rateLimits": "not documented",
+   "fieldsUsed": [
+    "RA",
+    "DEC",
+    "Z"
+   ],
+   "updateCadence": "per data release",
+   "cachePolicy": "versioned offline snapshot",
+   "normalization": "scripts/data/galaxies/fetch-desi.mjs",
+   "fallback": "omit layer",
+   "files": [
+    {
+     "path": "data/galaxies/cosmicweb-deep-lrg.bin",
+     "bytes": 6400000,
+     "records": 400000
+    },
+    {
+     "path": "data/galaxies/cosmicweb-deep-lrg.json",
+     "bytes": 8859
+    }
+   ],
+   "limitations": "Partial sky; weights not applied; random subsample 18.7%.",
+   "domain": "galaxies"
+  },
+  "celestrak-gp-omm": {
+   "id": "celestrak-gp-omm",
+   "name": "CelesTrak GP mean element sets (CCSDS OMM keywords, CSV): published groups, special data sets and NAME searches",
+   "organization": "CelesTrak (T.S. Kelso); data from U.S. Space Force 18th/19th Space Defense Squadrons via Space-Track.org",
+   "purpose": "SGP4 mean elements for every tracked on-orbit object rendered and propagated in the Earth orbital-environment layer; CelesTrak group memberships for filters (stations, constellations, GNSS, GEO, debris clouds, ...).",
+   "mechanism": "HTTPS GET gp.php?{GROUP|SPECIAL|NAME}=...&FORMAT=CSV (OMM keywords, 9-digit-safe) -> merged by NORAD_CAT_ID (latest EPOCH wins, group tags unioned) -> catalog.json rows with elementSource=\"celestrak-gp\".",
+   "endpoint": "https://celestrak.org/NORAD/elements/gp.php",
+   "query": "GROUP={active,fengyun-1c-debris,cosmos-2251-debris,iridium-33-debris,analyst,last-30-days,stations,visual,weather,resource,sar,sarsat,dmc,tdrss,argos,planet,spire,geo,intelsat,ses,eutelsat,telesat,oneweb,qianfan,hulianwang,kuiper,iridium-NEXT,orbcomm,globalstar,amateur,satnogs,x-comm,other-comm,gnss,gps-ops,glo-ops,galileo,beidou,sbas,science,geodetic,engineering,education,military,radar,cubesat}&FORMAT=CSV (46 requests); SPECIAL={GPZ,GPZ-PLUS,DECAYING}&FORMAT=CSV; NAME=DEB&FORMAT=CSV; NAME=R/B&FORMAT=CSV. Starlink group intentionally not downloaded (subset of active per CelesTrak).",
+   "version": "live archive state at retrieval (GP downloads 2026-10-16T18:29:34.217Z .. 2026-10-17T06:50:38.227Z; CelesTrak GP update cycle current as of 2026-10-16 18:05:42 UTC)",
+   "retrieved": "2026-10-17T06:50:38.227Z",
+   "license": "No formal open-data licence. CelesTrak makes the data freely available to all users subject to its usage policy (https://celestrak.org/usage-policy.php). The GP/OMM element sets and SATCAT are \"basic SSA data\" originating from USSPACECOM (U.S. Space Force 18th/19th Space Defense Squadrons) via Space-Track.org, for which USSPACECOM grants \"express blanket approval for transfer/redistribution of basic SSA data ... conditioned on appropriate citation\" (Space-Track User Agreement, section \"Redistribution of Basic SSA Information\").",
+   "licenseUrl": "https://celestrak.org/usage-policy.php",
+   "citation": "Orbital data: CelesTrak (Dr T.S. Kelso, https://celestrak.org) - GP element sets and SATCAT; source data: U.S. Space Force 18th & 19th Space Defense Squadrons / USSPACECOM via Space-Track.org.",
+   "rateLimits": "CelesTrak usage policy (2026-05-22): download each data set at most once per update (GP every 2 h, SupGP 2 h, SATCAT 1-2x per day); since 2026-03-26 a repeat request for GP Active/Starlink before the next update returns HTTP 403; stop querying on any non-200 (301/403/404/5xx); >50 HTTP errors in 2 h or >100 MB/day may get the IP firewalled; directory/query pages at most once per hour. No per-second limit documented (this pipeline waits 2.5 s between requests).",
+   "fieldsUsed": [
+    "OBJECT_NAME",
+    "OBJECT_ID",
+    "EPOCH",
+    "MEAN_MOTION",
+    "ECCENTRICITY",
+    "INCLINATION",
+    "RA_OF_ASC_NODE",
+    "ARG_OF_PERICENTER",
+    "MEAN_ANOMALY",
+    "NORAD_CAT_ID",
+    "BSTAR",
+    "MEAN_MOTION_DOT",
+    "MEAN_MOTION_DDOT",
+    "EPHEMERIS_TYPE",
+    "CLASSIFICATION_TYPE"
+   ],
+   "updateCadence": "Upstream refresh every 2 h. Cosmos snapshot refreshed manually: node scripts/data/orbital/fetch.mjs --refresh && node scripts/data/orbital/build.mjs (never more than once per upstream update).",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/orbital/build.mjs",
+   "fallback": "If catalog.json is missing or fails to parse, hide the orbital-object layer and show \"orbital catalog unavailable\" (never synthesize objects). Per object: hasElements=false -> render from SATCAT shape with illustrative phase and label it reconstructed; elementSource=null -> list only, do not render.",
+   "files": [
+    {
+     "path": "data/orbital/catalog.json",
+     "bytes": 9106711,
+     "records": 35652
+    }
+   ],
+   "limitations": "GP elements are SGP4 mean elements (TEME, UTC epochs) with ~1 km accuracy at epoch degrading by km/day; ages differ per object (median 1.14 d at retrieval). 3813 of 35652 on-orbit objects have no public GP in the downloaded sets (no group covers inactive payloads; ~800 objects are NEA \"no elements available\", e.g. classified; others have no current GP at CelesTrak) and fall back to SATCAT shape. 594 analyst objects (uncorrelated tracks, numbers 8xxxx / 2xxxxx) are included as class \"unknown\". The tracked catalogue (~10 cm LEO / ~1 m GEO detection limits) is a small fraction of the real debris population (ESA MASTER-8: ~1.5 million objects 1-10 cm).",
+   "provenanceClass": "observed",
+   "domain": "orbital"
+  },
+  "celestrak-satcat": {
+   "id": "celestrak-satcat",
+   "name": "CelesTrak Satellite Catalog (SATCAT), full CSV",
+   "organization": "CelesTrak (T.S. Kelso); catalog maintained by U.S. Space Force 18th SDS, with CelesTrak corrections",
+   "purpose": "Authoritative list of on-orbit objects (no decay date, Earth-centred): object class, owner, launch date/site, RCS, operational status, docking; orbit shape (apogee/perigee/inclination/period) for objects without GP elements; population statistics by class/regime/altitude shell.",
+   "mechanism": "HTTPS GET of the static full-catalog CSV -> filter DECAY_DATE empty and ORBIT_CENTER = EA (or docked to an Earth-orbiting host) -> joined with GP by NORAD_CAT_ID.",
+   "endpoint": "https://celestrak.org/pub/satcat.csv",
+   "query": null,
+   "version": "SATCAT file Last-Modified 2026-10-15T20:56:28.000Z (71073 records incl. decayed; official catalog then at 101074)",
+   "retrieved": "2026-10-16T18:29:27.616Z",
+   "license": "No formal open-data licence. CelesTrak makes the data freely available to all users subject to its usage policy (https://celestrak.org/usage-policy.php). The GP/OMM element sets and SATCAT are \"basic SSA data\" originating from USSPACECOM (U.S. Space Force 18th/19th Space Defense Squadrons) via Space-Track.org, for which USSPACECOM grants \"express blanket approval for transfer/redistribution of basic SSA data ... conditioned on appropriate citation\" (Space-Track User Agreement, section \"Redistribution of Basic SSA Information\").",
+   "licenseUrl": "https://celestrak.org/usage-policy.php",
+   "citation": "Orbital data: CelesTrak (Dr T.S. Kelso, https://celestrak.org) - GP element sets and SATCAT; source data: U.S. Space Force 18th & 19th Space Defense Squadrons / USSPACECOM via Space-Track.org.",
+   "rateLimits": "CelesTrak usage policy (2026-05-22): download each data set at most once per update (GP every 2 h, SupGP 2 h, SATCAT 1-2x per day); since 2026-03-26 a repeat request for GP Active/Starlink before the next update returns HTTP 403; stop querying on any non-200 (301/403/404/5xx); >50 HTTP errors in 2 h or >100 MB/day may get the IP firewalled; directory/query pages at most once per hour. No per-second limit documented (this pipeline waits 2.5 s between requests).",
+   "fieldsUsed": [
+    "OBJECT_NAME",
+    "OBJECT_ID",
+    "NORAD_CAT_ID",
+    "OBJECT_TYPE",
+    "OPS_STATUS_CODE",
+    "OWNER",
+    "LAUNCH_DATE",
+    "LAUNCH_SITE",
+    "DECAY_DATE",
+    "PERIOD",
+    "INCLINATION",
+    "APOGEE",
+    "PERIGEE",
+    "RCS",
+    "DATA_STATUS_CODE",
+    "ORBIT_CENTER",
+    "ORBIT_TYPE"
+   ],
+   "updateCadence": "Upstream updated manually 1-2x per day; Cosmos snapshot refreshed manually with the GP data.",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/orbital/build.mjs",
+   "fallback": "Without SATCAT the app cannot show owner/class/launch metadata; render GP objects with class from name heuristics only and flag metadata as unavailable.",
+   "files": [
+    {
+     "path": "data/orbital/catalog.json",
+     "bytes": 9106711,
+     "records": 35652
+    },
+    {
+     "path": "data/orbital/summary.json",
+     "bytes": 18938
+    }
+   ],
+   "limitations": "SATCAT apogee/perigee/period/inclination are rounded (km, 0.01 deg/min) and can be stale for objects without current elements. RCS (m^2) is missing for ~58% of on-orbit objects (rcsSize null). OWNER is the SATCAT source code (country/organisation), not necessarily the operator. Analyst objects are not in SATCAT.",
+   "provenanceClass": "observed",
+   "domain": "orbital"
+  },
+  "celestrak-satcat-code-tables": {
+   "id": "celestrak-satcat-code-tables",
+   "name": "CelesTrak SATCAT source (owner) and launch-site code tables",
+   "organization": "CelesTrak (T.S. Kelso)",
+   "purpose": "Human-readable names for SATCAT OWNER and LAUNCH_SITE codes in the inspector and filters.",
+   "mechanism": "HTTPS GET of two HTML pages (no structured version exists) -> two-column table parse -> lookups.json (with locally defined status/class/regime/group-tag tables).",
+   "endpoint": "https://celestrak.org/satcat/sources.php",
+   "query": "https://celestrak.org/satcat/sources.php ; https://celestrak.org/satcat/launchsites.php",
+   "version": "live page state at retrieval",
+   "retrieved": "2026-10-16T18:32:08.175Z",
+   "license": "No formal open-data licence. CelesTrak makes the data freely available to all users subject to its usage policy (https://celestrak.org/usage-policy.php). The GP/OMM element sets and SATCAT are \"basic SSA data\" originating from USSPACECOM (U.S. Space Force 18th/19th Space Defense Squadrons) via Space-Track.org, for which USSPACECOM grants \"express blanket approval for transfer/redistribution of basic SSA data ... conditioned on appropriate citation\" (Space-Track User Agreement, section \"Redistribution of Basic SSA Information\").",
+   "licenseUrl": "https://celestrak.org/usage-policy.php",
+   "citation": "Orbital data: CelesTrak (Dr T.S. Kelso, https://celestrak.org) - GP element sets and SATCAT; source data: U.S. Space Force 18th & 19th Space Defense Squadrons / USSPACECOM via Space-Track.org.",
+   "rateLimits": "CelesTrak usage policy (2026-05-22): download each data set at most once per update (GP every 2 h, SupGP 2 h, SATCAT 1-2x per day); since 2026-03-26 a repeat request for GP Active/Starlink before the next update returns HTTP 403; stop querying on any non-200 (301/403/404/5xx); >50 HTTP errors in 2 h or >100 MB/day may get the IP firewalled; directory/query pages at most once per hour. No per-second limit documented (this pipeline waits 2.5 s between requests).",
+   "fieldsUsed": [
+    "Source Code",
+    "Source Description",
+    "Launch Site Code",
+    "Launch Site Description"
+   ],
+   "updateCadence": "Rarely changes; refresh at most weekly.",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/orbital/build.mjs",
+   "fallback": "Show the raw code (e.g. \"PRC\", \"AFETR\") when a name is missing.",
+   "files": [
+    {
+     "path": "data/orbital/lookups.json",
+     "bytes": 13548,
+     "records": 174
+    }
+   ],
+   "limitations": "Parsed from HTML; text kept as published (including CelesTrak spelling). Some codes used in SATCAT may be absent from the tables.",
+   "provenanceClass": "observed",
+   "domain": "orbital"
+  },
+  "orbital-population-statistics": {
+   "id": "orbital-population-statistics",
+   "name": "Derived on-orbit population statistics (class, regime, 50-km shells, spatial density, notable objects)",
+   "organization": "Cosmos / AstroNexus (derived from CelesTrak GP + SATCAT)",
+   "purpose": "Kessler / debris laboratory: real-catalog shell populations and spatial densities; HUD counts; notable-object shortcuts.",
+   "mechanism": "Computed locally by build.mjs from the catalog rows (no separate download): regime classification, mean-altitude histogram, residence-time-weighted shell occupancy and spatial density; external reference figures (ESA, CelesTrak boxscore) quoted for context.",
+   "endpoint": "https://celestrak.org/pub/satcat.csv",
+   "query": null,
+   "version": "derived from the snapshot of 2026-10-17T06:50:38.227Z",
+   "retrieved": "2026-10-17T06:50:38.227Z",
+   "license": "No formal open-data licence. CelesTrak makes the data freely available to all users subject to its usage policy (https://celestrak.org/usage-policy.php). The GP/OMM element sets and SATCAT are \"basic SSA data\" originating from USSPACECOM (U.S. Space Force 18th/19th Space Defense Squadrons) via Space-Track.org, for which USSPACECOM grants \"express blanket approval for transfer/redistribution of basic SSA data ... conditioned on appropriate citation\" (Space-Track User Agreement, section \"Redistribution of Basic SSA Information\"). Derived statistics: cite as below.",
+   "licenseUrl": "https://celestrak.org/usage-policy.php",
+   "citation": "Orbital data: CelesTrak (Dr T.S. Kelso, https://celestrak.org) - GP element sets and SATCAT; source data: U.S. Space Force 18th & 19th Space Defense Squadrons / USSPACECOM via Space-Track.org. Statistics computed by the Cosmos/AstroNexus project. Context figures: ESA Space Debris Office (sdup.esoc.esa.int/discosweb/statistics, 2026-10-14) and CelesTrak SATCAT boxscore (2026-10-15).",
+   "rateLimits": "not applicable (local computation)",
+   "fieldsUsed": [
+    "objectClass",
+    "isActive",
+    "perigeeKm",
+    "apogeeKm",
+    "inclinationDeg",
+    "groups"
+   ],
+   "updateCadence": "Regenerated with every build.",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/orbital/build.mjs",
+   "fallback": "If summary.json is missing, the app may recompute counts from catalog.json; hide shell-density charts otherwise.",
+   "files": [
+    {
+     "path": "data/orbital/summary.json",
+     "bytes": 18938
+    }
+   ],
+   "limitations": "Shell statistics use mean (not osculating) apsides and a two-body residence-time model; satcat-shape rows use rounded SATCAT apsides. Only the tracked public catalogue is counted (objects >~10 cm in LEO); real densities including untracked debris are far higher.",
+   "provenanceClass": "derived",
+   "domain": "orbital"
+  },
+  "astronomy-engine": {
+   "organization": "Don Cross (open source)",
+   "purpose": "Planet, Sun and Moon positions, body orientation and Earth rotation at any time",
+   "mechanism": "Bundled software / published constants (no data download)",
+   "endpoint": "https://github.com/cosinekitty/astronomy",
+   "query": null,
+   "version": "npm astronomy-engine 2.x",
+   "retrieved": "2026-10-18T00:00:00Z",
+   "license": "MIT",
+   "licenseUrl": "https://github.com/cosinekitty/astronomy/blob/master/LICENSE",
+   "citation": "Cross, D. Astronomy Engine. https://github.com/cosinekitty/astronomy",
+   "rateLimits": "none",
+   "fieldsUsed": [
+    "heliocentric vectors",
+    "rotation axes"
+   ],
+   "updateCadence": "static",
+   "cachePolicy": "bundled with the app",
+   "normalization": "none",
+   "fallback": "none needed (no network access)",
+   "files": [],
+   "limitations": "Truncated VSOP87: arcsecond-level accuracy for planets over several millennia; not a JPL DE ephemeris.",
+   "provenanceClass": "derived",
+   "id": "astronomy-engine",
+   "name": "Astronomy Engine (VSOP87 / ELP / IAU rotation models)",
+   "domain": "references"
+  },
+  "iau-2006-precession": {
+   "organization": "International Astronomical Union (SOFA)",
+   "purpose": "Earth orientation (precession, nutation, sidereal time) for the rotating Earth",
+   "mechanism": "Bundled software / published constants (no data download)",
+   "endpoint": "https://www.iausofa.org/",
+   "query": null,
+   "version": "IAU 2006/2000B",
+   "retrieved": "2026-10-18T00:00:00Z",
+   "license": "Published standard",
+   "licenseUrl": null,
+   "citation": "Capitaine, N., Wallace, P. T. & Chapront, J. 2003, A&A 412, 567; IERS Conventions (2010).",
+   "rateLimits": "none",
+   "fieldsUsed": [
+    "precession angles",
+    "Earth rotation angle"
+   ],
+   "updateCadence": "static",
+   "cachePolicy": "bundled with the app",
+   "normalization": "none",
+   "fallback": "none needed (no network access)",
+   "files": [],
+   "limitations": "No polar motion or UT1-UTC corrections (sub-arcsecond).",
+   "provenanceClass": "derived",
+   "id": "iau-2006-precession",
+   "name": "IAU 2006 precession / IAU 2000B nutation",
+   "domain": "references"
+  },
+  "iau-2015-nominal": {
+   "organization": "International Astronomical Union",
+   "purpose": "Nominal radii and luminosity of the Sun and nominal Earth/Jupiter radii",
+   "mechanism": "Bundled software / published constants (no data download)",
+   "endpoint": "https://www.iau.org/static/resolutions/IAU2015_English.pdf",
+   "query": null,
+   "version": "2015 B3",
+   "retrieved": "2026-10-18T00:00:00Z",
+   "license": "Published standard",
+   "licenseUrl": null,
+   "citation": "Prsa, A. et al. 2016, AJ 152, 41 (IAU 2015 Resolution B3).",
+   "rateLimits": "none",
+   "fieldsUsed": [
+    "R_sun",
+    "L_sun",
+    "R_earth",
+    "R_jupiter"
+   ],
+   "updateCadence": "static",
+   "cachePolicy": "bundled with the app",
+   "normalization": "none",
+   "fallback": "none needed (no network access)",
+   "files": [],
+   "limitations": "Nominal conversion constants, not measurements.",
+   "provenanceClass": "derived",
+   "id": "iau-2015-nominal",
+   "name": "IAU 2015 Resolution B3 nominal solar and planetary constants",
+   "domain": "references"
+  },
+  "ortiz-2017-haumea": {
+   "organization": "Ortiz et al. (Nature)",
+   "purpose": "Haumea triaxial shape and ring",
+   "mechanism": "Bundled software / published constants (no data download)",
+   "endpoint": "https://doi.org/10.1038/nature24051",
+   "query": null,
+   "version": "2017",
+   "retrieved": "2026-10-18T00:00:00Z",
+   "license": "Published literature (values cited)",
+   "licenseUrl": null,
+   "citation": "Ortiz, J. L. et al. 2017, Nature 550, 219-223.",
+   "rateLimits": "none",
+   "fieldsUsed": [
+    "semi-axes",
+    "ring radius"
+   ],
+   "updateCadence": "static",
+   "cachePolicy": "bundled with the app",
+   "normalization": "none",
+   "fallback": "none needed (no network access)",
+   "files": [],
+   "limitations": "Single-occultation solution; later work revises the shape slightly.",
+   "provenanceClass": "observed",
+   "id": "ortiz-2017-haumea",
+   "name": "Haumea size, shape and ring from the 2017 stellar occultation",
+   "domain": "references"
+  },
+  "literature": {
+   "organization": "Various (see reference)",
+   "purpose": "Physical properties not in a machine-readable catalogue (shapes, albedos, rotation)",
+   "mechanism": "Bundled software / published constants (no data download)",
+   "endpoint": "n/a",
+   "query": null,
+   "version": "as cited",
+   "retrieved": "2026-10-18T00:00:00Z",
+   "license": "Published literature (values cited)",
+   "licenseUrl": null,
+   "citation": "See the reference given with each value.",
+   "rateLimits": "none",
+   "fieldsUsed": [
+    "as cited"
+   ],
+   "updateCadence": "static",
+   "cachePolicy": "bundled with the app",
+   "normalization": "none",
+   "fallback": "none needed (no network access)",
+   "files": [],
+   "limitations": "Values transcribed by hand; see each reference.",
+   "provenanceClass": "observed",
+   "id": "literature",
+   "name": "Peer-reviewed literature (cited per value)",
+   "domain": "references"
+  },
+  "sky-visible": {
+   "id": "sky-visible",
+   "name": "Visible light all-sky map — Gaia DR3 colour flux map (integrated starlight of ~1.8 billion Gaia DR3 sources)",
+   "organization": "ESA/Gaia mission/DPAC; HiPS by Boch T. (CDS)",
+   "purpose": "Spectral View Switcher: real 0.33–1.05 µm (Gaia BP / G / RP) all-sky texture for the celestial sphere (not recoloured visible light).",
+   "mechanism": "CDS hips2fits service (HTTP GET, explicit CAR/ICRS WCS JSON) -> JPG -> sharp/Node normalisation -> JPEG/PNG; HiPS discovered via the CDS MocServer",
+   "endpoint": "https://alasky.cds.unistra.fr/hips-image-services/hips2fits",
+   "query": "GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=CDS/P/DM/flux-color-Rp-G-Bp/I/355/gaiadr3&wcs={\"NAXIS\":2,\"NAXIS1\":8192,\"NAXIS2\":4096,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":4096.5,\"CRPIX2\":2048.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.0439453125,\"CDELT2\":0.0439453125,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=jpg",
+   "version": "HiPS CDS/P/DM/flux-color-Rp-G-Bp/I/355/gaiadr3 released 2022-06-16T09:03Z (HiPS standard 1.4); Gaia DR3 colour flux map (integrated starlight of ~1.8 billion Gaia DR3 sources)",
+   "retrieved": "2026-10-18T14:04:35.058Z",
+   "license": "Gaia data: CC BY-NC 3.0 IGO (ESA; non-commercial use with credit \"ESA/Gaia/DPAC\"). HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://www.cosmos.esa.int/web/gaia-users/license",
+   "citation": "ESA/Gaia/DPAC (Gaia DR3, Gaia Collaboration, Vallenari et al. 2023, A&A 674, A1). Colour flux map HiPS: CDS, Université de Strasbourg/CNRS. Gaia Collaboration, Vallenari A. et al. 2023, A&A 674, A1 (Gaia DR3). HiPS: Fernique P. et al. 2015, A&A 578, A114. HiPS: Fernique et al. 2015, A&A 578, A114; reprojection: CDS hips2fits.",
+   "rateLimits": "hips2fits: not documented (max 50 million pixels per image; two independent endpoints alasky/alaskybis); MocServer: not documented. Cosmos throttles to >=1.1 s between requests per host, sequential, with retries/backoff.",
+   "fieldsUsed": [
+    "RGB colour HiPS tiles (8-bit)"
+   ],
+   "updateCadence": "static survey release (re-render only if CDS re-publishes the HiPS)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/fetch.mjs",
+   "fallback": "If missing, fall back to the 1024x512 preview; if that is missing too, hide this band in the switcher (do not recolour another band).",
+   "files": [
+    {
+     "path": "data/sky/visible/visible_8k.jpg",
+     "bytes": 10155798,
+     "records": 33554432
+    },
+    {
+     "path": "data/sky/visible/visible_4k.jpg",
+     "bytes": 2175916,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/visible/visible_1k.jpg",
+     "bytes": 45226,
+     "records": 524288
+    }
+   ],
+   "limitations": "Built from the Gaia DR3 source catalogue, not from a photograph: diffuse glowing gas (e.g. the Orion Nebula) is absent, and stars brighter than about G = 3 mag are missing or incomplete in Gaia. Faint stripes from Gaia's scanning pattern and star-count noise are visible in low-density regions at full resolution. Cosmos applied a per-channel levels curve (black point 40/255, gamma 1.6) to the CDS colour composite to obtain a dark sky background.",
+   "provenanceClass": "derived",
+   "domain": "sky"
+  },
+  "sky-halpha": {
+   "id": "sky-halpha",
+   "name": "Hydrogen-alpha all-sky map — Finkbeiner (2003) full-sky Hα composite (WHAM + VTSS + SHASSA)",
+   "organization": "Composite map by Douglas Finkbeiner (2004).; HiPS by CDS",
+   "purpose": "Spectral View Switcher: real 656.3 nm (Hα emission line) all-sky texture for the celestial sphere (not recoloured visible light).",
+   "mechanism": "CDS hips2fits service (HTTP GET, explicit CAR/ICRS WCS JSON) -> FITS -> sharp/Node normalisation -> JPEG/PNG; HiPS discovered via the CDS MocServer",
+   "endpoint": "https://alasky.cds.unistra.fr/hips-image-services/hips2fits",
+   "query": "GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=CDS/P/Finkbeiner&wcs={\"NAXIS\":2,\"NAXIS1\":4096,\"NAXIS2\":2048,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":2048.5,\"CRPIX2\":1024.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.087890625,\"CDELT2\":0.087890625,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=fits",
+   "version": "HiPS CDS/P/Finkbeiner released 2019-05-05T06:07Z (HiPS standard 1.4); Finkbeiner (2003) full-sky Hα composite (WHAM + VTSS + SHASSA)",
+   "retrieved": "2026-10-18T14:13:48.315Z",
+   "license": "Publicly released research data product (Finkbeiner 2003); free use with citation. HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://faun.rc.fas.harvard.edu/dfink/skymaps/halpha/",
+   "citation": "Hα composite map: D. P. Finkbeiner (2003, ApJS 146, 407), using data from WHAM (NSF), VTSS (NSF) and SHASSA (NSF). HiPS: CDS. Finkbeiner D. P. 2003, ApJS 146, 407; Haffner L. M. et al. 2003, ApJS 149, 405 (WHAM); Dennison B. et al. 1998, PASA 15, 147 (VTSS); Gaustad J. E. et al. 2001, PASP 113, 1326 (SHASSA). HiPS: Fernique et al. 2015, A&A 578, A114; reprojection: CDS hips2fits.",
+   "rateLimits": "hips2fits: not documented (max 50 million pixels per image; two independent endpoints alasky/alaskybis); MocServer: not documented. Cosmos throttles to >=1.1 s between requests per host, sequential, with retries/backoff.",
+   "fieldsUsed": [
+    "HiPS FITS tiles (physical values)"
+   ],
+   "updateCadence": "static survey release (re-render only if CDS re-publishes the HiPS)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/fetch.mjs",
+   "fallback": "If missing, fall back to the 1024x512 preview; if that is missing too, hide this band in the switcher (do not recolour another band).",
+   "files": [
+    {
+     "path": "data/sky/halpha/halpha_4k.jpg",
+     "bytes": 804548,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/halpha/halpha_1k.jpg",
+     "bytes": 55486,
+     "records": 524288
+    }
+   ],
+   "limitations": "Composite of three surveys with different resolutions (WHAM ~1°, VTSS/SHASSA ~6′); regions covered only by WHAM look smoother. Not corrected for dust extinction: Hα from distant regions of the Galactic plane (e.g. towards the Galactic Centre) is strongly dimmed. Residual artifacts around some bright stars may be visible.",
+   "provenanceClass": "observed",
+   "domain": "sky"
+  },
+  "sky-nir": {
+   "id": "sky-nir",
+   "name": "Near-infrared all-sky map — 2MASS All-Sky Atlas images, colour composite J (blue), H (green), Ks (red)",
+   "organization": "University of Massachusetts & IPAC/Caltech; HiPS by Oberto A., Boch T. (CDS)",
+   "purpose": "Spectral View Switcher: real 1.2–2.2 µm (2MASS J, H, Ks) all-sky texture for the celestial sphere (not recoloured visible light).",
+   "mechanism": "CDS hips2fits service (HTTP GET, explicit CAR/ICRS WCS JSON) -> JPG -> sharp/Node normalisation -> JPEG/PNG; HiPS discovered via the CDS MocServer",
+   "endpoint": "https://alasky.cds.unistra.fr/hips-image-services/hips2fits",
+   "query": "GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=CDS/P/2MASS/color&wcs={\"NAXIS\":2,\"NAXIS1\":4096,\"NAXIS2\":2048,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":2048.5,\"CRPIX2\":1024.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.087890625,\"CDELT2\":0.087890625,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=jpg",
+   "version": "HiPS CDS/P/2MASS/color released 2024-10-09T07:12Z (HiPS standard 1.4); 2MASS All-Sky Atlas images, colour composite J (blue), H (green), Ks (red)",
+   "retrieved": "2026-10-18T14:14:15.870Z",
+   "license": "2MASS data products are public (NASA/NSF funded); free use with the acknowledgement above. HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://irsa.ipac.caltech.edu/data/2MASS/docs/releases/allsky/doc/sec1_1.html",
+   "citation": "This publication makes use of data products from the Two Micron All Sky Survey, which is a joint project of the University of Massachusetts and the Infrared Processing and Analysis Center/California Institute of Technology, funded by the National Aeronautics and Space Administration and the National Science Foundation. HiPS: CDS. Skrutskie M. F. et al. 2006, AJ 131, 1163. HiPS: Fernique et al. 2015, A&A 578, A114; reprojection: CDS hips2fits.",
+   "rateLimits": "hips2fits: not documented (max 50 million pixels per image; two independent endpoints alasky/alaskybis); MocServer: not documented. Cosmos throttles to >=1.1 s between requests per host, sequential, with retries/backoff.",
+   "fieldsUsed": [
+    "RGB colour HiPS tiles (8-bit)"
+   ],
+   "updateCadence": "static survey release (re-render only if CDS re-publishes the HiPS)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/fetch.mjs",
+   "fallback": "If missing, fall back to the 1024x512 preview; if that is missing too, hide this band in the switcher (do not recolour another band).",
+   "files": [
+    {
+     "path": "data/sky/nir/nir_4k.jpg",
+     "bytes": 1550062,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/nir/nir_1k.jpg",
+     "bytes": 31235,
+     "records": 524288
+    }
+   ],
+   "limitations": "Mosaic of 2MASS Atlas tiles: faint seams between tiles and saturated halos around the brightest stars are possible.",
+   "provenanceClass": "observed",
+   "domain": "sky"
+  },
+  "sky-mir": {
+   "id": "sky-mir",
+   "name": "Mid-infrared all-sky map — unWISE coadds of WISE + NEOWISE (W1, W2), colour composite",
+   "organization": "IPAC/NASA - D. Lang for the reprocessing; HiPS by Boch T. (CDS)",
+   "purpose": "Spectral View Switcher: real 3.4–4.6 µm (WISE W1, W2) all-sky texture for the celestial sphere (not recoloured visible light).",
+   "mechanism": "CDS hips2fits service (HTTP GET, explicit CAR/ICRS WCS JSON) -> JPG -> sharp/Node normalisation -> JPEG/PNG; HiPS discovered via the CDS MocServer",
+   "endpoint": "https://alasky.cds.unistra.fr/hips-image-services/hips2fits",
+   "query": "GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=CDS/P/unWISE/color-W2-W1W2-W1&wcs={\"NAXIS\":2,\"NAXIS1\":4096,\"NAXIS2\":2048,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":2048.5,\"CRPIX2\":1024.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.087890625,\"CDELT2\":0.087890625,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=jpg",
+   "version": "HiPS CDS/P/unWISE/color-W2-W1W2-W1 released 2022-12-12T11:02Z (HiPS standard 1.4); unWISE coadds of WISE + NEOWISE (W1, W2), colour composite",
+   "retrieved": "2026-10-18T14:14:42.287Z",
+   "license": "WISE/NEOWISE and unWISE data are public (NASA funded); free use with the acknowledgement above. HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://wise2.ipac.caltech.edu/docs/release/allsky/",
+   "citation": "This publication makes use of data products from the Wide-field Infrared Survey Explorer, which is a joint project of the University of California, Los Angeles, and the Jet Propulsion Laboratory/California Institute of Technology, and NEOWISE, which is a project of the Jet Propulsion Laboratory/California Institute of Technology. WISE and NEOWISE are funded by the National Aeronautics and Space Administration. unWISE coadds: Lang (2014); Meisner, Lang & Schlegel. HiPS: CDS. Wright E. L. et al. 2010, AJ 140, 1868 (WISE); Lang D. 2014, AJ 147, 108 (unWISE); Meisner A. M., Lang D., Schlegel D. J. 2017, AJ 153, 38. HiPS: Fernique et al. 2015, A&A 578, A114; reprojection: CDS hips2fits.",
+   "rateLimits": "hips2fits: not documented (max 50 million pixels per image; two independent endpoints alasky/alaskybis); MocServer: not documented. Cosmos throttles to >=1.1 s between requests per host, sequential, with retries/backoff.",
+   "fieldsUsed": [
+    "RGB colour HiPS tiles (8-bit)"
+   ],
+   "updateCadence": "static survey release (re-render only if CDS re-publishes the HiPS)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/fetch.mjs",
+   "fallback": "If missing, fall back to the 1024x512 preview; if that is missing too, hide this band in the switcher (do not recolour another band).",
+   "files": [
+    {
+     "path": "data/sky/mir/mir_4k.jpg",
+     "bytes": 2379948,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/mir/mir_1k.jpg",
+     "bytes": 60367,
+     "records": 524288
+    }
+   ],
+   "limitations": "Bright stars produce halos and diffraction artifacts; small residual seams between coadd tiles.",
+   "provenanceClass": "observed",
+   "domain": "sky"
+  },
+  "sky-fir": {
+   "id": "sky-fir",
+   "name": "Far-infrared all-sky map — AKARI Far-Infrared Surveyor all-sky maps, colour composite 140 µm (red), 90 µm (green), 65 µm (blue)",
+   "organization": "ISAS/JAXA; HiPS by Fernique P. (CDS)",
+   "purpose": "Spectral View Switcher: real 65–140 µm (AKARI FIS N60, WIDE-S, WIDE-L) all-sky texture for the celestial sphere (not recoloured visible light).",
+   "mechanism": "CDS hips2fits service (HTTP GET, explicit CAR/ICRS WCS JSON) -> JPG -> sharp/Node normalisation -> JPEG/PNG; HiPS discovered via the CDS MocServer",
+   "endpoint": "https://alasky.cds.unistra.fr/hips-image-services/hips2fits",
+   "query": "GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=CDS/P/AKARI/FIS/Color&wcs={\"NAXIS\":2,\"NAXIS1\":4096,\"NAXIS2\":2048,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":2048.5,\"CRPIX2\":1024.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.087890625,\"CDELT2\":0.087890625,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=jpg",
+   "version": "HiPS CDS/P/AKARI/FIS/Color released 2019-05-05T04:59Z (HiPS standard 1.4); AKARI Far-Infrared Surveyor all-sky maps, colour composite 140 µm (red), 90 µm (green), 65 µm (blue)",
+   "retrieved": "2026-10-18T14:15:04.855Z",
+   "license": "AKARI FIS all-sky maps are publicly released by ISAS/JAXA for research and education with acknowledgement. HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://www.ir.isas.jaxa.jp/AKARI/Archive/Images/FIS_AllSkyMap/",
+   "citation": "This research is based on observations with AKARI, a JAXA project with the participation of ESA. AKARI FIS all-sky maps: Doi et al. (2015), Takita et al. (2015). HiPS: CDS. Doi Y. et al. 2015, PASJ 67, 50; Takita S. et al. 2015, PASJ 67, 51; Murakami H. et al. 2007, PASJ 59, S369. HiPS: Fernique et al. 2015, A&A 578, A114; reprojection: CDS hips2fits.",
+   "rateLimits": "hips2fits: not documented (max 50 million pixels per image; two independent endpoints alasky/alaskybis); MocServer: not documented. Cosmos throttles to >=1.1 s between requests per host, sequential, with retries/backoff.",
+   "fieldsUsed": [
+    "RGB colour HiPS tiles (8-bit)"
+   ],
+   "updateCadence": "static survey release (re-render only if CDS re-publishes the HiPS)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/fetch.mjs",
+   "fallback": "If missing, fall back to the 1024x512 preview; if that is missing too, hide this band in the switcher (do not recolour another band).",
+   "files": [
+    {
+     "path": "data/sky/fir/fir_4k.jpg",
+     "bytes": 552736,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/fir/fir_1k.jpg",
+     "bytes": 42921,
+     "records": 524288
+    }
+   ],
+   "limitations": "A few narrow strips with missing or degraded data (scan gaps, Moon avoidance) appear as thin dark or striped streaks.",
+   "provenanceClass": "observed",
+   "domain": "sky"
+  },
+  "sky-uv": {
+   "id": "sky-uv",
+   "name": "Ultraviolet all-sky map — GALEX GR6/7 All-sky Imaging Survey + other surveys, colour composite FUV (blue), NUV (red)",
+   "organization": "STScI (NASA); HiPS by Buga M. (CDS) , Boch T. (CDS)",
+   "purpose": "Spectral View Switcher: real 135–280 nm (GALEX FUV + NUV) all-sky texture for the celestial sphere (not recoloured visible light).",
+   "mechanism": "CDS hips2fits service (HTTP GET, explicit CAR/ICRS WCS JSON) -> PNG -> sharp/Node normalisation -> JPEG/PNG; HiPS discovered via the CDS MocServer",
+   "endpoint": "https://alasky.cds.unistra.fr/hips-image-services/hips2fits",
+   "query": "GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=CDS/P/GALEXGR6_7/color&wcs={\"NAXIS\":2,\"NAXIS1\":4096,\"NAXIS2\":2048,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":2048.5,\"CRPIX2\":1024.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.087890625,\"CDELT2\":0.087890625,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=png",
+   "version": "HiPS CDS/P/GALEXGR6_7/color released 2022-03-30T19:35Z (HiPS standard 1.4); GALEX GR6/7 All-sky Imaging Survey + other surveys, colour composite FUV (blue), NUV (red)",
+   "retrieved": "2026-10-18T14:15:33.511Z",
+   "license": "Public domain (NASA data distributed by STScI/MAST: \"no claim to copyright is being asserted ... may be freely used as in the public domain\"). HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://www.stsci.edu/copyright",
+   "citation": "Based on observations made with the NASA Galaxy Evolution Explorer. GALEX was operated for NASA by the California Institute of Technology under NASA contract NAS5-98034. Data from MAST (STScI). HiPS: CDS. Martin D. C. et al. 2005, ApJ 619, L1; Bianchi L. et al. 2017, ApJS 230, 24. HiPS: Fernique et al. 2015, A&A 578, A114; reprojection: CDS hips2fits.",
+   "rateLimits": "hips2fits: not documented (max 50 million pixels per image; two independent endpoints alasky/alaskybis); MocServer: not documented. Cosmos throttles to >=1.1 s between requests per host, sequential, with retries/backoff.",
+   "fieldsUsed": [
+    "RGB colour HiPS tiles (8-bit)"
+   ],
+   "updateCadence": "static survey release (re-render only if CDS re-publishes the HiPS)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/fetch.mjs",
+   "fallback": "If missing, fall back to the 1024x512 preview; if that is missing too, hide this band in the switcher (do not recolour another band).",
+   "files": [
+    {
+     "path": "data/sky/uv/uv_4k.jpg",
+     "bytes": 1567097,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/uv/uv_1k.jpg",
+     "bytes": 84613,
+     "records": 524288
+    },
+    {
+     "path": "data/sky/uv/uv_mask_2k.png",
+     "bytes": 65764,
+     "records": 2097152
+    }
+   ],
+   "limitations": "Partial sky (~79%): the Galactic plane, the Magellanic Clouds and fields around very bright stars were mostly avoided to protect the detectors; no-data areas are black and flagged in the mask file. Where only near-UV data exist (the far-UV detector failed in 2009) the colour is reddish.",
+   "provenanceClass": "observed",
+   "domain": "sky"
+  },
+  "sky-xray": {
+   "id": "sky-xray",
+   "name": "X-ray (ROSAT) all-sky map — ROSAT All-Sky Survey (RASS) diffuse maps: soft 0.1–0.4 keV (red) and hard 0.5–2.4 keV (blue)",
+   "organization": "IRAP/CADE; HiPS by CDS",
+   "purpose": "Spectral View Switcher: real 0.1–2.4 keV (≈0.5–12 nm) all-sky texture for the celestial sphere (not recoloured visible light).",
+   "mechanism": "CDS hips2fits service (HTTP GET, explicit CAR/ICRS WCS JSON) -> FITS + FITS -> sharp/Node normalisation -> JPEG/PNG; HiPS discovered via the CDS MocServer",
+   "endpoint": "https://alasky.cds.unistra.fr/hips-image-services/hips2fits",
+   "query": "GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=ov-gso/P/RASS/SoftBand&wcs={\"NAXIS\":2,\"NAXIS1\":4096,\"NAXIS2\":2048,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":2048.5,\"CRPIX2\":1024.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.087890625,\"CDELT2\":0.087890625,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=fits ; GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=ov-gso/P/RASS/HardBand&wcs={\"NAXIS\":2,\"NAXIS1\":4096,\"NAXIS2\":2048,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":2048.5,\"CRPIX2\":1024.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.087890625,\"CDELT2\":0.087890625,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=fits",
+   "version": "HiPS ov-gso/P/RASS/SoftBand (+ ov-gso/P/RASS/HardBand) released 2019-10-08T13:01Z (HiPS standard 1.4); ROSAT All-Sky Survey (RASS) diffuse maps: soft 0.1–0.4 keV (red) and hard 0.5–2.4 keV (blue)",
+   "retrieved": "2026-10-18T14:39:23.321Z",
+   "license": "ROSAT survey data are public (MPE/HEASARC archives); free use with acknowledgement.",
+   "licenseUrl": "https://heasarc.gsfc.nasa.gov/docs/rosat/rosat3.html",
+   "citation": "ROSAT All-Sky Survey (MPE; Voges et al. 1999, Snowden et al. 1997). The ROSAT project was supported by the German Bundesministerium für Bildung und Forschung (BMBF/DLR) and the Max-Planck-Gesellschaft (MPG). HEALPix maps: IRAP/CADE (D. Paradis). HiPS distributed through the CDS/IVOA HiPS network. Voges W. et al. 1999, A&A 349, 389; Snowden S. L. et al. 1997, ApJ 485, 125. HiPS: Fernique et al. 2015, A&A 578, A114; reprojection: CDS hips2fits.",
+   "rateLimits": "hips2fits: not documented (max 50 million pixels per image; two independent endpoints alasky/alaskybis); MocServer: not documented. Cosmos throttles to >=1.1 s between requests per host, sequential, with retries/backoff.",
+   "fieldsUsed": [
+    "HiPS FITS tiles (physical values)"
+   ],
+   "updateCadence": "static survey release (re-render only if CDS re-publishes the HiPS)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/fetch.mjs",
+   "fallback": "If missing, fall back to the 1024x512 preview; if that is missing too, hide this band in the switcher (do not recolour another band).",
+   "files": [
+    {
+     "path": "data/sky/xray/xray_4k.jpg",
+     "bytes": 2938561,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/xray/xray_1k.jpg",
+     "bytes": 81973,
+     "records": 524288
+    }
+   ],
+   "limitations": "Counts-based maps (Poisson noise) at about 2′ native resolution, shown smoothed by resampling; RASS has scan/exposure streaks converging on the ecliptic poles and low-exposure gaps (instrumental); soft X-rays are absorbed by neutral Galactic gas.",
+   "provenanceClass": "observed",
+   "domain": "sky"
+  },
+  "sky-xray-erosita": {
+   "id": "sky-xray-erosita",
+   "name": "X-ray (eROSITA, half sky) all-sky map — eROSITA-DE DR1 (eRASS1) RGB rate image: 0.2–0.5 keV (red), 0.5–1.0 keV (green), 1.0–2.0 keV (blue)",
+   "organization": "This work is based on data from eROSITA, the soft X-ray instrument aboard SRG, a joint Russian-German science mission supported by the Russian Space Agency (Roskosmos), in the interests of the Russian Academy of Sciences represented by its Space Research Institute (IKI), and the Deutsches Zentrum für Luft- und Raumfahrt (DLR); HiPS by Jeremy Sanders, MPE",
+   "purpose": "Spectral View Switcher: real 0.2–2.0 keV (≈0.6–6 nm) all-sky texture for the celestial sphere (not recoloured visible light).",
+   "mechanism": "CDS hips2fits service (HTTP GET, explicit CAR/ICRS WCS JSON) -> PNG -> sharp/Node normalisation -> JPEG/PNG; HiPS discovered via the CDS MocServer",
+   "endpoint": "https://alasky.cds.unistra.fr/hips-image-services/hips2fits",
+   "query": "GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=erosita/dr1/rate/rgb&wcs={\"NAXIS\":2,\"NAXIS1\":4096,\"NAXIS2\":2048,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":2048.5,\"CRPIX2\":1024.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.087890625,\"CDELT2\":0.087890625,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=png",
+   "version": "HiPS erosita/dr1/rate/rgb released 2024-01-31T11:00Z (HiPS standard 1.4); eROSITA-DE DR1 (eRASS1) RGB rate image: 0.2–0.5 keV (red), 0.5–1.0 keV (green), 1.0–2.0 keV (blue)",
+   "retrieved": "2026-10-18T14:40:30.915Z",
+   "license": "eROSITA-DE DR1 public data release (MPE, 2024-01-31); free use with the acknowledgement above.",
+   "licenseUrl": "https://erosita.mpe.mpg.de/dr1/AllSkySurveyData_dr1/acknowledgement.html",
+   "citation": "This work is based on data from eROSITA, the soft X-ray instrument aboard SRG, a joint Russian-German science mission supported by the Russian Space Agency (Roskosmos), in the interests of the Russian Academy of Sciences represented by its Space Research Institute (IKI), and the Deutsches Zentrum für Luft- und Raumfahrt (DLR). The SRG spacecraft was built by Lavochkin Association (NPOL) and its subcontractors, and is operated by NPOL with support from the Max Planck Institute for Extraterrestrial Physics (MPE). HiPS: MPE (J. Sanders). Merloni A. et al. 2024, A&A 682, A34; Predehl P. et al. 2021, A&A 647, A1. HiPS: Fernique et al. 2015, A&A 578, A114; reprojection: CDS hips2fits.",
+   "rateLimits": "hips2fits: not documented (max 50 million pixels per image; two independent endpoints alasky/alaskybis); MocServer: not documented. Cosmos throttles to >=1.1 s between requests per host, sequential, with retries/backoff.",
+   "fieldsUsed": [
+    "RGB colour HiPS tiles (8-bit)"
+   ],
+   "updateCadence": "static survey release (re-render only if CDS re-publishes the HiPS)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/fetch.mjs",
+   "fallback": "If missing, fall back to the 1024x512 preview; if that is missing too, hide this band in the switcher (do not recolour another band).",
+   "files": [
+    {
+     "path": "data/sky/xray-erosita/xray-erosita_4k.jpg",
+     "bytes": 1046905,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/xray-erosita/xray-erosita_1k.jpg",
+     "bytes": 48114,
+     "records": 524288
+    },
+    {
+     "path": "data/sky/xray-erosita/xray-erosita_mask_2k.png",
+     "bytes": 9754,
+     "records": 2097152
+    }
+   ],
+   "limitations": "Only the western Galactic hemisphere (Galactic longitude 180°–360°, the eROSITA-DE share) is public; the other half of the sky is black (no data) and flagged in the mask file.",
+   "provenanceClass": "observed",
+   "domain": "sky"
+  },
+  "sky-gamma": {
+   "id": "sky-gamma",
+   "name": "Gamma rays all-sky map — Fermi LAT all-sky intensity maps (SkyView), colour composite of three energy bands",
+   "organization": "Distributed by SkyView/HEASARC - HEALPixed by CDS; HiPS by Boch T. (CDS)",
+   "purpose": "Spectral View Switcher: real 0.3–300 GeV all-sky texture for the celestial sphere (not recoloured visible light).",
+   "mechanism": "CDS hips2fits service (HTTP GET, explicit CAR/ICRS WCS JSON) -> JPG -> sharp/Node normalisation -> JPEG/PNG; HiPS discovered via the CDS MocServer",
+   "endpoint": "https://alasky.cds.unistra.fr/hips-image-services/hips2fits",
+   "query": "GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=CDS/P/Fermi/color&wcs={\"NAXIS\":2,\"NAXIS1\":4096,\"NAXIS2\":2048,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":2048.5,\"CRPIX2\":1024.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.087890625,\"CDELT2\":0.087890625,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=jpg",
+   "version": "HiPS CDS/P/Fermi/color released 2019-05-05T06:06Z (HiPS standard 1.4); Fermi LAT all-sky intensity maps (SkyView), colour composite of three energy bands",
+   "retrieved": "2026-10-18T14:15:54.727Z",
+   "license": "NASA mission data — public domain in the USA; free use with acknowledgement. HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://fermi.gsfc.nasa.gov/ssc/data/policy/",
+   "citation": "Fermi LAT data: NASA/DOE/Fermi LAT Collaboration. Maps distributed by SkyView/HEASARC (NASA GSFC). This research has made use of data and/or software provided by the High Energy Astrophysics Science Archive Research Center (HEASARC), which is a service of the Astrophysics Science Division at NASA/GSFC. HiPS: CDS. Atwood W. B. et al. 2009, ApJ 697, 1071 (Fermi LAT); McGlynn T. et al. 1998 (SkyView). HiPS: Fernique et al. 2015, A&A 578, A114; reprojection: CDS hips2fits.",
+   "rateLimits": "hips2fits: not documented (max 50 million pixels per image; two independent endpoints alasky/alaskybis); MocServer: not documented. Cosmos throttles to >=1.1 s between requests per host, sequential, with retries/backoff.",
+   "fieldsUsed": [
+    "RGB colour HiPS tiles (8-bit)"
+   ],
+   "updateCadence": "static survey release (re-render only if CDS re-publishes the HiPS)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/fetch.mjs",
+   "fallback": "If missing, fall back to the 1024x512 preview; if that is missing too, hide this band in the switcher (do not recolour another band).",
+   "files": [
+    {
+     "path": "data/sky/gamma/gamma_4k.jpg",
+     "bytes": 1545510,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/gamma/gamma_1k.jpg",
+     "bytes": 58539,
+     "records": 524288
+    }
+   ],
+   "limitations": "Angular resolution depends strongly on energy (about 1° near 300 MeV, ~0.1° above 10 GeV); faint sources look blurred.",
+   "provenanceClass": "observed",
+   "domain": "sky"
+  },
+  "sky-microwave": {
+   "id": "sky-microwave",
+   "name": "Microwave (Planck LFI) all-sky map — Planck PR3 (2018) LFI frequency maps, colour composite 30 GHz (red), 44 GHz (green), 70 GHz (blue)",
+   "organization": "EUROPEAN SPACE AGENCY. ALL RIGHTS RESERVED; HiPS by Buga M. (CDS)",
+   "purpose": "Spectral View Switcher: real 30–70 GHz (4.3–10 mm) all-sky texture for the celestial sphere (not recoloured visible light).",
+   "mechanism": "CDS hips2fits service (HTTP GET, explicit CAR/ICRS WCS JSON) -> PNG -> sharp/Node normalisation -> JPEG/PNG; HiPS discovered via the CDS MocServer",
+   "endpoint": "https://alasky.cds.unistra.fr/hips-image-services/hips2fits",
+   "query": "GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=CDS/P/PLANCK/R3/LFI/color&wcs={\"NAXIS\":2,\"NAXIS1\":4096,\"NAXIS2\":2048,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":2048.5,\"CRPIX2\":1024.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.087890625,\"CDELT2\":0.087890625,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=png",
+   "version": "HiPS CDS/P/PLANCK/R3/LFI/color released 2022-11-07T13:38Z (HiPS standard 1.4); Planck PR3 (2018) LFI frequency maps, colour composite 30 GHz (red), 44 GHz (green), 70 GHz (blue)",
+   "retrieved": "2026-10-18T14:16:30.399Z",
+   "license": "ESA Planck Legacy Archive data: CC BY-NC 3.0 IGO (ESA Space Science Archives terms; credit \"ESA, Planck Collaboration\"). HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://www.cosmos.esa.int/web/esdc/terms-and-conditions",
+   "citation": "Based on observations obtained with Planck (http://www.esa.int/Planck), an ESA science mission with instruments and contributions directly funded by ESA Member States, NASA, and Canada. Credit: ESA, Planck Collaboration. HiPS: CDS. Planck Collaboration 2020, A&A 641, A1 (Planck 2018 results. I). HiPS: Fernique et al. 2015, A&A 578, A114; reprojection: CDS hips2fits.",
+   "rateLimits": "hips2fits: not documented (max 50 million pixels per image; two independent endpoints alasky/alaskybis); MocServer: not documented. Cosmos throttles to >=1.1 s between requests per host, sequential, with retries/backoff.",
+   "fieldsUsed": [
+    "RGB colour HiPS tiles (8-bit)"
+   ],
+   "updateCadence": "static survey release (re-render only if CDS re-publishes the HiPS)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/fetch.mjs",
+   "fallback": "If missing, fall back to the 1024x512 preview; if that is missing too, hide this band in the switcher (do not recolour another band).",
+   "files": [
+    {
+     "path": "data/sky/microwave/microwave_4k.jpg",
+     "bytes": 735906,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/microwave/microwave_1k.jpg",
+     "bytes": 58806,
+     "records": 524288
+    }
+   ],
+   "limitations": "Angular resolution 13′–33′ depending on frequency; the composite colour scale was chosen by CDS.",
+   "provenanceClass": "observed",
+   "domain": "sky"
+  },
+  "sky-submm": {
+   "id": "sky-submm",
+   "name": "Submillimetre (Planck HFI) all-sky map — Planck PR3 (2018) HFI frequency maps, colour composite 353 GHz (red), 545 GHz (green), 857 GHz (blue)",
+   "organization": "EUROPEAN SPACE AGENCY. ALL RIGHTS RESERVED; HiPS by Buga M. (CDS)",
+   "purpose": "Spectral View Switcher: real 353–857 GHz (0.35–0.85 mm) all-sky texture for the celestial sphere (not recoloured visible light).",
+   "mechanism": "CDS hips2fits service (HTTP GET, explicit CAR/ICRS WCS JSON) -> PNG -> sharp/Node normalisation -> JPEG/PNG; HiPS discovered via the CDS MocServer",
+   "endpoint": "https://alasky.cds.unistra.fr/hips-image-services/hips2fits",
+   "query": "GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=CDS/P/PLANCK/R3/HFI/color&wcs={\"NAXIS\":2,\"NAXIS1\":4096,\"NAXIS2\":2048,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":2048.5,\"CRPIX2\":1024.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.087890625,\"CDELT2\":0.087890625,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=png",
+   "version": "HiPS CDS/P/PLANCK/R3/HFI/color released 2022-11-07T13:34Z (HiPS standard 1.4); Planck PR3 (2018) HFI frequency maps, colour composite 353 GHz (red), 545 GHz (green), 857 GHz (blue)",
+   "retrieved": "2026-10-18T14:17:04.321Z",
+   "license": "ESA Planck Legacy Archive data: CC BY-NC 3.0 IGO (ESA Space Science Archives terms; credit \"ESA, Planck Collaboration\"). HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://www.cosmos.esa.int/web/esdc/terms-and-conditions",
+   "citation": "Based on observations obtained with Planck (http://www.esa.int/Planck), an ESA science mission with instruments and contributions directly funded by ESA Member States, NASA, and Canada. Credit: ESA, Planck Collaboration. HiPS: CDS. Planck Collaboration 2020, A&A 641, A1 (Planck 2018 results. I). HiPS: Fernique et al. 2015, A&A 578, A114; reprojection: CDS hips2fits.",
+   "rateLimits": "hips2fits: not documented (max 50 million pixels per image; two independent endpoints alasky/alaskybis); MocServer: not documented. Cosmos throttles to >=1.1 s between requests per host, sequential, with retries/backoff.",
+   "fieldsUsed": [
+    "RGB colour HiPS tiles (8-bit)"
+   ],
+   "updateCadence": "static survey release (re-render only if CDS re-publishes the HiPS)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/fetch.mjs",
+   "fallback": "If missing, fall back to the 1024x512 preview; if that is missing too, hide this band in the switcher (do not recolour another band).",
+   "files": [
+    {
+     "path": "data/sky/submm/submm_4k.jpg",
+     "bytes": 462984,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/submm/submm_1k.jpg",
+     "bytes": 39888,
+     "records": 524288
+    }
+   ],
+   "limitations": "Angular resolution about 5′; the composite colour scale was chosen by CDS.",
+   "provenanceClass": "observed",
+   "domain": "sky"
+  },
+  "sky-cmb": {
+   "id": "sky-cmb",
+   "name": "Cosmic Microwave Background all-sky map — Planck PR3 (2018) SMICA CMB temperature map (foreground-cleaned)",
+   "organization": "EUROPEAN SPACE AGENCY. ALL RIGHTS RESERVED; HiPS by Buga M. (CDS)",
+   "purpose": "Cosmology finale (CMB sphere) and the Microwave/CMB mode of the Spectral View Switcher; numeric temperature read-outs.",
+   "mechanism": "CDS hips2fits service (HTTP GET, explicit CAR/ICRS WCS JSON) -> FITS -> sharp/Node normalisation -> JPEG/PNG/Float32; HiPS discovered via the CDS MocServer",
+   "endpoint": "https://alasky.cds.unistra.fr/hips-image-services/hips2fits",
+   "query": "GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=CDS/P/PLANCK/R3/CMB&wcs={\"NAXIS\":2,\"NAXIS1\":4096,\"NAXIS2\":2048,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":2048.5,\"CRPIX2\":1024.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.087890625,\"CDELT2\":0.087890625,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=fits",
+   "version": "HiPS CDS/P/PLANCK/R3/CMB released 2022-11-04T16:44Z (HiPS standard 1.4); Planck PR3 (2018) SMICA CMB temperature map (foreground-cleaned)",
+   "retrieved": "2026-10-18T14:17:28.120Z",
+   "license": "ESA Planck Legacy Archive data: CC BY-NC 3.0 IGO (ESA Space Science Archives terms; credit \"ESA, Planck Collaboration\"). HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://www.cosmos.esa.int/web/esdc/terms-and-conditions",
+   "citation": "Based on observations obtained with Planck (http://www.esa.int/Planck), an ESA science mission with instruments and contributions directly funded by ESA Member States, NASA, and Canada. Credit: ESA, Planck Collaboration. Map: COM_CMB_IQU-smica_2048_R3.00_full (Planck Legacy Archive). HiPS: CDS. Planck Collaboration 2020, A&A 641, A4 (Planck 2018 results. IV. Diffuse component separation); Planck Collaboration 2020, A&A 641, A1. HiPS: Fernique et al. 2015, A&A 578, A114; reprojection: CDS hips2fits.",
+   "rateLimits": "hips2fits: not documented (max 50 million pixels per image; two independent endpoints alasky/alaskybis); MocServer: not documented. Cosmos throttles to >=1.1 s between requests per host, sequential, with retries/backoff.",
+   "fieldsUsed": [
+    "I_STOKES temperature (K_CMB) HiPS FITS tiles"
+   ],
+   "updateCadence": "static survey release (re-render only if CDS re-publishes the HiPS)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/fetch.mjs",
+   "fallback": "If missing, show the low-resolution preview (cmb_1k.jpg) or a labelled placeholder sphere; never synthesize a fake CMB pattern.",
+   "files": [
+    {
+     "path": "data/sky/cmb/cmb_4k.jpg",
+     "bytes": 3124169,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/cmb/cmb_1k.jpg",
+     "bytes": 220983,
+     "records": 524288
+    },
+    {
+     "path": "data/sky/cmb/cmb_smica_4k_u16.png",
+     "bytes": 14519896,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/cmb/cmb_smica_1k_f32.bin",
+     "bytes": 2097152,
+     "records": 524288
+    },
+    {
+     "path": "data/sky/cmb/cmb_smica_1k_f32.json",
+     "bytes": 671
+    }
+   ],
+   "limitations": "Foreground-cleaned with the SMICA method; residual Galactic emission and point sources remain in a thin strip along the Galactic plane. The monopole (2.7255 K) and the dipole due to the Sun's motion (±3.36 mK) are removed; values are temperature differences in µK (K_CMB units). Effective resolution 5′ FWHM.",
+   "provenanceClass": "derived",
+   "domain": "sky"
+  },
+  "sky-radio-408": {
+   "id": "sky-radio-408",
+   "name": "Radio continuum (408 MHz) all-sky map — Haslam et al. (1982) 408 MHz all-sky survey, destriped and source-subtracted reprocessing by Remazeilles et al. (2015)",
+   "organization": "LAMBDA/NASA; HiPS by Fernique P. (CDS)",
+   "purpose": "Spectral View Switcher: real 408 MHz (73.5 cm) all-sky texture for the celestial sphere (not recoloured visible light).",
+   "mechanism": "CDS hips2fits service (HTTP GET, explicit CAR/ICRS WCS JSON) -> FITS -> sharp/Node normalisation -> JPEG/PNG; HiPS discovered via the CDS MocServer",
+   "endpoint": "https://alasky.cds.unistra.fr/hips-image-services/hips2fits",
+   "query": "GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=CDS/P/Haslam408/v2&wcs={\"NAXIS\":2,\"NAXIS1\":4096,\"NAXIS2\":2048,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":2048.5,\"CRPIX2\":1024.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.087890625,\"CDELT2\":0.087890625,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=fits",
+   "version": "HiPS CDS/P/Haslam408/v2 released 2019-05-05T06:35Z (HiPS standard 1.4); Haslam et al. (1982) 408 MHz all-sky survey, destriped and source-subtracted reprocessing by Remazeilles et al. (2015)",
+   "retrieved": "2026-10-18T14:17:58.714Z",
+   "license": "Public research data distributed by NASA LAMBDA; free use with citation. HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://lambda.gsfc.nasa.gov/product/foreground/fg_2014_haslam_408_info.html",
+   "citation": "Haslam C. G. T. et al. (1982), reprocessed by Remazeilles M. et al. (2015). Data via LAMBDA (NASA GSFC): we acknowledge the use of the Legacy Archive for Microwave Background Data Analysis (LAMBDA), part of the High Energy Astrophysics Science Archive Center (HEASARC). HiPS: CDS. Haslam C. G. T. et al. 1982, A&AS 47, 1; Remazeilles M. et al. 2015, MNRAS 451, 4311. HiPS: Fernique et al. 2015, A&A 578, A114; reprojection: CDS hips2fits.",
+   "rateLimits": "hips2fits: not documented (max 50 million pixels per image; two independent endpoints alasky/alaskybis); MocServer: not documented. Cosmos throttles to >=1.1 s between requests per host, sequential, with retries/backoff.",
+   "fieldsUsed": [
+    "HiPS FITS tiles (physical values)"
+   ],
+   "updateCadence": "static survey release (re-render only if CDS re-publishes the HiPS)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/fetch.mjs",
+   "fallback": "If missing, fall back to the 1024x512 preview; if that is missing too, hide this band in the switcher (do not recolour another band).",
+   "files": [
+    {
+     "path": "data/sky/radio-408/radio-408_4k.jpg",
+     "bytes": 264769,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/radio-408/radio-408_1k.jpg",
+     "bytes": 26210,
+     "records": 524288
+    }
+   ],
+   "limitations": "Low angular resolution (≈56′ FWHM); bright compact radio sources have been subtracted in this reprocessed version.",
+   "provenanceClass": "observed",
+   "domain": "sky"
+  },
+  "sky-radio-hi": {
+   "id": "sky-radio-hi",
+   "name": "Neutral hydrogen (21 cm) all-sky map — HI4PI full-sky HI column density map (EBHIS + GASS)",
+   "organization": "HI4PI Collaboration (Ben Bekhti N; HiPS by Buga M. (CDS)",
+   "purpose": "Spectral View Switcher: real 1420.4 MHz (21.1 cm HI line) all-sky texture for the celestial sphere (not recoloured visible light).",
+   "mechanism": "CDS hips2fits service (HTTP GET, explicit CAR/ICRS WCS JSON) -> FITS -> sharp/Node normalisation -> JPEG/PNG; HiPS discovered via the CDS MocServer",
+   "endpoint": "https://alasky.cds.unistra.fr/hips-image-services/hips2fits",
+   "query": "GET https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=CDS/P/HI4PI/NHI&wcs={\"NAXIS\":2,\"NAXIS1\":4096,\"NAXIS2\":2048,\"CTYPE1\":\"RA---CAR\",\"CTYPE2\":\"DEC--CAR\",\"CRPIX1\":2048.5,\"CRPIX2\":1024.5,\"CRVAL1\":180,\"CRVAL2\":0,\"CDELT1\":0.087890625,\"CDELT2\":0.087890625,\"CUNIT1\":\"deg\",\"CUNIT2\":\"deg\",\"RADESYS\":\"ICRS\"}&format=fits",
+   "version": "HiPS CDS/P/HI4PI/NHI released 2019-05-22T05:04Z (HiPS standard 1.4); HI4PI full-sky HI column density map (EBHIS + GASS)",
+   "retrieved": "2026-10-18T14:18:37.637Z",
+   "license": "Public research data (A&A/CDS VizieR catalogue J/A+A/594/A116); free use with citation. HiPS: ODbL-1.0 (CDS).",
+   "licenseUrl": "https://cdsarc.cds.unistra.fr/viz-bin/cat/J/A+A/594/A116",
+   "citation": "HI4PI Collaboration (Ben Bekhti N. et al. 2016, A&A 594, A116), based on EBHIS (Effelsberg, MPIfR) and GASS (Parkes, CSIRO) data; data via CDS/VizieR J/A+A/594/A116. HiPS: CDS. HI4PI Collaboration: Ben Bekhti N. et al. 2016, A&A 594, A116. HiPS: Fernique et al. 2015, A&A 578, A114; reprojection: CDS hips2fits.",
+   "rateLimits": "hips2fits: not documented (max 50 million pixels per image; two independent endpoints alasky/alaskybis); MocServer: not documented. Cosmos throttles to >=1.1 s between requests per host, sequential, with retries/backoff.",
+   "fieldsUsed": [
+    "HiPS FITS tiles (physical values)"
+   ],
+   "updateCadence": "static survey release (re-render only if CDS re-publishes the HiPS)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/fetch.mjs",
+   "fallback": "If missing, fall back to the 1024x512 preview; if that is missing too, hide this band in the switcher (do not recolour another band).",
+   "files": [
+    {
+     "path": "data/sky/radio-hi/radio-hi_4k.jpg",
+     "bytes": 416868,
+     "records": 8388608
+    },
+    {
+     "path": "data/sky/radio-hi/radio-hi_1k.jpg",
+     "bytes": 42322,
+     "records": 524288
+    }
+   ],
+   "limitations": "Angular resolution 16.2′; column densities assume optically thin emission (underestimated in the densest clouds).",
+   "provenanceClass": "derived",
+   "domain": "sky"
+  },
+  "sdo-sun-latest": {
+   "id": "sdo-sun-latest",
+   "name": "SDO latest solar images (AIA 171/193/304/1600, HMI continuum)",
+   "organization": "NASA Goddard / SDO",
+   "purpose": "Sun views in Sun scale",
+   "mechanism": "HTTP GET of latest JPEGs",
+   "endpoint": "https://sdo.gsfc.nasa.gov/assets/img/latest/",
+   "query": "latest_1024_{0171,0193,0304,1600,HMIIC}.jpg",
+   "version": "live state at retrieval",
+   "retrieved": "2026-10-18T16:24:35.253Z",
+   "license": "Public domain (NASA); credit requested",
+   "licenseUrl": "https://sdo.gsfc.nasa.gov/data/",
+   "citation": "NASA/SDO and the AIA, EVE, and HMI science teams",
+   "rateLimits": "not documented (1 req/s used)",
+   "fieldsUsed": [
+    "image",
+    "Last-Modified"
+   ],
+   "updateCadence": "minutes",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/sky/sun.mjs",
+   "fallback": "hide solar-wavelength switcher",
+   "files": [
+    {
+     "path": "data/sky/sun/aia171_1024.jpg",
+     "bytes": 188672,
+     "records": 1
+    },
+    {
+     "path": "data/sky/sun/aia193_1024.jpg",
+     "bytes": 140867,
+     "records": 1
+    },
+    {
+     "path": "data/sky/sun/aia304_1024.jpg",
+     "bytes": 208337,
+     "records": 1
+    },
+    {
+     "path": "data/sky/sun/aia1600_1024.jpg",
+     "bytes": 176239,
+     "records": 1
+    },
+    {
+     "path": "data/sky/sun/hmi-continuum_1024.jpg",
+     "bytes": 200510,
+     "records": 1
+    },
+    {
+     "path": "data/sky/sun/sun.json",
+     "bytes": 2282,
+     "records": 5
+    }
+   ],
+   "limitations": "1024 px previews; snapshot reflects one moment; timestamp from HTTP Last-Modified.",
+   "provenanceClass": "observed",
+   "domain": "sky"
+  },
+  "cneos-cad-close-approaches": {
+   "id": "cneos-cad-close-approaches",
+   "name": "CNEOS Close-Approach Data (CAD) 2026-2036",
+   "organization": "NASA JPL CNEOS / SSD",
+   "purpose": "Planetary-defense lab: upcoming asteroid/comet close approaches to Earth within 0.05 AU",
+   "mechanism": "REST API (JSON) -> compact table",
+   "endpoint": "https://ssd-api.jpl.nasa.gov/cad.api",
+   "query": "date-min=2026-10-16&date-max=2036-10-16&dist-max=0.05&body=Earth&sort=date&diameter=true&fullname=true ; plus des=99942&date-min=2029-01-01&date-max=2029-12-31&dist-max=0.05&body=Earth&diameter=true&fullname=true",
+   "version": "live archive state at retrieval",
+   "retrieved": "2026-10-18T06:07:41.681Z",
+   "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+   "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+   "citation": "NASA/JPL-Caltech Center for Near Earth Object Studies (CNEOS), SSD/CNEOS Close-Approach Data API.",
+   "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+   "fieldsUsed": [
+    "des",
+    "fullname",
+    "cd",
+    "jd",
+    "dist",
+    "dist_min",
+    "dist_max",
+    "v_rel",
+    "h",
+    "diameter",
+    "diameter_sigma",
+    "t_sigma_f"
+   ],
+   "updateCadence": "continuously updated as orbits are refined",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/solar/fetch-cad.mjs",
+   "fallback": "Hide the close-approach list; Apophis 2029 record is also embedded in smallbodies.json notes.",
+   "files": [
+    {
+     "path": "data/solar/close-approaches.json",
+     "bytes": 235929,
+     "records": 1441
+    }
+   ],
+   "limitations": "Predicted approaches change as orbits are refined; poorly observed objects have large distMin/distMax spread; diameter is measured only for a minority, otherwise null (H-based estimates are in neos.json).",
+   "provenanceClass": "derived",
+   "domain": "solar"
+  },
+  "cneos-sentry": {
+   "id": "cneos-sentry",
+   "name": "CNEOS Sentry Impact Risk Table",
+   "organization": "NASA JPL CNEOS",
+   "purpose": "Planetary-defense lab: objects with non-zero computed Earth-impact probability over the next 100 years",
+   "mechanism": "REST API (JSON) summary list",
+   "endpoint": "https://ssd-api.jpl.nasa.gov/sentry.api",
+   "query": null,
+   "version": "live archive state at retrieval",
+   "retrieved": "2026-10-18T06:18:32.199Z",
+   "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+   "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+   "citation": "NASA/JPL-Caltech Center for Near Earth Object Studies (CNEOS), Sentry Impact Risk Table.",
+   "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+   "fieldsUsed": [
+    "des",
+    "fullname",
+    "ip",
+    "ps_cum",
+    "ps_max",
+    "ts_max",
+    "n_imp",
+    "range",
+    "h",
+    "diameter",
+    "mass",
+    "v_inf",
+    "last_obs",
+    "last_obs_jd"
+   ],
+   "updateCadence": "updated as new observations arrive (objects are added and removed)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/solar/fetch-sentry.mjs",
+   "fallback": "Hide the risk table.",
+   "files": [
+    {
+     "path": "data/solar/sentry.json",
+     "bytes": 267059,
+     "records": 2222
+    }
+   ],
+   "limitations": "Impact probabilities are computed from current orbit fits and routinely drop to zero as data improve; a non-zero entry is not a prediction of impact. The Sentry list is a snapshot.",
+   "provenanceClass": "derived",
+   "domain": "solar"
+  },
+  "jpl-horizons-spacecraft": {
+   "id": "jpl-horizons-spacecraft",
+   "name": "JPL Horizons spacecraft position tracks 2025-2030",
+   "organization": "NASA JPL SSD",
+   "purpose": "Spacecraft search and trajectories (Voyagers, New Horizons, Parker, Juno, Europa Clipper, Psyche, Lucy, Hera, JUICE, BepiColombo, JWST)",
+   "mechanism": "Horizons API EPHEM_TYPE=VECTORS CSV (position only)",
+   "endpoint": "https://ssd.jpl.nasa.gov/api/horizons.api",
+   "query": "COMMAND=<naif>&CENTER=500@10 (JWST 500@399)&START_TIME=2025-01-01&STOP_TIME=2030-12-31&STEP_SIZE=<1|5> d&VEC_TABLE=1&REF_SYSTEM=ICRF&REF_PLANE=FRAME&OUT_UNITS=KM-S&TIME_TYPE=TDB&CSV_FORMAT=YES",
+   "version": "Horizons live state (latest spacecraft SPK kernels) at retrieval",
+   "retrieved": "2026-10-18T12:24:41.666Z",
+   "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+   "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+   "citation": "NASA/JPL Horizons On-Line Ephemeris System (https://ssd.jpl.nasa.gov/horizons/). Spacecraft trajectories from mission navigation teams via NAIF SPK kernels.",
+   "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+   "fieldsUsed": [
+    "JDTDB",
+    "X",
+    "Y",
+    "Z"
+   ],
+   "updateCadence": "predicts are updated by flight dynamics teams after trajectory correction maneuvers",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/solar/fetch-spacecraft.mjs",
+   "fallback": "Hide spacecraft whose track is missing; never extrapolate.",
+   "files": [
+    {
+     "path": "data/solar/spacecraft.json",
+     "bytes": 912234,
+     "records": 12
+    }
+   ],
+   "limitations": "Future portions are navigation predictions that shift after maneuvers; coarse steps for outer probes (5 d); Parker Solar Probe 1-day samples undersample perihelion passes. Mission status text is editorial and dated 2026-10; verify before presenting as current.",
+   "provenanceClass": "derived",
+   "domain": "solar"
+  },
+  "jpl-sbdb-neos-phas": {
+   "id": "jpl-sbdb-neos-phas",
+   "name": "JPL SBDB near-Earth objects and PHAs",
+   "organization": "NASA JPL SSD / CNEOS",
+   "purpose": "Planetary-defense lab: orbits, sizes and MOIDs of potentially hazardous asteroids and the larger NEAs",
+   "mechanism": "SBDB Query API (two queries) -> JSON",
+   "endpoint": "https://ssd-api.jpl.nasa.gov/sbdb_query.api",
+   "query": "fields=spkid,full_name,pdes,a,e,i,om,w,ma,epoch,tp,per,q,H,diameter,diameter_sigma,albedo,rot_per,moid,class,pha,condition_code,data_arc,n_obs_used,sigma_a,sigma_e,sigma_i,sigma_om,sigma_w,sigma_ma&full-prec=1&sb-kind=a&sb-group=pha  +  fields=spkid,full_name,pdes,a,e,i,om,w,ma,epoch,tp,per,q,H,diameter,diameter_sigma,albedo,rot_per,moid,class,pha,condition_code,data_arc,n_obs_used,sigma_a,sigma_e,sigma_i,sigma_om,sigma_w,sigma_ma&full-prec=1&sb-kind=a&sb-group=neo&sb-cdata={\"AND\":[\"H|LT|18\"]}",
+   "version": "live archive state at retrieval",
+   "retrieved": "2026-10-18T17:45:05.281Z",
+   "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+   "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+   "citation": "NASA/JPL Solar System Dynamics and CNEOS, Small-Body Database Query API.",
+   "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+   "fieldsUsed": [
+    "spkid",
+    "full_name",
+    "pdes",
+    "a",
+    "e",
+    "i",
+    "om",
+    "w",
+    "ma",
+    "epoch",
+    "tp",
+    "per",
+    "q",
+    "H",
+    "diameter",
+    "diameter_sigma",
+    "albedo",
+    "rot_per",
+    "moid",
+    "class",
+    "pha",
+    "condition_code",
+    "data_arc",
+    "n_obs_used",
+    "sigma_a",
+    "sigma_e",
+    "sigma_i",
+    "sigma_om",
+    "sigma_w",
+    "sigma_ma"
+   ],
+   "updateCadence": "continuous (new discoveries daily)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/solar/fetch-neos.mjs",
+   "fallback": "Hide the NEO table; keep notable bodies from smallbodies.json.",
+   "files": [
+    {
+     "path": "data/solar/neos.json",
+     "bytes": 1120330,
+     "records": 3449
+    }
+   ],
+   "limitations": "diameterEstKm is a rough H-based estimate (real albedos span ~0.03-0.5, so diameters are uncertain by about a factor of 2); only a minority have measured diameters. Osculating elements; not a complete NEO catalog (H<18 plus PHAs).",
+   "provenanceClass": "observed",
+   "domain": "solar"
+  },
+  "jpl-sbdb-notable-small-bodies": {
+   "id": "jpl-sbdb-notable-small-bodies",
+   "name": "JPL Small-Body Database - notable bodies",
+   "organization": "NASA JPL SSD",
+   "purpose": "Orbits and physical parameters of notable asteroids, comets, interstellar objects and dwarf-planet orbits; planetary-defense lab (Apophis, Didymos, 2024 YR4)",
+   "mechanism": "SBDB API (JSON) per object, phys-par=1&discovery=1",
+   "endpoint": "https://ssd-api.jpl.nasa.gov/sbdb.api",
+   "query": "sstr=<designation>&phys-par=1&discovery=1",
+   "version": "live archive state at retrieval",
+   "retrieved": "2026-10-18T17:44:57.663Z",
+   "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+   "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+   "citation": "NASA/JPL Solar System Dynamics, Small-Body Database (https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html). Dimorphos: Thomas et al. 2023 Nature 616:448; Cheng et al. 2023 Nature 616:457.",
+   "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+   "fieldsUsed": [
+    "object.*",
+    "orbit.elements",
+    "orbit.epoch",
+    "orbit.condition_code",
+    "orbit.data_arc",
+    "orbit.n_obs_used",
+    "orbit.moid",
+    "orbit.soln_date",
+    "phys_par.*",
+    "discovery"
+   ],
+   "updateCadence": "orbit solutions updated as new astrometry arrives",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/solar/fetch-smallbodies.mjs + build-smallbodies.mjs",
+   "fallback": "Use bundled snapshot; hide uncertainties if absent.",
+   "files": [
+    {
+     "path": "data/solar/smallbodies.json",
+     "bytes": 32762,
+     "records": 28
+    }
+   ],
+   "limitations": "Osculating elements drift and are valid near their epoch only; low condition-code objects (2024 YR4, 3I) have large uncertainties; hyperbolic orbits need the hyperbolic Kepler equation. Dimorphos mass is an estimate pending Hera.",
+   "provenanceClass": "observed",
+   "domain": "solar"
+  },
+  "jpl-sbdb-numbered-asteroids": {
+   "id": "jpl-sbdb-numbered-asteroids",
+   "name": "JPL SBDB numbered asteroids (H < 15)",
+   "organization": "NASA JPL SSD",
+   "purpose": "Asteroid belt / NEO / Trojan point cloud rendering",
+   "mechanism": "SBDB Query API -> JSON -> Float32 binary",
+   "endpoint": "https://ssd-api.jpl.nasa.gov/sbdb_query.api",
+   "query": "fields=spkid,a,e,i,om,w,ma,epoch,H,class,pha,neo&sb-kind=a&sb-ns=n&sb-cdata={\"AND\":[\"H|LT|15\"]}",
+   "version": "live archive state at retrieval",
+   "retrieved": "2026-10-18T12:07:36.776Z",
+   "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+   "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+   "citation": "NASA/JPL Solar System Dynamics, Small-Body Database Query API.",
+   "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+   "fieldsUsed": [
+    "spkid",
+    "a",
+    "e",
+    "i",
+    "om",
+    "w",
+    "ma",
+    "epoch",
+    "H",
+    "class"
+   ],
+   "updateCadence": "continuous",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/solar/fetch-asteroids.mjs",
+   "fallback": "Render a procedural belt only if the file is missing, labelled illustrative.",
+   "files": [
+    {
+     "path": "data/solar/asteroids.bin",
+     "bytes": 2730780,
+     "records": 75855
+    },
+    {
+     "path": "data/solar/asteroids.json",
+     "bytes": 1227,
+     "records": 1
+    }
+   ],
+   "limitations": "Brightness-limited sample (H<16, roughly D > 1-2 km depending on albedo), not complete; osculating elements at per-body epochs; positions beyond a few years from epoch drift. No names/diameters in the point cloud.",
+   "provenanceClass": "observed",
+   "domain": "solar"
+  },
+  "jpl-ssd-approx-pos": {
+   "id": "jpl-ssd-approx-pos",
+   "name": "JPL Approximate Positions of the Planets (Standish) Table 1",
+   "organization": "NASA JPL SSD",
+   "purpose": "Planet Keplerian elements and rates for orbit lines / fallback positions",
+   "mechanism": "HTML <pre> table parse",
+   "endpoint": "https://ssd.jpl.nasa.gov/planets/approx_pos.html",
+   "query": "Table 1 (1800-2050 AD)",
+   "retrieved": "2026-10-16T18:20:44.662Z",
+   "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+   "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+   "citation": "E. M. Standish, Keplerian Elements for Approximate Positions of the Major Planets, NASA/JPL SSD.",
+   "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+   "fieldsUsed": [
+    "a",
+    "e",
+    "I",
+    "L",
+    "long.peri",
+    "long.node",
+    "rates"
+   ],
+   "updateCadence": "static",
+   "normalization": "scripts/data/solar/build-bodies.mjs",
+   "files": [
+    {
+     "path": "data/solar/bodies.json",
+     "bytes": 83740,
+     "records": 8
+    }
+   ],
+   "limitations": "Accuracy of arcminutes to arcseconds-scale only within 1800-2050; Earth row is the Earth-Moon barycentre. Use astronomy-engine for runtime positions.",
+   "version": "live archive state at retrieval",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "fallback": "Use bundled snapshot.",
+   "provenanceClass": "observed",
+   "domain": "solar"
+  },
+  "jpl-ssd-planet-phys-par": {
+   "id": "jpl-ssd-planet-phys-par",
+   "name": "JPL SSD planet and dwarf-planet physical parameters",
+   "organization": "NASA JPL SSD",
+   "purpose": "Radii, mass, density, albedo of planets and dwarf planets",
+   "mechanism": "HTML table scrape (no structured API exists)",
+   "endpoint": "https://ssd.jpl.nasa.gov/planets/phys_par.html",
+   "query": null,
+   "retrieved": "2026-10-16T18:19:53.434Z",
+   "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+   "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+   "citation": "NASA/JPL Solar System Dynamics, Planetary Physical Parameters (Park et al. 2021 for planet masses).",
+   "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+   "fieldsUsed": [
+    "equatorial/mean radius",
+    "mass",
+    "density",
+    "geometric albedo",
+    "sidereal rotation"
+   ],
+   "updateCadence": "irregular",
+   "normalization": "scripts/data/solar/build-bodies.mjs",
+   "files": [
+    {
+     "path": "data/solar/bodies.json",
+     "bytes": 83740,
+     "records": 38
+    }
+   ],
+   "limitations": "Dwarf-planet values have large uncertainties (Eris, Haumea, Makemake).",
+   "version": "live archive state at retrieval",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "fallback": "Use bundled snapshot.",
+   "provenanceClass": "observed",
+   "domain": "solar"
+  },
+  "jpl-ssd-satellite-discovery": {
+   "id": "jpl-ssd-satellite-discovery",
+   "name": "JPL SSD planetary satellite discovery circumstances",
+   "organization": "NASA JPL SSD",
+   "purpose": "Moon discoverer and discovery year",
+   "mechanism": "HTML table scrape",
+   "endpoint": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+   "query": null,
+   "retrieved": "2026-10-16T18:20:09.515Z",
+   "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+   "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+   "citation": "NASA/JPL Solar System Dynamics, Planetary Satellite Discovery Circumstances.",
+   "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+   "fieldsUsed": [
+    "name",
+    "year",
+    "discoverer"
+   ],
+   "updateCadence": "as moons are announced",
+   "normalization": "scripts/data/solar/build-bodies.mjs",
+   "files": [
+    {
+     "path": "data/solar/bodies.json",
+     "bytes": 83740,
+     "records": 24
+    }
+   ],
+   "limitations": "None significant.",
+   "version": "live archive state at retrieval",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "fallback": "Use bundled snapshot.",
+   "provenanceClass": "observed",
+   "domain": "solar"
+  },
+  "jpl-ssd-satellite-mean-elements": {
+   "id": "jpl-ssd-satellite-mean-elements",
+   "name": "JPL SSD planetary satellite mean orbital elements",
+   "organization": "NASA JPL SSD",
+   "purpose": "Moon orbit lines and Laplace-plane orientation",
+   "mechanism": "HTML table scrape",
+   "endpoint": "https://ssd.jpl.nasa.gov/sats/elem/",
+   "query": null,
+   "retrieved": "2026-10-16T18:20:02.844Z",
+   "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+   "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+   "citation": "NASA/JPL Solar System Dynamics, Planetary Satellite Mean Elements.",
+   "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+   "fieldsUsed": [
+    "a",
+    "e",
+    "omega",
+    "M",
+    "i",
+    "node",
+    "P",
+    "Laplace pole"
+   ],
+   "updateCadence": "irregular",
+   "normalization": "scripts/data/solar/build-bodies.mjs",
+   "files": [
+    {
+     "path": "data/solar/bodies.json",
+     "bytes": 83740,
+     "records": 24
+    }
+   ],
+   "limitations": "Mean elements at epoch 2000-01-01.5 TDB, rounded; not for precise positions.",
+   "version": "live archive state at retrieval",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "fallback": "Use bundled snapshot.",
+   "provenanceClass": "observed",
+   "domain": "solar"
+  },
+  "jpl-ssd-satellite-phys-par": {
+   "id": "jpl-ssd-satellite-phys-par",
+   "name": "JPL SSD planetary satellite physical parameters",
+   "organization": "NASA JPL SSD",
+   "purpose": "Moon GM, mean radius, density",
+   "mechanism": "HTML table scrape",
+   "endpoint": "https://ssd.jpl.nasa.gov/sats/phys_par/",
+   "query": null,
+   "retrieved": "2026-10-16T18:19:56.152Z",
+   "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+   "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+   "citation": "NASA/JPL Solar System Dynamics, Planetary Satellite Physical Parameters.",
+   "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time (no simultaneous requests); back off on errors; JPL may throttle or block unreasonable load. Scripts use sequential requests with >= 1.1 s spacing.",
+   "fieldsUsed": [
+    "GM",
+    "mean radius",
+    "mean density"
+   ],
+   "updateCadence": "irregular",
+   "normalization": "scripts/data/solar/build-bodies.mjs",
+   "files": [
+    {
+     "path": "data/solar/bodies.json",
+     "bytes": 83740,
+     "records": 24
+    }
+   ],
+   "limitations": "Irregular moons have approximate radii.",
+   "version": "live archive state at retrieval",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "fallback": "Use bundled snapshot.",
+   "provenanceClass": "observed",
+   "domain": "solar"
+  },
+  "naif-gm-de440": {
+   "id": "naif-gm-de440",
+   "name": "NAIF gm_de440.tpc (planetary GM values)",
+   "organization": "NASA JPL NAIF",
+   "purpose": "GM of Sun and planets",
+   "mechanism": "SPICE text kernel parse",
+   "endpoint": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/gm_de440.tpc",
+   "query": null,
+   "retrieved": "2026-10-16T18:20:41.564Z",
+   "license": "NAIF SPICE rules: kernels on the NAIF server may be downloaded and used by anyone; redistribution of unmodified kernels is permitted; no fees or licensing required (acknowledgement encouraged).",
+   "licenseUrl": "https://naif.jpl.nasa.gov/naif/rules.html",
+   "citation": "Park et al. 2021, The JPL Planetary and Lunar Ephemerides DE440 and DE441, AJ 161:105.",
+   "rateLimits": "not documented",
+   "fieldsUsed": [
+    "BODYn_GM"
+   ],
+   "updateCadence": "with ephemeris releases",
+   "normalization": "scripts/data/solar/build-bodies.mjs",
+   "files": [
+    {
+     "path": "data/solar/bodies.json",
+     "bytes": 83740,
+     "records": 9
+    }
+   ],
+   "limitations": "GM of the Sun is in km^3/s^2 (TDB-compatible units).",
+   "version": "live archive state at retrieval",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "fallback": "Use bundled snapshot.",
+   "provenanceClass": "observed",
+   "domain": "solar"
+  },
+  "naif-pck00011": {
+   "id": "naif-pck00011",
+   "name": "NAIF PCK pck00011.tpc (IAU WGCCRE 2015 rotation elements and radii)",
+   "organization": "NASA JPL NAIF",
+   "purpose": "Body pole/prime-meridian rotation models and triaxial radii",
+   "mechanism": "SPICE text kernel parse",
+   "endpoint": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc",
+   "query": null,
+   "retrieved": "2026-10-16T18:20:40.193Z",
+   "license": "NAIF SPICE rules: kernels on the NAIF server may be downloaded and used by anyone; redistribution of unmodified kernels is permitted; no fees or licensing required (acknowledgement encouraged).",
+   "licenseUrl": "https://naif.jpl.nasa.gov/naif/rules.html",
+   "citation": "Archinal et al. 2018, Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015, Celest. Mech. Dyn. Astr. 130:22; kernel by NASA JPL NAIF.",
+   "rateLimits": "not documented",
+   "fieldsUsed": [
+    "BODYn_POLE_RA",
+    "BODYn_POLE_DEC",
+    "BODYn_PM",
+    "BODYn_NUT_PREC_*",
+    "BODYn_RADII"
+   ],
+   "updateCadence": "with IAU reports",
+   "normalization": "scripts/data/solar/build-bodies.mjs",
+   "files": [
+    {
+     "path": "data/solar/bodies.json",
+     "bytes": 83740,
+     "records": 38
+    }
+   ],
+   "limitations": "Mars system requires the pck00011 convention; Eris/Haumea/Makemake and some irregular moons have no solution.",
+   "version": "live archive state at retrieval",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "fallback": "Use bundled snapshot.",
+   "provenanceClass": "observed",
+   "domain": "solar"
+  },
+  "nasa-donki-space-weather": {
+   "id": "nasa-donki-space-weather",
+   "name": "NASA DONKI solar flares, CMEs and geomagnetic storms (2024-10 to 2026-10)",
+   "organization": "NASA CCMC (Space Weather Database Of Notifications, Knowledge, Information)",
+   "purpose": "Link solar activity to thermospheric heating and orbital-debris decay; Sun inspector",
+   "mechanism": "CCMC DONKI web service (keyless; FLR, CME, GST) -> JSON",
+   "endpoint": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/{FLR|CME|GST}",
+   "query": "startDate=<a>&endDate=<b> (30-day chunks, 2024-10-01..2026-10-17)",
+   "version": "live archive state at retrieval",
+   "retrieved": "2026-10-18T17:49:37.328Z",
+   "license": "NASA-produced content is generally not subject to U.S. copyright (17 U.S.C. 105) and may be used for educational purposes; credit NASA as the source and do not imply endorsement (NASA Media Usage Guidelines).",
+   "licenseUrl": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+   "citation": "NASA Community Coordinated Modeling Center (CCMC), DONKI database (https://ccmc.gsfc.nasa.gov/DONKI/).",
+   "rateLimits": "Not documented; script makes ~75 requests, 1.5 s apart.",
+   "fieldsUsed": [
+    "flrID",
+    "beginTime",
+    "peakTime",
+    "endTime",
+    "classType",
+    "activeRegionNum",
+    "sourceLocation",
+    "activityID",
+    "startTime",
+    "cmeAnalyses.*",
+    "gstID",
+    "allKpIndex"
+   ],
+   "updateCadence": "continuous",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/solar/fetch-space-weather.mjs",
+   "fallback": "Hide the space-weather timeline.",
+   "files": [
+    {
+     "path": "data/solar/space-weather.json",
+     "bytes": 1769104,
+     "records": 4408
+    }
+   ],
+   "limitations": "DONKI is a notification database curated by human forecasters: CME speed/type depend on the chosen analysis and some CMEs have none; flare class is the GOES-reported peak. Retrieved via the keyless ccmc.gsfc.nasa.gov web service.",
+   "provenanceClass": "observed",
+   "domain": "solar"
+  },
+  "noaa-swpc-solar-cycle-indices": {
+   "id": "noaa-swpc-solar-cycle-indices",
+   "name": "NOAA SWPC observed solar cycle indices (sunspot number, F10.7)",
+   "organization": "NOAA Space Weather Prediction Center",
+   "purpose": "Solar-cycle context (cycle 25) for thermospheric drag and debris decay",
+   "mechanism": "JSON file",
+   "endpoint": "https://services.swpc.noaa.gov/json/solar-cycle/observed-solar-cycle-indices.json",
+   "query": null,
+   "version": "live archive state at retrieval",
+   "retrieved": "2026-10-18T13:53:31.436Z",
+   "license": "U.S. Government work (NOAA/NWS); public domain, no restrictions stated; SWPC data usage guidance requests attribution.",
+   "licenseUrl": "https://www.swpc.noaa.gov/content/data-access",
+   "citation": "NOAA Space Weather Prediction Center; sunspot numbers originate from SILSO/Royal Observatory of Belgium.",
+   "rateLimits": "not documented (single static file)",
+   "fieldsUsed": [
+    "time-tag",
+    "ssn",
+    "smoothed_ssn",
+    "f10.7",
+    "smoothed_f10.7"
+   ],
+   "updateCadence": "monthly",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/solar/fetch-space-weather.mjs",
+   "fallback": "Hide the cycle chart.",
+   "files": [
+    {
+     "path": "data/solar/space-weather.json",
+     "bytes": 1769104,
+     "records": 921
+    }
+   ],
+   "limitations": "Monthly means from 1950 only (source starts 1749). F10.7 pre-1947 not available. Last months provisional.",
+   "provenanceClass": "observed",
+   "domain": "solar"
+  },
+  "nssdca-planetary-fact-sheets": {
+   "id": "nssdca-planetary-fact-sheets",
+   "name": "NASA NSSDCA Planetary Fact Sheets",
+   "organization": "NASA GSFC NSSDCA",
+   "purpose": "Polar radius, Bond albedo, obliquity, temperatures, atmosphere composition",
+   "mechanism": "HTML table scrape (no API)",
+   "endpoint": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/",
+   "query": null,
+   "retrieved": "2026-10-16T18:22:19.156Z",
+   "license": "NASA-produced content is generally not subject to U.S. copyright (17 U.S.C. 105) and may be used for educational purposes; credit NASA as the source and do not imply endorsement (NASA Media Usage Guidelines).",
+   "licenseUrl": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+   "citation": "NASA Goddard Space Flight Center, NSSDCA Planetary Fact Sheets (D. R. Williams).",
+   "rateLimits": "not documented",
+   "fieldsUsed": [
+    "Polar radius",
+    "Bond albedo",
+    "Obliquity to orbit",
+    "Average temperature",
+    "Surface pressure",
+    "Atmospheric composition"
+   ],
+   "updateCadence": "infrequent",
+   "normalization": "scripts/data/solar/build-bodies.mjs",
+   "files": [
+    {
+     "path": "data/solar/bodies.json",
+     "bytes": 83740,
+     "records": 10
+    }
+   ],
+   "limitations": "Rounded values; gas giants have no surface (1-bar level used). Titan atmosphere pressure comes from the literature (Fulchignoni et al. 2005).",
+   "version": "live archive state at retrieval",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "fallback": "Use bundled snapshot.",
+   "provenanceClass": "observed",
+   "domain": "solar"
+  },
+  "stars-hyg-field": {
+   "organization": "David Nash / Astronexus (compiled from ESA Hipparcos, Yale BSC5, Gliese CNS3)",
+   "mechanism": "bulk CSV download (git LFS, pinned commit) -> Node build",
+   "endpoint": "https://codeberg.org/astronexus/hyg/src/commit/53e3df311869e813ace5f1ad2ec4ce909f13256c/data/hyg/CURRENT/hyg_v44.csv.gz",
+   "query": null,
+   "version": "HYG v4.4 (codeberg commit 53e3df3)",
+   "retrieved": "2026-10-17T06:15:27.293Z",
+   "license": "CC BY-SA 4.0 (share-alike: derived data files carry the same licence)",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "citation": "HYG Database v4.4, David Nash / Astronexus (https://codeberg.org/astronexus/hyg), licensed CC BY-SA 4.0. Compiled from the Hipparcos catalogue (ESA 1997; new reduction van Leeuwen 2007), the Yale Bright Star Catalogue (5th ed.) and the Gliese Catalogue of Nearby Stars (3rd ed.).",
+   "rateLimits": "not documented (static file; fetched once, 1 request)",
+   "updateCadence": "irregular releases (v4.4 current as of 2026-10)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/stars/build.mjs",
+   "provenanceClass": "derived",
+   "id": "stars-hyg-field",
+   "name": "HYG v4.4 3-D star field (109k stars)",
+   "purpose": "Photometrically correct 3-D star field, LOD by magnitude prefix",
+   "fieldsUsed": [
+    "ra",
+    "dec",
+    "dist",
+    "mag",
+    "absmag",
+    "ci"
+   ],
+   "fallback": "Render only the bundled stars-named.json rows (apparent mag + ra/dec) as a billboard sky",
+   "files": [
+    {
+     "path": "data/stars/stars.bin",
+     "bytes": 2625336,
+     "records": 109389
+    },
+    {
+     "path": "data/stars/stars.json",
+     "bytes": 4235,
+     "records": 1
+    }
+   ],
+   "limitations": "Hipparcos-era parallaxes: distances beyond ~300 pc are uncertain; stars without parallax (10,224) are excluded from 3-D; Teff is a B-V black-body rendering aid, not measured; no extinction; epoch J2000.",
+   "domain": "stars"
+  },
+  "stars-named-search": {
+   "organization": "David Nash / Astronexus (compiled from ESA Hipparcos, Yale BSC5, Gliese CNS3); names cross-checked with IAU WGSN",
+   "mechanism": "bulk CSV download (git LFS, pinned commit) -> Node build",
+   "endpoint": "https://codeberg.org/astronexus/hyg/src/commit/53e3df311869e813ace5f1ad2ec4ce909f13256c/data/hyg/CURRENT/hyg_v44.csv.gz",
+   "query": null,
+   "version": "HYG v4.4 (codeberg commit 53e3df3)",
+   "retrieved": "2026-10-17T06:15:27.293Z",
+   "license": "CC BY-SA 4.0 (share-alike: derived data files carry the same licence)",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "citation": "HYG Database v4.4, David Nash / Astronexus (https://codeberg.org/astronexus/hyg), licensed CC BY-SA 4.0. Compiled from the Hipparcos catalogue (ESA 1997; new reduction van Leeuwen 2007), the Yale Bright Star Catalogue (5th ed.) and the Gliese Catalogue of Nearby Stars (3rd ed.). Star names: IAU Catalog of Star Names (IAU-CSN), IAU Division C Working Group on Star Names (WGSN), https://exopla.net/star-names/modern-iau-star-names/ (linked from iau.org).",
+   "rateLimits": "not documented (static file; fetched once, 1 request)",
+   "updateCadence": "irregular releases (v4.4 current as of 2026-10)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/stars/build.mjs",
+   "provenanceClass": "derived",
+   "id": "stars-named-search",
+   "name": "Named / designated / naked-eye star table",
+   "purpose": "Search by name, Bayer/Flamsteed, Gliese, HIP/HD/HR; labels; multiple-star systems",
+   "fieldsUsed": [
+    "proper",
+    "bayer",
+    "flam",
+    "gl",
+    "hip",
+    "hd",
+    "hr",
+    "spect",
+    "var",
+    "lum",
+    "comp",
+    "base"
+   ],
+   "files": [
+    {
+     "path": "data/stars/stars-named.json",
+     "bytes": 1544489,
+     "records": 12355
+    },
+    {
+     "path": "data/stars/hip-index.json",
+     "bytes": 1511714,
+     "records": 107737
+    },
+    {
+     "path": "data/stars/star-systems.json",
+     "bytes": 43281,
+     "records": 401
+    }
+   ],
+   "fallback": "Search disabled; show brightest-star labels only",
+   "limitations": "Proper names: IAU WGSN where matched (569), else HYG (41). 226 rows have no usable distance (index null). luminositySolar is V-band, not bolometric.",
+   "domain": "stars"
+  },
+  "iau-wgsn-star-names": {
+   "id": "iau-wgsn-star-names",
+   "name": "IAU Catalog of Star Names (WGSN)",
+   "organization": "IAU Working Group on Star Names",
+   "purpose": "Authoritative proper-name cross-check of HYG names",
+   "mechanism": "HTML table (no structured API exists) + legacy 2022 text list",
+   "endpoint": "https://exopla.net/star-names/modern-iau-star-names/",
+   "query": null,
+   "version": "live table at retrieval",
+   "retrieved": "2026-10-17T06:15:40.851Z",
+   "license": "Public IAU list; cite IAU WGSN",
+   "licenseUrl": null,
+   "citation": "Star names: IAU Catalog of Star Names (IAU-CSN), IAU Division C Working Group on Star Names (WGSN), https://exopla.net/star-names/modern-iau-star-names/ (linked from iau.org).",
+   "rateLimits": "not documented",
+   "fieldsUsed": [
+    "name",
+    "designation",
+    "HIP",
+    "HD",
+    "constellation"
+   ],
+   "updateCadence": "WGSN adds names a few times per year",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/stars/build.mjs",
+   "fallback": "Use HYG proper names",
+   "files": [],
+   "limitations": "Used only to correct/extend names inside stars-named.json (no separate output). 70 of 640 entries unmatched (stars not in HYG field).",
+   "provenanceClass": "observed",
+   "domain": "stars"
+  },
+  "constellation-figures-boundaries": {
+   "id": "constellation-figures-boundaries",
+   "name": "IAU constellation lines (Stellarium modern_iau) and boundaries (VizieR VI/49)",
+   "organization": "Stellarium team; CDS / Davenhall & Leggett (Delporte 1930)",
+   "purpose": "Constellation figures that distort in 3-D, labels and sky-area boundaries",
+   "mechanism": "raw GitHub JSON (pinned commit) + CDS FTP flat files -> Node build (B1875 boundaries precessed to J2000, densified to 1 deg)",
+   "endpoint": "https://github.com/Stellarium/stellarium/blob/dc5679c9723685585196c4d6ecd7ffd33da59ecd/skycultures/modern_iau/index.json ; https://cdsarc.cds.unistra.fr/ftp/VI/49/constbnd.dat",
+   "query": null,
+   "version": "Stellarium commit dc5679c; VI/49 VizieR VI/49, CDS ReadMe history last entry 23-Jul-2024 (J2000 boundaries for CEP and UMI fixed.)",
+   "retrieved": "2026-10-17T06:15:27.293Z",
+   "license": "Lines: CC BY-SA 4.0 (Stellarium modern_iau). Boundaries: CDS VizieR open data, cite catalogue.",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "citation": "Constellation figures: Stellarium sky culture \"modern_iau\" (Stellarium team; figures after the IAU / Sky & Telescope constellation charts by Roger Sinnott, Rick Fienberg and Alan MacRobert), CC BY-SA 4.0, https://github.com/Stellarium/stellarium. Constellation boundaries: Davenhall A.C., Leggett S.K. 1989, \"Catalogue of Constellation Boundary Data\", CDS VizieR VI/49 (1997yCat.6049....0D), after Delporte E. 1930, \"Delimitation scientifique des constellations\". This research has made use of the VizieR catalogue access tool, CDS, Strasbourg, France (DOI: 10.26093/cds/vizier).",
+   "rateLimits": "not documented",
+   "fieldsUsed": [
+    "lines (HIP pairs)",
+    "RAhr",
+    "DEdeg",
+    "cst",
+    "adj"
+   ],
+   "updateCadence": "static (boundaries 1930; figures change rarely)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/stars/build.mjs",
+   "fallback": "Hide constellation overlay",
+   "files": [
+    {
+     "path": "data/stars/constellations.json",
+     "bytes": 314858,
+     "records": 88
+    }
+   ],
+   "limitations": "Figures are a cultural convention (one of several). 1 segment (UMa, HIP 55203) has an endpoint absent from HYG and 18 other endpoints lack parallax (no 3-D position; use lineStars RA/Dec). Boundaries reconstructed: B1875 edges precessed to J2000 and sampled at 1 deg; all 12,948 VI/49 J2000 vertices lie within 7.6 arcsec of them.",
+   "provenanceClass": "reconstructed",
+   "domain": "stars"
+  },
+  "gaia-gcns-100pc": {
+   "id": "gaia-gcns-100pc",
+   "name": "Gaia Catalogue of Nearby Stars (GCNS, EDR3, <=100 pc)",
+   "organization": "ESA Gaia DPAC (Smart et al. 2021)",
+   "purpose": "Catalog-adapter demo: complete 100 pc volume with HR-diagram colours",
+   "mechanism": "ESA Gaia Archive TAP async ADQL (24 RA bands) -> CSV -> Float32 binary",
+   "endpoint": "https://gea.esac.esa.int/tap-server/tap",
+   "query": "SELECT source_id, ra, dec, parallax, parallax_error, phot_g_mean_mag, phot_bp_mean_mag, phot_rp_mean_mag, dist_16, dist_50, dist_84, gcns_prob, wd_prob, ruwe FROM external.gaiaedr3_gcns_main_1 WHERE ra >= a AND ra < b (24 bands of 15 deg)",
+   "version": "Gaia EDR3 (GCNS table external.gaiaedr3_gcns_main_1)",
+   "retrieved": "2026-10-18T17:44:45.107Z",
+   "license": "ESA Gaia data licence: CC BY-NC 3.0 IGO (non-commercial, educational exhibition use)",
+   "licenseUrl": "https://www.cosmos.esa.int/web/gaia-users/license",
+   "citation": "Gaia Collaboration, Smart R.L., Sarro L.M., et al. 2021, \"Gaia Early Data Release 3: The Gaia Catalogue of Nearby Stars\", A&A 649, A6 (doi:10.1051/0004-6361/202039498). Credit: ESA/Gaia/DPAC. This work has made use of data from the European Space Agency (ESA) mission Gaia (https://www.cosmos.esa.int/gaia), processed by the Gaia Data Processing and Analysis Consortium (DPAC, https://www.cosmos.esa.int/web/gaia/dpac/consortium). Funding for the DPAC has been provided by national institutions, in particular the institutions participating in the Gaia Multilateral Agreement.",
+   "rateLimits": "anonymous async jobs capped at 50,000 rows per job (hence band splitting)",
+   "fieldsUsed": [
+    "ra",
+    "dec",
+    "parallax",
+    "phot_g_mean_mag",
+    "phot_bp_mean_mag",
+    "phot_rp_mean_mag",
+    "dist_50"
+   ],
+   "updateCadence": "Gaia DR4 due 2026-12-02 (NOT used); EDR3 static",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/stars/fetch-gcns.mjs + build-gcns.mjs",
+   "fallback": "Use HYG field only",
+   "files": [
+    {
+     "path": "data/stars/gaia-gcns.bin",
+     "bytes": 6617620,
+     "records": 330881
+    },
+    {
+     "path": "data/stars/gaia-gcns.json",
+     "bytes": 2157,
+     "records": 1
+    }
+   ],
+   "limitations": "Positions at epoch J2016.0, not propagated. 431 rows lack G (dropped); 6,574 lack BP-RP (NaN). Distances are GCNS Bayesian medians. Contains faint dwarfs to G~21.",
+   "provenanceClass": "observed",
+   "domain": "stars"
+  },
+  "textures-earth-blue-marble-ng": {
+   "id": "textures-earth-blue-marble-ng",
+   "name": "NASA Blue Marble: Next Generation (Dec 2004), Earth day colour",
+   "organization": "NASA Earth Observatory",
+   "purpose": "Earth day-side albedo map",
+   "mechanism": "HTTP GET JPEG 21600x10800 -> sharp resize",
+   "endpoint": "https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74218/world.200412.3x21600x10800.jpg",
+   "query": null,
+   "version": "Blue Marble NG, December 2004 monthly composite",
+   "retrieved": "2026-10-18T12:18:34.475Z",
+   "license": "Public domain (NASA)",
+   "licenseUrl": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+   "citation": "NASA Earth Observatory (Reto Stockli, Robert Simmon), Blue Marble: Next Generation",
+   "rateLimits": "not documented",
+   "fieldsUsed": [
+    "RGB"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-earth.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/earth/day_8k.jpg",
+     "bytes": 2563842,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/day_4k.jpg",
+     "bytes": 726894,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/day_2k.jpg",
+     "bytes": 207981,
+     "records": 1
+    }
+   ],
+   "limitations": "Single monthly composite: seasonal snow of Dec 2004; no cloud; 500 m/px source downsampled.",
+   "provenanceClass": "observed",
+   "domain": "textures"
+  },
+  "textures-earth-black-marble-2016": {
+   "id": "textures-earth-black-marble-2016",
+   "name": "NASA Black Marble 2016 (VIIRS) via GIBS, Earth night lights",
+   "organization": "NASA EOSDIS GIBS / NASA GSFC",
+   "purpose": "Earth night-side emissive map",
+   "mechanism": "OGC WMS 1.1.1 GetMap (VIIRS_Black_Marble, time 2016-01-01) 8192x4096 PNG -> lights-only processing",
+   "endpoint": "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi",
+   "query": "LAYERS=VIIRS_Black_Marble&SRS=EPSG:4326&BBOX=-180,-90,180,90&WIDTH=8192&HEIGHT=4096&TIME=2016-01-01",
+   "version": "Black Marble 2016 annual composite as served by GIBS",
+   "retrieved": "2026-10-18T12:19:08.896Z",
+   "license": "NASA EOSDIS open data (public domain; acknowledge NASA/GIBS)",
+   "licenseUrl": "https://www.earthdata.nasa.gov/engage/open-data-services-and-software/data-and-information-policy",
+   "citation": "We acknowledge the use of imagery provided by services from NASA GIBS, part of NASA ESDIS. Black Marble: NASA Earth Observatory / NOAA NGDC",
+   "rateLimits": "GIBS: not documented; single request used",
+   "fieldsUsed": [
+    "RGB"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-earth.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/earth/night_8k.jpg",
+     "bytes": 990002,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/night_4k.jpg",
+     "bytes": 276351,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/night_2k.jpg",
+     "bytes": 76925,
+     "records": 1
+    }
+   ],
+   "limitations": "Base tint of GIBS rendering removed (derived lights-only emissive); absolute radiance not preserved; 8192 px is oversampled from ~500 m tiles.",
+   "provenanceClass": "derived",
+   "domain": "textures"
+  },
+  "textures-earth-clouds-sss": {
+   "id": "textures-earth-clouds-sss",
+   "name": "Solar System Scope Earth cloud map",
+   "organization": "Solar System Scope / INOVE",
+   "purpose": "Earth cloud layer (alpha/opacity)",
+   "mechanism": "HTTP GET 8k_earth_clouds.jpg -> greyscale",
+   "endpoint": "https://www.solarsystemscope.com/textures/download/8k_earth_clouds.jpg",
+   "query": null,
+   "version": "site snapshot",
+   "retrieved": "2026-10-18T12:19:17.402Z",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+   "citation": "Solar System Scope / INOVE (textures based on NASA imagery)",
+   "rateLimits": "not documented",
+   "fieldsUsed": [
+    "luminance"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-earth.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/earth/clouds_8k.jpg",
+     "bytes": 7178322,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/clouds_4k.jpg",
+     "bytes": 1981531,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/clouds_2k.jpg",
+     "bytes": 498589,
+     "records": 1
+    }
+   ],
+   "limitations": "Static composite, not real weather; bright polar bands are source artefacts.",
+   "provenanceClass": "illustrative",
+   "domain": "textures"
+  },
+  "textures-earth-etopo2022": {
+   "id": "textures-earth-etopo2022",
+   "name": "NOAA ETOPO 2022 60 arc-second surface elevation -> ocean mask, height, normal",
+   "organization": "NOAA National Centers for Environmental Information",
+   "purpose": "Earth specular (ocean) mask, height/bump and normal map",
+   "mechanism": "OPeNDAP .dods (z[lat][lon], stride 2 = 10800x5400) -> area resample -> derived maps",
+   "endpoint": "https://www.ngdc.noaa.gov/thredds/dodsC/global/ETOPO2022/60s/60s_surface_elev_netcdf/ETOPO_2022_v1_60s_N90W180_surface.nc",
+   "query": "z.z[0:2:10798][0:2:21598] in 6 latitude chunks",
+   "version": "ETOPO 2022 v1",
+   "retrieved": "2026-10-18T12:34:13.733Z",
+   "license": "Public domain (NOAA NCEI)",
+   "licenseUrl": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
+   "citation": "NOAA National Centers for Environmental Information. 2022: ETOPO 2022 15 Arc-Second Global Relief Model. doi:10.25921/fd45-gt74",
+   "rateLimits": "not documented",
+   "fieldsUsed": [
+    "z (surface elevation, m)"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-earth.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/earth/height_4k.png",
+     "bytes": 1720974,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/height_2k.png",
+     "bytes": 479982,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/normal_8k.webp",
+     "bytes": 10858914,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/normal_4k.png",
+     "bytes": 2114270,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/normal_2k.png",
+     "bytes": 541363,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/specular_8k.png",
+     "bytes": 550359,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/specular_4k.png",
+     "bytes": 239461,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/specular_2k.png",
+     "bytes": 99732,
+     "records": 1
+    }
+   ],
+   "limitations": "Stride-2 subsample of the 60\" grid (~3.7 km); normal slope exaggerated x6; ocean mask = z<0 (includes Caspian/Dead Sea depressions); bathymetry not used for normals.",
+   "provenanceClass": "derived",
+   "domain": "textures"
+  },
+  "textures-earth-epic": {
+   "id": "textures-earth-epic",
+   "name": "DSCOVR EPIC natural colour images",
+   "organization": "NASA GSFC / NOAA DSCOVR EPIC team",
+   "purpose": "\"Earth from L1\" observation card",
+   "mechanism": "REST JSON list + JPEG archive",
+   "endpoint": "https://epic.gsfc.nasa.gov/api/natural",
+   "query": "latest day, 3 images spread in longitude",
+   "version": "L1B v04",
+   "retrieved": "2026-10-18T13:27:51.990Z",
+   "license": "Public domain (NASA)",
+   "licenseUrl": "https://epic.gsfc.nasa.gov/about/api",
+   "citation": "DSCOVR EPIC / NASA",
+   "rateLimits": "not documented",
+   "fieldsUsed": [
+    "image",
+    "centroid_coordinates",
+    "dscovr_j2000_position",
+    "sun_j2000_position",
+    "lunar_j2000_position",
+    "attitude_quaternions",
+    "date"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-epic.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/earth/epic/epic_1b_20261016163933_2048.jpg",
+     "bytes": 273022,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/epic/epic_1b_20261016111527_2048.jpg",
+     "bytes": 263014,
+     "records": 1
+    },
+    {
+     "path": "textures/earth/epic/epic_1b_20261016040317_2048.jpg",
+     "bytes": 268476,
+     "records": 1
+    }
+   ],
+   "limitations": "Snapshot of one day; positions are geocentric J2000 in km.",
+   "provenanceClass": "observed",
+   "domain": "textures"
+  },
+  "textures-usgs-planetary-wms": {
+   "id": "textures-usgs-planetary-wms",
+   "name": "USGS Astrogeology planetary WMS global mosaics",
+   "organization": "USGS Astrogeology Science Center (NASA mission data)",
+   "purpose": "Global surface maps: Moon, Mars, Mercury, Venus surface, Io, Europa, Ganymede, Callisto, Titan, Enceladus, Triton, Pluto, Charon",
+   "mechanism": "OGC WMS 1.1.1 GetMap EPSG:4326 4096x2048 PNG",
+   "endpoint": "https://planetarymaps.usgs.gov/cgi-bin/mapserv",
+   "query": "see per-body endpoint in index.json credits / records",
+   "version": "live archive state at retrieval",
+   "retrieved": "2026-10-18T11:19:18.193Z",
+   "license": "Public domain (U.S. Government works; NASA/USGS)",
+   "licenseUrl": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+   "citation": "USGS Astrogeology Science Center / NASA mission teams (see credits in index.json)",
+   "rateLimits": "not documented (requests throttled to >=1 s per host)",
+   "fieldsUsed": [
+    "image layer"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-wms.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/callisto/color_4k.jpg",
+     "bytes": 1081642,
+     "records": 1
+    },
+    {
+     "path": "textures/callisto/color_1k.jpg",
+     "bytes": 70019,
+     "records": 1
+    },
+    {
+     "path": "textures/charon/color_4k.jpg",
+     "bytes": 710963,
+     "records": 1
+    },
+    {
+     "path": "textures/charon/color_1k.jpg",
+     "bytes": 63008,
+     "records": 1
+    },
+    {
+     "path": "textures/enceladus/color_4k.jpg",
+     "bytes": 2022155,
+     "records": 1
+    },
+    {
+     "path": "textures/enceladus/color_1k.jpg",
+     "bytes": 143575,
+     "records": 1
+    },
+    {
+     "path": "textures/europa/color_4k.jpg",
+     "bytes": 1335589,
+     "records": 1
+    },
+    {
+     "path": "textures/europa/color_1k.jpg",
+     "bytes": 91858,
+     "records": 1
+    },
+    {
+     "path": "textures/ganymede/color_4k.jpg",
+     "bytes": 1060254,
+     "records": 1
+    },
+    {
+     "path": "textures/ganymede/color_1k.jpg",
+     "bytes": 69242,
+     "records": 1
+    },
+    {
+     "path": "textures/io/color_4k.jpg",
+     "bytes": 1091120,
+     "records": 1
+    },
+    {
+     "path": "textures/io/color_1k.jpg",
+     "bytes": 80796,
+     "records": 1
+    },
+    {
+     "path": "textures/mars/color_4k.jpg",
+     "bytes": 1700379,
+     "records": 1
+    },
+    {
+     "path": "textures/mars/color_1k.jpg",
+     "bytes": 105641,
+     "records": 1
+    },
+    {
+     "path": "textures/mars/normal_4k.png",
+     "bytes": 6290412,
+     "records": 1
+    },
+    {
+     "path": "textures/mars/normal_1k.png",
+     "bytes": 445975,
+     "records": 1
+    },
+    {
+     "path": "textures/mercury/color_4k.jpg",
+     "bytes": 1958501,
+     "records": 1
+    },
+    {
+     "path": "textures/mercury/color_1k.jpg",
+     "bytes": 97257,
+     "records": 1
+    },
+    {
+     "path": "textures/moon/color_4k.jpg",
+     "bytes": 2206178,
+     "records": 1
+    },
+    {
+     "path": "textures/moon/color_1k.jpg",
+     "bytes": 133122,
+     "records": 1
+    },
+    {
+     "path": "textures/moon/normal_4k.png",
+     "bytes": 6798625,
+     "records": 1
+    },
+    {
+     "path": "textures/moon/normal_1k.png",
+     "bytes": 491382,
+     "records": 1
+    },
+    {
+     "path": "textures/pluto/color_4k.jpg",
+     "bytes": 921201,
+     "records": 1
+    },
+    {
+     "path": "textures/pluto/color_1k.jpg",
+     "bytes": 70870,
+     "records": 1
+    },
+    {
+     "path": "textures/titan/color_4k.jpg",
+     "bytes": 881817,
+     "records": 1
+    },
+    {
+     "path": "textures/titan/color_1k.jpg",
+     "bytes": 72981,
+     "records": 1
+    },
+    {
+     "path": "textures/triton/color_4k.jpg",
+     "bytes": 546859,
+     "records": 1
+    },
+    {
+     "path": "textures/triton/color_1k.jpg",
+     "bytes": 53030,
+     "records": 1
+    },
+    {
+     "path": "textures/venus/surface_4k.jpg",
+     "bytes": 1988086,
+     "records": 1
+    },
+    {
+     "path": "textures/venus/surface_1k.jpg",
+     "bytes": 151525,
+     "records": 1
+    }
+   ],
+   "limitations": "Server-resampled; Pluto/Charon/Triton far sides unobserved and Europa/Ganymede/Callisto polar gaps are filled with smooth interpolation (illustrative); Moon/Mercury/Pluto/Charon/Enceladus are greyscale; Venus colour is artificial; Moon has no bump map in this build. Moon/Mars normal maps are derived from 8-bit grey elevation stretches (approximate heights). Triton/Pluto/Charon unobserved regions are faded to mean colour; coverage masks provided.",
+   "provenanceClass": "observed",
+   "domain": "textures"
+  },
+  "textures-nasa-treks-dawn": {
+   "id": "textures-nasa-treks-dawn",
+   "name": "NASA Solar System Treks Dawn FC mosaics (Ceres, Vesta)",
+   "organization": "NASA JPL / Solar System Treks; DLR; MPS",
+   "purpose": "Ceres and Vesta global maps",
+   "mechanism": "OGC WMTS tiles (level 3, 16x8) mosaic",
+   "endpoint": "https://trek.nasa.gov/tiles/",
+   "query": "see per-body endpoint in index.json credits / records",
+   "version": "live archive state at retrieval",
+   "retrieved": "2026-10-18T12:57:51.971Z",
+   "license": "Public domain (NASA); credit NASA/JPL-Caltech/UCLA/MPS/DLR/IDA",
+   "licenseUrl": "https://trek.nasa.gov/",
+   "citation": "NASA/JPL-Caltech/UCLA/MPS/DLR/IDA via NASA Solar System Treks",
+   "rateLimits": "not documented (requests throttled to >=1 s per host)",
+   "fieldsUsed": [
+    "image layer"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-treks.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/ceres/color_4k.jpg",
+     "bytes": 2476692,
+     "records": 1
+    },
+    {
+     "path": "textures/ceres/color_1k.jpg",
+     "bytes": 156836,
+     "records": 1
+    },
+    {
+     "path": "textures/vesta/color_4k.jpg",
+     "bytes": 1352704,
+     "records": 1
+    },
+    {
+     "path": "textures/vesta/color_1k.jpg",
+     "bytes": 97294,
+     "records": 1
+    }
+   ],
+   "limitations": "Greyscale only; Vesta north polar night painted black in source and filled by smooth interpolation.",
+   "provenanceClass": "observed",
+   "domain": "textures"
+  },
+  "textures-sss-planets": {
+   "id": "textures-sss-planets",
+   "name": "Solar System Scope planet textures (Venus atmosphere, Jupiter, Saturn, Saturn rings, Uranus, Neptune)",
+   "organization": "Solar System Scope / INOVE",
+   "purpose": "Cloud-top textures for bodies without surface maps",
+   "mechanism": "HTTP GET JPEG/PNG",
+   "endpoint": "https://www.solarsystemscope.com/textures/",
+   "query": "see per-body endpoint in index.json credits / records",
+   "version": "live archive state at retrieval",
+   "retrieved": "2026-10-18T12:53:57.525Z",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+   "citation": "Solar System Scope / INOVE (textures based on NASA spacecraft imagery)",
+   "rateLimits": "not documented (requests throttled to >=1 s per host)",
+   "fieldsUsed": [
+    "image layer"
+   ],
+   "updateCadence": "static archive products (rarely updated)",
+   "cachePolicy": "versioned offline snapshot; optional online refresh",
+   "normalization": "scripts/data/textures/build-sss.mjs",
+   "fallback": "Use a flat albedo colour per body (see index.json) and keep the scene running; never fetch online during the exhibition",
+   "files": [
+    {
+     "path": "textures/jupiter/color_4k.jpg",
+     "bytes": 624638,
+     "records": 1
+    },
+    {
+     "path": "textures/jupiter/color_1k.jpg",
+     "bytes": 64289,
+     "records": 1
+    },
+    {
+     "path": "textures/neptune/color_2k.jpg",
+     "bytes": 39888,
+     "records": 1
+    },
+    {
+     "path": "textures/neptune/color_1k.jpg",
+     "bytes": 13615,
+     "records": 1
+    },
+    {
+     "path": "textures/saturn/color_4k.jpg",
+     "bytes": 230472,
+     "records": 1
+    },
+    {
+     "path": "textures/saturn/color_1k.jpg",
+     "bytes": 23941,
+     "records": 1
+    },
+    {
+     "path": "textures/saturn/rings_8k.png",
+     "bytes": 6848,
+     "records": 1
+    },
+    {
+     "path": "textures/saturn/rings_2k.png",
+     "bytes": 2753,
+     "records": 1
+    },
+    {
+     "path": "textures/uranus/color_2k.jpg",
+     "bytes": 16615,
+     "records": 1
+    },
+    {
+     "path": "textures/uranus/color_1k.jpg",
+     "bytes": 6793,
+     "records": 1
+    },
+    {
+     "path": "textures/venus/atmosphere_4k.jpg",
+     "bytes": 269749,
+     "records": 1
+    },
+    {
+     "path": "textures/venus/atmosphere_1k.jpg",
+     "bytes": 26797,
+     "records": 1
+    }
+   ],
+   "limitations": "Artistic, not epoch-specific; Uranus/Neptune source only 2048x1024; ring radial range assumed 74,500-140,220 km.",
+   "provenanceClass": "illustrative",
+   "domain": "textures"
+  }
+ }
+}

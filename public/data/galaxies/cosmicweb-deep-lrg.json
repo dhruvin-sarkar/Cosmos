@@ -1,0 +1,151 @@
+{
+ "schemaVersion": 1,
+ "generated": "2026-10-17T06:39:58.054Z",
+ "file": "cosmicweb-deep-lrg.bin",
+ "description": "DESI DR1 Luminous Red Galaxy (LRG) clustering sample (0.4<z<1.1), randomly down-sampled: a deep, sparse shell showing the survey reach out to ~3.6 Gpc comoving.",
+ "encoding": "float32 little-endian, interleaved records",
+ "count": 400000,
+ "stride": 4,
+ "strideBytes": 16,
+ "byteLength": 6400000,
+ "fields": [
+  {
+   "name": "xMpc",
+   "unit": "Mpc",
+   "description": "comoving x: towards RA=0h, Dec=0 (ICRS)"
+  },
+  {
+   "name": "yMpc",
+   "unit": "Mpc",
+   "description": "comoving y: towards RA=6h, Dec=0 (ICRS)"
+  },
+  {
+   "name": "zMpc",
+   "unit": "Mpc",
+   "description": "comoving z: towards Dec=+90 (ICRS north pole)"
+  },
+  {
+   "name": "redshift",
+   "unit": "1",
+   "description": "CMB-frame redshift z_cmb used for the distance (input Z is solar-system-barycentric)"
+  }
+ ],
+ "nullHandling": "No nulls/NaN. The LRG clustering catalogue carries no photometry, so this file has no colour column (stride 4).",
+ "order": "Uniform random sample drawn with a seeded partial Fisher-Yates shuffle (mulberry32 seed 20250211); records are in random order, so any prefix of N records is itself a uniform random subsample (use for progressive loading / level of detail).",
+ "coordinateFrame": {
+  "axes": "ICRS (J2000) equatorial Cartesian; x=(cos dec cos ra), y=(cos dec sin ra), z=(sin dec) times comoving distance",
+  "origin": "observer (solar-system barycentre); the Milky Way is at the origin",
+  "distance": "line-of-sight comoving distance D_C(z_cmb)",
+  "positionsAre": "redshift-space (derived): peculiar velocities not removed (Fingers of God in clusters, Kaiser flattening)."
+ },
+ "redshiftFrame": {
+  "used": "CMB rest frame",
+  "inputFrame": "solar-system barycentric (DESI Redrock Z, as stored in the LSS catalogues)",
+  "conversion": "1+z_cmb = (1+z_bary) * gamma * (1 + beta*cos(theta)); beta = v/c, theta = angle to CMB dipole apex",
+  "cmbDipole": {
+   "vKms": 369.82,
+   "lDeg": 264.021,
+   "bDeg": 48.253,
+   "ref": "Planck Collaboration 2020, A&A 641, A1 (Planck 2018 results I), Sect. 5.3",
+   "apexRaDeg": 167.9419,
+   "apexDecDeg": -6.9443
+  }
+ },
+ "cosmology": {
+  "H0": 67.66,
+  "Om": 0.3111,
+  "OL": 0.6889000000000001,
+  "Or": 0,
+  "name": "flat LambdaCDM, Planck 2018 TT,TE,EE+lowE+lensing+BAO (H0=67.66 km/s/Mpc, Omega_m=0.3111, Omega_Lambda=1-Omega_m, radiation neglected)",
+  "ref": "Planck Collaboration 2020, A&A 641, A6, Table 2 (last column)",
+  "hubbleDistanceMpc": 4430.867,
+  "integration": "D_C(z) = (c/H0) * int_0^z dz/sqrt(Om(1+z)^3 + OL); cumulative composite Simpson on a uniform grid dz=1e-5, linear interpolation (error < 1e-6 Mpc)",
+  "checkComovingDistanceMpcAtZ0p1": 432.568
+ },
+ "source": {
+  "release": "DESI DR1 (iron) LSS catalogs v1.5 - clustering .dat files",
+  "dataReleasePaper": "DESI Collaboration et al. 2026, AJ 171, 285: \"Data Release 1 of the Dark Energy Spectroscopic Instrument\"",
+  "catalogPapers": [
+   "Ross A.J. et al. 2025, JCAP 01, 125 (construction of DESI LSS catalogs)",
+   "DESI Collaboration 2025, JCAP 07, 017 (DESI 2024 II: sample definitions, characteristics and two-point clustering statistics)"
+  ],
+  "files": [
+   {
+    "url": "https://data.desi.lbl.gov/public/dr1/survey/catalogs/dr1/LSS/iron/LSScats/v1.5/LRG_NGC_clustering.dat.fits",
+    "cap": "NGC (north Galactic cap)",
+    "rows": 1476135,
+    "bytes": 143196480,
+    "lastModified": "Mon, 10 Feb 2025 13:08:50 GMT",
+    "etag": "\"67a9fa62-8890140\"",
+    "retrieved": "2026-10-17T06:39:27.169Z",
+    "columnsRead": [
+     "RA",
+     "DEC",
+     "Z"
+    ]
+   },
+   {
+    "url": "https://data.desi.lbl.gov/public/dr1/survey/catalogs/dr1/LSS/iron/LSScats/v1.5/LRG_SGC_clustering.dat.fits",
+    "cap": "SGC (south Galactic cap)",
+    "rows": 662492,
+    "bytes": 64272960,
+    "lastModified": "Mon, 10 Feb 2025 13:19:48 GMT",
+    "etag": "\"67a9fcf4-3d4ba40\"",
+    "retrieved": "2026-10-17T06:39:56.824Z",
+    "columnsRead": [
+     "RA",
+     "DEC",
+     "Z"
+    ]
+   }
+  ],
+  "license": "CC BY 4.0 (DESI Data License); changes: columns subset, frame change, distance computation, random down-sampling"
+ },
+ "sampling": {
+  "catalogRows": 2138627,
+  "poolRows": 2138627,
+  "excludedNoColour": 0,
+  "sampled": 400000,
+  "fraction": 0.187036,
+  "perCap": {
+   "NGC (north Galactic cap)": 275722,
+   "SGC (south Galactic cap)": 124278
+  },
+  "seed": 20250211,
+  "weightsIgnored": "Clustering weights (WEIGHT, WEIGHT_FKP, completeness) are NOT applied: points are galaxies, not a density estimator."
+ },
+ "selection": {
+  "tracer": "LRG",
+  "targetSelection": "LRG: colour-selected luminous red galaxies, approximately volume-limited 0.4<z<0.8, declining to z=1.1",
+  "catalogRedshiftRangeBarycentric": [
+   0.4,
+   1.1
+  ],
+  "sampleRedshiftRangeCmb": [
+   0.39832,
+   1.10256
+  ],
+  "distanceRangeMpc": [
+   1594.18,
+   3643.31
+  ]
+ },
+ "footprint": {
+  "summary": "Partial sky: two caps. The NGC footprint spans roughly RA 110-270 deg (Dec ~ -10 to +80); the SGC footprint wraps through RA 0 (roughly RA 300-360 and 0-50 deg, Dec ~ -20 to +35). Rendered in 3D the survey appears as two thick wedge-shaped cones with the observer at the apex; empty directions are unobserved sky (DR1 = first year of DESI), not voids.",
+  "approxAreaDeg2": 10177,
+  "areaMethod": "sum of occupied 0.5x0.5-deg RA/Dec cells (overestimates edges slightly)",
+  "grid": {
+   "encoding": "base64 bitmask, LSB-first within each byte; bit index k = raCell + 180*decCell; raCell = floor(RA/2deg) (0..179), decCell = floor((Dec+90)/2deg) (0..89); bit=1 means at least one galaxy in the cell",
+   "cellDeg": 2,
+   "nRa": 180,
+   "nDec": 90,
+   "base64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwP2Y/AAAAAAAAAAAAAAAAAAAAAAAA8P93/wcAAAAAAAAAAAAAAAAAAAAAAHD/P/9/AAAAAAAAAAAAAAAAAAAAAAA8/////wcAAAAAAAAAAAAAAAAAAAD+//v/////AwAAAAAIAAAAAAAAAACA4f+//////z8AAAD+///7/88BAAAAADz/////////AwAA+P//////fwAAAADg9////////z8AAID///////8HAAAAAP7v////////AwAA/P//////fwMAAADg////////3x8AAMD/////////PwAAAPz////////5AQAA/v////////8PAADA////////AQAAAOD//////////wEAAPz//////w8AAAAA//////////8fAACA//////9/AAAAAPj//////////wMAAPD//////wEAAACA/////+P///9/AAAA//////8/AAAAAPj///8P/PP//w8AAAD8/////wMAAADA////PwMc+///AAAAwP////8/AAAAAPz///8/wLH//w8AAAD8////vwMAAADg/////wMM8P//AQAA4P////8/AAAAAP6/z/8cAAD//z8AAAD8/////wEAAADw/4D9/wAA8P//AwAAAP////8fAAAAAN8D+LAPAMD//38AAADg/////wAAAAD4/4DvPwDg////DwAAgP//3P8fAAAAgP8PYP4DAP////8AAAD4x4///wEAAAD4/wDOPAD8////HwAAAP8f+P8HAAAAwP8H4OH+//////8BAADg/4E/HAAAAAD+fzic////////PwAAAPAfAAAAAAAA4P+D//n///////8DAAAAAAAAAAAAAAD+//v/////////PwAAAAAAAAAAAAAA4P////////////8DAAAAAAAAAAAAAAD//3zw//9//v//PwAAAAAAAAAAAAAA8P9/F/7/f/f///8HAAAAAAAAAAAAAID/f/fj9///nv//fwAAAAAAAAAAAAAAvP9/+A/c/8E5//8PAAAAAAAAAAAAAMDx4QB+AJgeAPj//wEAAAAAAAAAAAAA3B8+4AcAAAAA//8/AAAAAAAAAAAAAOA+wB9+AAAAAMD//wMAAAAAAAAAAAAA/nHwBwAAHgAA4P8/AAAAAAAAAAAAAPifx38AAOABAAD8/w8AAAAAAAAAAADAv3H8BwAAAAAAwP//AwAAAAAAAAAAAPjDgz8AAAAAAADA834AAAAAAAAAAACAP/77AwAAAAAAgAfADwAAAAAAAAAAAB7A/38AAAAAAAB4AP4BAAAAAAAAAADgA+D/BwAAAAAAgAfwHwAAAAAAAAAAAD4A+B8AAAAAAAAAAP8AAAAAAAAAAAAAAPg/AAAAAAAAAABgAAAAAAAAAAAAAACA/wMAAAAAAAAAAAAAAAAAAAAAAAAAAPA3AAAAAAAAAAAAAAAAAAAAAAAAAAAA/x8AAAAAAAAAAAAAAAAAAAAAAAAAAAD+AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  }
+ },
+ "caveats": [
+  "Wedges: DR1 covers only part of the sky; edges of the cones are survey boundaries.",
+  "Flux limit (BGS r<19.5): point density thins strongly beyond z~0.3; this is selection, not a real decline.",
+  "Redshift-space distortions: clusters stretched radially (Fingers of God), large-scale walls flattened (Kaiser effect).",
+  "Fibre-assignment incompleteness in DR1 is patchy (tile overlap pattern); weights that correct it are not applied."
+ ]
+}

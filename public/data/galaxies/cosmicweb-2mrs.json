@@ -1,0 +1,117 @@
+{
+ "schemaVersion": 1,
+ "generated": "2026-10-17T06:19:12.037Z",
+ "file": "cosmicweb-2mrs.bin",
+ "description": "2MASS Redshift Survey galaxies (Ks<=11.75, |b|>=5 deg, >=8 deg towards the bulge) as 3D points in comoving space for the cosmic-web view.",
+ "encoding": "float32 little-endian, interleaved records",
+ "count": 43508,
+ "stride": 5,
+ "strideBytes": 20,
+ "byteLength": 870160,
+ "fields": [
+  {
+   "name": "xMpc",
+   "unit": "Mpc",
+   "description": "comoving x: towards RA=0h, Dec=0 (ICRS)"
+  },
+  {
+   "name": "yMpc",
+   "unit": "Mpc",
+   "description": "comoving y: towards RA=6h, Dec=0 (ICRS)"
+  },
+  {
+   "name": "zMpc",
+   "unit": "Mpc",
+   "description": "comoving z: towards Dec=+90 (ICRS north pole)"
+  },
+  {
+   "name": "redshift",
+   "unit": "1",
+   "description": "CMB-frame redshift z_cmb used for the distance (see redshiftFrame)"
+  },
+  {
+   "name": "kMag",
+   "unit": "mag (Vega)",
+   "description": "2MRS Kcmag: extinction-corrected 2MASS Ks isophotal magnitude (K=20 mag/arcsec^2 isophote)"
+  }
+ ],
+ "nullHandling": "No nulls: galaxies without a redshift (or with z_cmb<=0) are excluded and counted in selection.",
+ "order": "Randomly shuffled (mulberry32 seed 20121226); any prefix of N records is a uniform random subsample. Row i corresponds to row i of cosmicweb-2mrs-meta.json.",
+ "coordinateFrame": {
+  "axes": "ICRS (J2000) equatorial Cartesian; x=(cos dec cos ra), y=(cos dec sin ra), z=(sin dec) times comoving distance",
+  "origin": "observer (solar-system barycentre); the Milky Way is at the origin",
+  "distance": "line-of-sight comoving distance D_C(z_cmb)",
+  "positionsAre": "redshift-space (derived): peculiar velocities are not removed; clusters appear elongated along the line of sight (Fingers of God), and very nearby galaxies (z_cmb<0.003, D<~13 Mpc) have large relative distance errors."
+ },
+ "redshiftFrame": {
+  "used": "CMB rest frame",
+  "inputFrame": "heliocentric / solar-system barycentric (2MRS cz column)",
+  "conversion": "1+z_cmb = (1+z_hel) * gamma * (1 + beta*cos(theta)); beta = v/c, theta = angle to CMB dipole apex",
+  "cmbDipole": {
+   "vKms": 369.82,
+   "lDeg": 264.021,
+   "bDeg": 48.253,
+   "ref": "Planck Collaboration 2020, A&A 641, A1 (Planck 2018 results I), Sect. 5.3",
+   "apexRaDeg": 167.9419,
+   "apexDecDeg": -6.9443
+  }
+ },
+ "cosmology": {
+  "H0": 67.66,
+  "Om": 0.3111,
+  "OL": 0.6889000000000001,
+  "Or": 0,
+  "name": "flat LambdaCDM, Planck 2018 TT,TE,EE+lowE+lensing+BAO (H0=67.66 km/s/Mpc, Omega_m=0.3111, Omega_Lambda=1-Omega_m, radiation neglected)",
+  "ref": "Planck Collaboration 2020, A&A 641, A6, Table 2 (last column)",
+  "hubbleDistanceMpc": 4430.867,
+  "integration": "D_C(z) = (c/H0) * int_0^z dz/sqrt(Om(1+z)^3 + OL); cumulative composite Simpson on a uniform grid dz=1e-5, linear interpolation (error < 1e-6 Mpc); cross-checked against direct Simpson with 2e5 panels",
+  "checkComovingDistanceMpcAtZ0p1": 432.568
+ },
+ "selection": {
+  "survey": "2MASS Redshift Survey (2MRS) main catalog (Huchra et al. 2012)",
+  "magnitudeLimit": "Kcmag <= 11.75",
+  "skyCoverage": "~91% of the sky: all-sky except the Zone of Avoidance |b|<5 deg, widened to |b|<8 deg for |l|<30 deg (Galactic bulge)",
+  "input": 44599,
+  "noRedshift": 1066,
+  "nonPositiveZcmb": 25,
+  "kept": 43508,
+  "zcmbBelow0p003": 216,
+  "medianRedshift": 0.02804
+ },
+ "stats": {
+  "redshiftRange": [
+   0.000025,
+   0.171554
+  ],
+  "distanceRangeMpc": [
+   0.112,
+   728.894
+  ],
+  "kMagRange": [
+   3.898,
+   11.754
+  ],
+  "boundsMpc": {
+   "xMpc": [
+    -674.542,
+    707.51
+   ],
+   "yMpc": [
+    -382.779,
+    426.583
+   ],
+   "zMpc": [
+    -501.319,
+    577.375
+   ]
+  }
+ },
+ "zoneOfAvoidance": "No galaxies at |b|<5 deg (|b|<8 deg towards the bulge): renderers will see an empty wedge/disc-shaped gap aligned with the Milky Way plane. This is an observational selection effect (dust extinction and stellar confusion), not a real void.",
+ "redshiftSpaceDistortions": "Distances are inferred from redshift. Random velocities in clusters stretch them radially (\"Fingers of God\"); coherent infall flattens large structures (Kaiser effect). The magnitude-limited selection makes the density of points fall with distance (Malmquist-type bias) - do not read the outer thinning as fewer galaxies in reality.",
+ "source": {
+  "catalog": "Huchra J.P. et al. 2012, ApJS 199, 26 (2MRS); VizieR J/ApJS/199/26/table3",
+  "url": "https://vizier.cds.unistra.fr/viz-bin/asu-tsv?-source=J/ApJS/199/26/table3&-out.add=_RAJ,_DEJ&-oc.form=d&-out=ID,GLON,GLAT,Kcmag,e_Kcmag,Ktmag,type,cz,e_cz,n_cz,r_cz&-out.max=unlimited",
+  "retrieved": "2026-10-17T06:19:11.337Z",
+  "license": "VizieR: free for scientific/educational use with citation; original tables (c) AAS (pre-2021 AAS copyright)"
+ }
+}
