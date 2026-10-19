@@ -30,7 +30,13 @@ const MIRROR_GOLD: V3 = [0.85, 0.6, 0.2];
 
 const enum Mat { Plain = 0, Cells = 1, Foil = 2, Membrane = 3 }
 
-interface Part { geo: THREE.BufferGeometry; color: V3; spec: number; mat: number }
+interface Part { geo: THREE.BufferGeometry; color: V3; spec: number; mat: number; /** Solar-array drive pivot z (m): rotates about X. */ drive?: number }
+const NO_DRIVE = 1e6;
+/** Mark parts as a solar-array wing turned by the array drive about the axis through (y=0, z=pivotZ) parallel to X. */
+function driven(parts: Part[], pivotZ: number): Part[] {
+  for (const p of parts) p.drive = pivotZ;
+  return parts;
+}
 
 const m4 = new THREE.Matrix4();
 const qq = new THREE.Quaternion();
@@ -90,10 +96,16 @@ function dish(r: number, depth: number, pos: V3, color: V3 = WHITE, rot: V3 = [0
 function cells(len: number, width: number, pos: V3, rot: V3 = [0, 0, 0], facing: 'z' | 'y' = 'z'): Part[] {
   const t = 0.035;
   const sub = facing === 'z' ? new THREE.BoxGeometry(len, width, t) : new THREE.BoxGeometry(len, t, width);
-  const blanket = new THREE.PlaneGeometry(len * 0.985, width * 0.97);
+  // Drop the substrate face under the blanket (its group: +Z = 4, +Y = 2) so the two never depth-fight; the blanket closes the box.
+  const g = sub.groups[facing === 'z' ? 4 : 2];
+  const idx = Array.from(sub.index!.array);
+  idx.splice(g.start, g.count);
+  sub.setIndex(idx);
+  sub.clearGroups();
+  const blanket = new THREE.PlaneGeometry(len, width);
   if (facing === 'y') blanket.rotateX(-Math.PI / 2);
-  blanket.translate(0, facing === 'y' ? t / 2 + 0.003 : 0, facing === 'z' ? t / 2 + 0.003 : 0);
-  return [place(sub, pos, rot, SUBSTRATE, 0.2), place(blanket, pos, rot, [0.02, 0.025, 0.05], 0.9, Mat.Cells)];
+  blanket.translate(0, facing === 'y' ? t / 2 : 0, facing === 'z' ? t / 2 : 0);
+  return [place(sub, pos, rot, SUBSTRATE, 0.2), place(blanket, pos, rot, [0.008, 0.011, 0.03], 0.9, Mat.Cells)];
 }
 /** A wing of `n` panels along +X from `x0` (mirrored for side −1). */
 function wing(n: number, panelLen: number, width: number, x0: number, side: 1 | -1, y: number, z: number, facing: 'z' | 'y' = 'z', tilt = 0): Part[] {
@@ -114,6 +126,29 @@ function slab(points: [number, number][], thick: number, pos: V3, color: V3, spe
   return place(g, pos, rot, color, spec, mat);
 }
 
+/** Thin polygon sheet (XY, +Z normal) triangulated in `rings` concentric rings so it can bend: z = zOf(relative radius). */
+function sheet(outline: [number, number][], rings: number, zOf: (rr: number) => number, color: V3, spec: number, mat: number): Part {
+  const pos: number[] = [0, 0, zOf(0)];
+  const idx: number[] = [];
+  const m = outline.length;
+  for (let r = 1; r <= rings; r++) {
+    const k = r / rings;
+    for (let j = 0; j < m; j++) pos.push(outline[j][0] * k, outline[j][1] * k, zOf(k));
+  }
+  const at = (r: number, j: number): number => (r === 0 ? 0 : 1 + (r - 1) * m + (j % m));
+  for (let r = 0; r < rings; r++) {
+    for (let j = 0; j < m; j++) {
+      if (r === 0) idx.push(0, at(1, j), at(1, j + 1));
+      else idx.push(at(r, j), at(r + 1, j), at(r + 1, j + 1), at(r, j), at(r + 1, j + 1), at(r, j + 1));
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return place(g, [0, 0, 0], [0, 0, 0], color, spec, mat);
+}
+
 // ── Models ────────────────────────────────────────────────────────────────────────────────────────────────────
 
 /** JWST sunshield outline (m): an elongated hexagon 21.2 × 14.2 m. */
@@ -124,7 +159,10 @@ const jwstOutline = (k: number): [number, number][] =>
 function jwst(): Part[] {
   const p: Part[] = [];
   // Five membrane layers; layer 1 (+Z) faces the Sun. Layers spread apart toward the edges in reality; spaced evenly here.
-  for (let i = 0; i < 5; i++) p.push(slab(jwstOutline(1 - i * 0.012), 0.01, [0, 0, -i * 0.28], i === 0 ? MEMBRANE1 : MEMBRANE, 0.55, Mat.Membrane));
+  // Layers are a few cm apart at the core and fan out toward the edges, where the gaps vent heat sideways.
+  for (let i = 0; i < 5; i++) {
+    p.push(sheet(jwstOutline(1 - i * 0.012), 6, (rr) => -i * (0.06 + 0.3 * rr * rr), i === 0 ? MEMBRANE1 : MEMBRANE, 0.55, Mat.Membrane));
+  }
   // Mid-booms, fore/aft pallets, spreader bars.
   p.push(rod([0, 1.0, -0.55], [0, JWST_B, -0.55], 0.07, GREY), rod([0, -1.0, -0.55], [0, -JWST_B, -0.55], 0.07, GREY));
   p.push(box(1.2, 4.2, 0.35, [JWST_A - 1.2, 0, -0.55], BLACKMLI, 0.3), box(1.2, 4.2, 0.35, [-JWST_A + 1.2, 0, -0.55], BLACKMLI, 0.3));
@@ -300,7 +338,7 @@ function hera(): Part[] {
     box(1.6, 1.6, 1.7, [0, 0, 0], GOLD, 0.65, Mat.Foil),
     box(1.62, 1.62, 0.05, [0, 0, 0.86], BLACKMLI, 0.3),
     ...dish(0.57, 0.14, [0.3, 0, 0.88]),
-    ...wing(3, 1.6, 1.6, 0.85, 1, 0, 0, 'y'), ...wing(3, 1.6, 1.6, 0.85, -1, 0, 0, 'y'),
+    ...driven(wing(3, 1.6, 1.6, 0.85, 1, 0, 0, 'y'), 0), ...driven(wing(3, 1.6, 1.6, 0.85, -1, 0, 0, 'y'), 0),
     box(0.45, 0.35, 0.4, [-0.4, -0.95, 0.5], DARK, 0.3), // AFC camera + instrument deck
   ];
 }
@@ -318,7 +356,7 @@ function juice(): Part[] {
     box(2.4, 2.4, 3.6, [0, 0, -0.4], GOLD, 0.6, Mat.Foil),
     box(2.42, 2.42, 0.6, [0, 0, 1.1], SILVER, 0.5, Mat.Foil),
     ...dish(1.25, 0.3, [0, 0, 1.4]),
-    ...crossY(1), ...crossY(-1),
+    ...driven(crossY(1), 0), ...driven(crossY(-1), 0),
     rod([0, -1.2, -1.0], [0, -11.8, -1.0], 0.035, GREY, 0.3, 4), box(0.15, 0.15, 0.15, [0, -11.8, -1.0], GREY),
     rod([-0.6, 1.2, 1.3], [-0.6, 16.0, 1.3], 0.03, SILVER, 0.5, 4), // RIME radar antenna
     cylZ(0.3, 0.45, 0.5, [0, 0, -2.45], DARK, 0.3, 0, 12),
@@ -329,7 +367,7 @@ function bepicolombo(): Part[] {
   return [
     // MTM (bottom), with two long array wings that roll to the Sun.
     box(3.6, 3.6, 1.7, [0, 0, -2.2], SILVER, 0.5, Mat.Foil),
-    ...wing(5, 2.4, 2.4, 1.85, 1, 0, -2.2, 'y'), ...wing(5, 2.4, 2.4, 1.85, -1, 0, -2.2, 'y'),
+    ...driven(wing(5, 2.4, 2.4, 1.85, 1, 0, -2.2, 'y'), -2.2), ...driven(wing(5, 2.4, 2.4, 1.85, -1, 0, -2.2, 'y'), -2.2),
     cylZ(0.25, 0.35, 0.4, [0.8, 0.8, -3.25], DARK, 0.3, 0, 12), cylZ(0.25, 0.35, 0.4, [-0.8, -0.8, -3.25], DARK, 0.3, 0, 12),
     // MPO: radiator panel (white) and its single three-panel array.
     box(3.0, 3.0, 1.6, [0, 0, -0.45], SILVER, 0.5, Mat.Foil),
@@ -392,7 +430,7 @@ function dart(): Part[] {
     cylZ(0.5, 0.5, 0.05, [0, 0, 0.68], [0.3, 0.3, 0.3], 0.3, 0, 32), // radial-line-slot array antenna
     place(new THREE.CylinderGeometry(0.16, 0.16, 0.7, 16), [0.2, -0.95, 0.2], [0, 0, 0], BLACKMLI, 0.4), // DRACO camera
     cylZ(0.22, 0.3, 0.3, [0, 0, -0.85], DARK, 0.3, 0, 16), // NEXT-C ion thruster
-    ...rosa(1), ...rosa(-1),
+    ...driven(rosa(1), 0), ...driven(rosa(-1), 0),
   ];
 }
 
@@ -405,6 +443,10 @@ const BUILDERS: Record<CraftModelId, () => Part[]> = {
  * Shadow casters for the cheap self-shadow in the shader: shield plane (object z, m), half-extents a (x) and b (y), and
  * shape (0 ellipse, 1 JWST hexagon, 2 rectangle). Anything behind the shield (−Z) whose ray to the Sun crosses it is shaded.
  */
+/** Models whose solar cells face +Z (the high-gain antenna's axis): when Earth and the Sun are far apart in their sky they fly
+ * Sun-pointed (arrays on the Sun, communicating through low/medium-gain antennas) instead of keeping the dish on Earth. */
+export const CRAFT_Z_ARRAYS: ReadonlySet<CraftModelId> = new Set<CraftModelId>(['juno', 'clipper', 'psyche', 'lucy']);
+
 export const CRAFT_SHIELD: Partial<Record<CraftModelId, [number, number, number, number]>> = {
   jwst: [-1.13, JWST_A, JWST_B, 1],
   parker: [1.24, 1.15, 1.15, 0],
@@ -419,6 +461,7 @@ function merge(parts: Part[]): THREE.BufferGeometry {
     const col = new Float32Array(n * 3);
     const spec = new Float32Array(n);
     const mat = new Float32Array(n);
+    const drive = new Float32Array(n).fill(p.drive ?? NO_DRIVE);
     for (let i = 0; i < n; i++) {
       col[3 * i] = p.color[0]; col[3 * i + 1] = p.color[1]; col[3 * i + 2] = p.color[2];
       spec[i] = p.spec;
@@ -427,7 +470,8 @@ function merge(parts: Part[]): THREE.BufferGeometry {
     g.setAttribute('color', new THREE.BufferAttribute(col, 3));
     g.setAttribute('aSpec', new THREE.BufferAttribute(spec, 1));
     g.setAttribute('aMat', new THREE.BufferAttribute(mat, 1));
-    for (const k of Object.keys(g.attributes)) if (k !== 'position' && k !== 'normal' && k !== 'color' && k !== 'aSpec' && k !== 'aMat') g.deleteAttribute(k);
+    g.setAttribute('aDrive', new THREE.BufferAttribute(drive, 1));
+    for (const k of Object.keys(g.attributes)) if (k !== 'position' && k !== 'normal' && k !== 'color' && k !== 'aSpec' && k !== 'aMat' && k !== 'aDrive') g.deleteAttribute(k);
     return g;
   });
   const out = mergeGeometries(gs, false);
@@ -457,6 +501,8 @@ ${VERTEX_PRELUDE}
 attribute vec3 color;
 attribute float aSpec;
 attribute float aMat;
+attribute float aDrive;
+uniform float uDrive;
 varying vec3 vColor;
 varying float vSpec;
 varying float vMat;
@@ -466,8 +512,18 @@ varying vec3 vObj;
 varying vec3 vObjN;
 void main() {
   vColor = color; vSpec = aSpec; vMat = aMat; vObj = position; vObjN = normal;
-  vNormalW = normalize(mat3(modelMatrix) * normal);
-  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vec3 pos = position;
+  vec3 nrm = normal;
+  if (aDrive < 1.0e5) {
+    // Solar-array drive: turn the wing about its X axis (pivot y = 0, z = aDrive) toward the Sun.
+    float c = cos(uDrive), s = sin(uDrive);
+    pos.z -= aDrive;
+    pos.yz = vec2(c * pos.y - s * pos.z, s * pos.y + c * pos.z);
+    pos.z += aDrive;
+    nrm.yz = vec2(c * nrm.y - s * nrm.z, s * nrm.y + c * nrm.z);
+  }
+  vNormalW = normalize(mat3(modelMatrix) * nrm);
+  vec4 wp = modelMatrix * vec4(pos, 1.0);
   vPosW = wp.xyz;
   gl_Position = projectionMatrix * viewMatrix * wp;
   ${LOGDEPTH_VERTEX}
@@ -505,10 +561,12 @@ vec3 bump(vec3 n, float h) {
   return normalize(abs(det) * n - g);
 }
 float gridLine(vec2 q, float w) {
-  vec2 g = abs(fract(q) - 0.5);
+  // Analytically filtered lines (half-width w cells); fades to the mean coverage before the grid can alias into moiré.
   vec2 fw = fwidth(q) + 1e-4;
-  vec2 l = smoothstep(vec2(0.5 - w) - fw, vec2(0.5 - w), g);
-  return mix(max(l.x, l.y), 2.0 * w, smoothstep(0.25, 0.6, max(fw.x, fw.y)));
+  vec2 dl = 0.5 - abs(fract(q) - 0.5);
+  vec2 l = 1.0 - smoothstep(vec2(w) - 0.5 * fw, vec2(w) + 0.5 * fw, dl);
+  float avg = 1.0 - (1.0 - 2.0 * w) * (1.0 - 2.0 * w);
+  return mix(max(l.x, l.y), avg, smoothstep(0.12, 0.4, max(fw.x, fw.y)));
 }
 bool shielded() {
   if (uShield.w < 0.0 || vObj.z > uShield.x - 0.005 || uSunObj.z <= 0.02) return false;
@@ -529,16 +587,19 @@ void main() {
   float shin = 30.0;
   vec3 specCol = vec3(1.0);
   if (vMat > 2.5) {
-    // Sunshield membrane: large soft pillowing, aluminised (specular, tinted on layer 1).
+    // Sunshield membrane: large soft pillowing plus creases from the folds, aluminised Kapton (specular, tinted on layer 1).
     float fw = length(fwidth(vObj * 0.7));
-    float h = vnoise(vObj * 0.7) * 0.04 * (1.0 - smoothstep(0.3, 1.0, fw));
+    float pillow = vnoise(vObj * 0.7);
+    float crease = vnoise(vec3(vObj.x * 0.45 + vObj.y * 0.2, vObj.y * 3.2 - vObj.x * 0.9, vObj.z));
+    float h = pillow * 0.05 * (1.0 - smoothstep(0.3, 1.0, fw)) + crease * 0.012 * (1.0 - smoothstep(0.08, 0.3, fw));
     n = bump(n, h * uUnits);
-    shin = 60.0; specCol = mix(vec3(1.0), vColor * 1.4, 0.5); albedo = vColor * 0.55;
+    shin = 34.0; specK = 0.55; specCol = mix(vec3(1.0), vColor * 1.4, 0.55);
+    albedo = vColor * (0.26 + 0.12 * pillow);
   } else if (vMat > 1.5) {
     // Multilayer insulation: crinkled metallised film. Metallic: specular takes the film colour.
     vec3 q = vObj * 7.0;
     float fw = length(fwidth(q));
-    float h = (vnoise(q) * 0.65 + vnoise(q * 2.7 + 3.1) * 0.35) * 0.012 * (1.0 - smoothstep(0.35, 1.2, fw));
+    float h = (vnoise(q) * 0.012 * (1.0 - smoothstep(0.35, 1.2, fw)) + vnoise(q * 2.7 + 3.1) * 0.003 * (1.0 - smoothstep(0.12, 0.45, fw)));
     n = bump(n, h * uUnits);
     shin = 45.0; specCol = vColor * 1.7; albedo = vColor * 0.35;
   } else if (vMat > 0.5) {
@@ -547,7 +608,7 @@ void main() {
     vec2 q = an.z > 0.5 ? vObj.xy : an.y > 0.5 ? vObj.xz : vObj.yz;
     float grid = gridLine(q / vec2(0.04, 0.07), 0.07);
     float seam = gridLine(q / 0.62, 0.015);
-    albedo = mix(vColor, vec3(0.32, 0.31, 0.3), grid * 0.45 + seam * 0.6);
+    albedo = mix(vColor, vec3(0.3, 0.29, 0.28), grid * 0.22 + seam * 0.5);
     shin = 260.0; specK = 0.08;
   }
   float nl = dot(n, uSunDir);
@@ -570,6 +631,7 @@ export class CraftMaterial extends THREE.ShaderMaterial {
     uFillDir: { value: THREE.Vector3 };
     uFill: { value: THREE.Vector3 };
     uUnits: { value: number };
+    uDrive: { value: number };
   };
   constructor(model: CraftModelId) {
     const s = CRAFT_SHIELD[model];
@@ -584,6 +646,7 @@ export class CraftMaterial extends THREE.ShaderMaterial {
         uFillDir: { value: new THREE.Vector3(0, 0, -1) },
         uFill: { value: new THREE.Vector3(0, 0, 0) },
         uUnits: { value: 1 },
+        uDrive: { value: 0 },
       },
       side: THREE.DoubleSide,
     });

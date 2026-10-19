@@ -73,6 +73,8 @@ void main() {
   gl_FragColor = vec4(vColor.rgb * a, a);
 }`;
 
+/** Minimum entity importance for a marker or label at system-scale views (minor bodies are clutter there). */
+const LABEL_TIER_IMPORTANCE = 70;
 const MAX_MARKERS = 40;
 
 const MARKER_COLOR = {
@@ -258,7 +260,8 @@ export function createSmallBodiesLayer(
   };
 
   const updateOrbit = (v: Visual, ctx: FrameContext, focusedLike: boolean): void => {
-    const want = focusedLike || (ctx.overlays.orbits && !v.model.id.startsWith('dimorphos'));
+    // Orbits are drawn only for the focused/selected body (the unfocused ones tangle the overview and rival the planets' orbits).
+    const want = focusedLike;
     if (!want) {
       if (v.orbit) v.orbit.visible = false;
       return;
@@ -392,6 +395,8 @@ export function createSmallBodiesLayer(
           let fade = 1 - THREE.MathUtils.smoothstep(shownPx, MARKER_HIDE_PX * 0.5, MARKER_HIDE_PX);
           // Same rule as the labels: at planet-scale views distant unlabelled markers are just clutter.
           if (markerFieldM < 3e9 && !focusedLike) fade *= 1 - THREE.MathUtils.smoothstep(v.distM, 100 * markerFieldM, 200 * markerFieldM);
+          // System-scale views: hide unlabelled (minor) markers; only focused/selected or prominent bodies keep one.
+          if (markerFieldM >= 3e9 && !focusedLike && v.entity.importance < LABEL_TIER_IMPORTANCE) fade = 0;
           const c = MARKER_COLOR[colorKey(v.model)];
           markerColor[4 * nm] = c[0];
           markerColor[4 * nm + 1] = c[1];
@@ -431,6 +436,7 @@ export function createSmallBodiesLayer(
         // At planet-scale views only nearby or selected small bodies are labelled (faint comets far along the line
         // of sight otherwise clutter the hero views), matching the orbit fade above.
         if (fieldM < 3e9 && v.distM > 200 * fieldM && v.entity.id !== ctx.selectedId && v.entity.id !== ctx.focusEntityId) continue;
+        if (fieldM >= 3e9 && v.entity.importance < LABEL_TIER_IMPORTANCE && v.entity.id !== ctx.selectedId && v.entity.id !== ctx.focusEntityId) continue;
         const shownPx = v.px * v.enlarge;
         if (shownPx > ctx.viewport.height * 0.9) continue;
         ctx.project(v.world, screen);

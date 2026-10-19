@@ -17,8 +17,8 @@ import type { Entity, EntityRegistry } from '../../core/entity';
 import type { EngineServices, FrameContext, LabelCandidate, Layer, PickHit } from '../../core/types';
 import { OrbitLine } from '../../render/orbitBuilder';
 import { createSatelliteSystemTransform, mapSatelliteOffset, registerScaledBody, renderTransform, satelliteSystem } from '../../core/visualScale';
-import { exhibitionDisplayGain, solarSceneIrradianceAt } from '../solar/ephemeris';
-import { CraftMaterial, craftGeometry, disposeCraftGeometries } from './craftModels';
+import { exhibitionDisplayGain, exposureState, solarSceneIrradianceAt } from '../solar/ephemeris';
+import { CRAFT_Z_ARRAYS, CraftMaterial, craftGeometry, disposeCraftGeometries } from './craftModels';
 import { CRAFT_INFO, CRAFT_META, ILLUSTRATIVE_LABEL, TRACKS, loadAllTracks, type CraftInfo, type CraftMeta } from './spacecraft';
 import { CENTER_ENTITY, centerSource } from './craftSources';
 import { jdTdbFromMs, msFromJdTdb } from './orbits';
@@ -29,6 +29,9 @@ const MAX_MESHES = 6;
 const TRAIL_N = 240;
 const FUTURE_N = 160;
 const R_SUN_M = 6.957e8;
+const AU_M = 1.495978707e11;
+const SUN_POINT_FROM = (15 * Math.PI) / 180;
+const SUN_POINT_TO = (35 * Math.PI) / 180;
 const OBLIQUITY = (23.4392911 * Math.PI) / 180;
 
 /** Planets a heliocentric craft can be captured by (for exhibition-scale mapping, eclipses and planetshine). */
@@ -320,7 +323,14 @@ export function createCraftLayer(entities: readonly Entity[], registry: Pick<Ent
 
   const orient = (v: Visual, tMs: number): void => {
     if (v.info.attitude === 'sun') zAx.copy(sunDir);
-    else zAx.subVectors(earthW, v.trueW).normalize();
+    else {
+      zAx.subVectors(earthW, v.trueW).normalize();
+      if (CRAFT_Z_ARRAYS.has(v.info.model)) {
+        // Earth far from the Sun in the craft's sky (e.g. near an Earth flyby): turn the arrays to the Sun.
+        const w = sstep(SUN_POINT_FROM, SUN_POINT_TO, Math.acos(Math.min(Math.max(zAx.dot(sunDir), -1), 1)));
+        if (w > 0) zAx.lerp(sunDir, w).normalize();
+      }
+    }
     if (!(zAx.lengthSq() > 0.5)) zAx.set(0, 0, 1);
     // Roll about Z so the panel normal (+Y) faces the Sun as closely as possible.
     yAx.copy(sunDir).addScaledVector(zAx, -sunDir.dot(zAx));
@@ -423,7 +433,10 @@ export function createCraftLayer(entities: readonly Entity[], registry: Pick<Ent
           tmp2.multiplyScalar(1 / dP);
         }
         const gain = exhibitionDisplayGain(v.enlarge, dSun);
-        const irr = solarSceneIrradianceAt(v.trueW, tMs) * gain;
+        let irr = solarSceneIrradianceAt(v.trueW, tMs) * gain;
+        // The shared exposure (solar bodiesLayer) exposes the focus as if at 1 au but clamps its gain to [0.1, 2500]:
+        // undo most of the clamp for a focused craft (Parker at 0.046 au, Voyager at 170 au) and let the meter do the rest.
+        if (focusedLike) irr *= Math.pow((dSun / AU_M) ** 2 / Math.max(exposureState.targetGain, 1e-6), 0.9);
 
         // Model.
         const wantMesh = shownPx >= MIN_MESH_PX && meshes < MAX_MESHES;
@@ -441,6 +454,7 @@ export function createCraftLayer(entities: readonly Entity[], registry: Pick<Ent
             const u = v.material.uniforms;
             u.uSunDir.value.copy(sunDir);
             u.uSunObj.value.copy(sunDir).applyQuaternion(invQ.copy(v.mesh.quaternion).invert());
+            u.uDrive.value = Math.atan2(u.uSunObj.value.z, u.uSunObj.value.y); // array drive: wing normal (+Y) → Sun
             u.uIrradiance.value = irr * eclipse;
             u.uUnits.value = v.enlarge / ctx.metersPerUnit;
             if (host) {
@@ -459,7 +473,7 @@ export function createCraftLayer(entities: readonly Entity[], registry: Pick<Ent
             if (built < 3) { buildTrail(v, jd, fid); built++; }
           }
           const lineFade = focusedLike ? 1 : sstep(0.002 * v.relExtentM, 0.02 * v.relExtentM, fieldM);
-          const wantTrail = v.relN > 1 && v.relFrame === fid && lineFade > 0.003;
+          const wantTrail = focusedLike && v.relN > 1 && v.relFrame === fid && lineFade > 0.003;
           if (wantTrail) ensureLines(v);
           if (v.trail && v.future) {
             v.trail.visible = wantTrail;

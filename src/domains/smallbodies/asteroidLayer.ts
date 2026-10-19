@@ -43,6 +43,7 @@ uniform float uUnitsPerAu;
 uniform float uPixelRatio;
 uniform float uOpacity;
 uniform float uSize;
+uniform float uInnerFade;     // NEO cloud: alpha multiplier for objects inside ~1.6 AU of the Sun
 uniform vec3 uPalette[16];
 varying vec3 vColor;
 
@@ -55,8 +56,10 @@ void main() {
   vec4 mv = modelViewMatrix * vec4(icrs * uUnitsPerAu, 1.0);
   gl_Position = projectionMatrix * mv;
   float bright = clamp((15.0 - aEl1.w) * 0.1, 0.0, 1.6);
-  gl_PointSize = clamp(uSize + bright, 1.0, 4.5) * uPixelRatio;
-  vColor = uPalette[int(aClass)] * (0.42 + 0.5 * clamp(bright, 0.0, 1.0)) * uOpacity;
+  // Size by absolute magnitude H (brighter = bigger), 1-2.5 px; alpha x0.6.
+  gl_PointSize = clamp(uSize + bright, 1.0, 2.5) * uPixelRatio;
+  float inner = mix(uInnerFade, 1.0, smoothstep(1.2, 1.8, length(p)));
+  vColor = uPalette[int(aClass)] * (0.42 + 0.5 * clamp(bright, 0.0, 1.0)) * uOpacity * 0.6 * inner;
   ${LOGDEPTH_VERTEX}
 }`;
 
@@ -76,9 +79,9 @@ function buildPalette(): THREE.Vector3[] {
   const p: THREE.Vector3[] = [];
   for (let i = 0; i < 16; i++) p.push(new THREE.Vector3(0.7, 0.68, 0.64));
   const set = (i: number, r: number, g: number, b: number): void => { p[i].set(r, g, b); };
-  set(0, 0.86, 0.74, 0.58);  // MBA main belt: warm tan
-  set(1, 0.94, 0.72, 0.52);  // IMB inner belt: warmer
-  set(2, 0.64, 0.68, 0.78);  // OMB outer belt: cool grey-blue
+  set(0, 0.75, 0.68, 0.6);   // MBA main belt: warm grey
+  set(1, 0.78, 0.68, 0.58);  // IMB inner belt: slightly warmer
+  set(2, 0.7, 0.67, 0.64);   // OMB outer belt: neutral warm grey
   set(3, 1.0, 0.62, 0.4);    // MCA Mars-crossers: orange
   set(4, 0.45, 0.82, 1.0);   // APO
   set(5, 0.45, 0.82, 1.0);   // ATE
@@ -113,6 +116,7 @@ function makeMaterial(palette: THREE.Vector3[], size: number): THREE.ShaderMater
       uUnitsPerAu: { value: 1 },
       uPixelRatio: { value: 1 },
       uOpacity: { value: 0 },
+      uInnerFade: { value: 1 },
       uSize: { value: size },
       uPalette: { value: palette },
     },
@@ -186,7 +190,7 @@ export function createAsteroidCloudLayer(registry: Pick<EntityRegistry, 'get'>):
       epochBase = header.epochBaseJD;
       const f = new Float32Array(buf);
       total = Math.min(header.count, Math.floor(f.length / header.stride));
-      cloudMat = makeMaterial(palette, 1.15);
+      cloudMat = makeMaterial(palette, 1.0);
       cloud = new THREE.Points(buildGeometry(f, total, header.stride), cloudMat);
       cloud.name = 'asteroid-cloud';
       cloud.frustumCulled = false;
@@ -205,7 +209,7 @@ export function createAsteroidCloudLayer(registry: Pick<EntityRegistry, 'get'>):
         const r = neoRows[i];
         nf.set([r.aAU, r.e, r.iDeg, r.nodeDeg, r.argPeriDeg, r.meanAnomalyDeg, r.epochJD - epochBase, r.H ?? 22, 0], i * 9);
       }
-      neoMat = makeMaterial(palette, 2.6);
+      neoMat = makeMaterial(palette, 1.3);
       neoPoints = new THREE.Points(buildGeometry(nf, neoRows.length, 9, (i) => (neoRows[i].pha ? 9 : 13)), neoMat);
       neoPoints.name = 'neo-points';
       neoPoints.frustumCulled = false;
@@ -221,7 +225,9 @@ export function createAsteroidCloudLayer(registry: Pick<EntityRegistry, 'get'>):
       // Fade out beyond the outer Solar System (the belt becomes a speck) and when the overlay is off.
       const far = 1 - THREE.MathUtils.smoothstep(dSunAu, 2500, 9000);
       const small = ctx.focusEntityId?.startsWith('sb:') === true || ctx.selectedId?.startsWith('sb:') === true;
-      const target = ctx.overlays.asteroids || small ? far : 0;
+      // Outer-system views: the belt and NEO cloud fade out (smoothstep 2.5e11 -> 2e12 m) so they do not form a white blob over the Sun.
+      const beltFade = small ? 1 : 1 - THREE.MathUtils.smoothstep(dSunAu * AU_M, 2.5e11, 2e12);
+      const target = ctx.overlays.asteroids || small ? far * beltFade : 0;
       opacity += (target - opacity) * Math.min(1, ctx.dtRealSec * 5);
       if (Math.abs(target - opacity) < 0.002) opacity = target;
       const show = opacity > 0.003;
@@ -239,7 +245,9 @@ export function createAsteroidCloudLayer(registry: Pick<EntityRegistry, 'get'>):
         mat.uniforms.uDays.value = jd;
         mat.uniforms.uUnitsPerAu.value = unitsPerAu;
         mat.uniforms.uPixelRatio.value = ctx.viewport.pixelRatio;
-        mat.uniforms.uOpacity.value = pts === cloud ? opacity * (state.neoHighlight ? 1 : 1) : opacity;
+        mat.uniforms.uOpacity.value = opacity;
+        // NEOs inside 1.6 AU crowd the inner system: fade them unless a small body is focused/selected.
+        mat.uniforms.uInnerFade.value = pts === cloud || small ? 1 : 0.15;
       }
       void tmp;
     },
