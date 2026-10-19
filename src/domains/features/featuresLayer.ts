@@ -19,7 +19,9 @@ import type { FeatureEntity } from './entities';
 const MIN_BODY_PX = 46;
 /** Lift of the anchor above the drawn surface (fraction of the radius) so it never z-fights the sphere. */
 const LIFT = 0.0012;
-const MAX_LABELS = 24;
+const MAX_LABELS = 8;
+/** Labels need the feature well inside the visible hemisphere (cosine of the view angle); markers fade nearer the limb. */
+const LABEL_MIN_COS = 0.15;
 /** Night-side features keep this fraction of their opacity (still findable, but the lit surface leads). */
 const NIGHT_ALPHA = 0.3;
 const MARKER_DOT = 0, MARKER_SITE = 1, MARKER_APPROX = 2;
@@ -34,6 +36,8 @@ interface Slot {
   sy: number;
   depthM: number;
   onScreen: boolean;
+  /** Cosine between the surface normal and the direction to the camera (horizon test). */
+  cosH: number;
 }
 
 interface Group {
@@ -121,7 +125,7 @@ export function createFeaturesLayer(features: FeatureEntity[]): Layer & { readon
     const slot: Slot = {
       e, importance: r.importance,
       marker: r.dynamic ? MARKER_APPROX : r.category === 'landing-site' ? MARKER_SITE : MARKER_DOT,
-      world: new THREE.Vector3(), alpha: 0, sx: 0, sy: 0, depthM: 0, onScreen: false,
+      world: new THREE.Vector3(), alpha: 0, sx: 0, sy: 0, depthM: 0, onScreen: false, cosH: 0,
     };
     g.slots.push(slot);
     byId.set(e.id, slot);
@@ -286,6 +290,7 @@ export function createFeaturesLayer(features: FeatureEntity[]): Layer & { readon
           s.world.copy(bodyPos).addScaledVector(nW, lift);
           toCam.subVectors(ctx.cameraPosition, s.world);
           const cosH = nW.dot(toCam) / Math.max(toCam.length(), 1e-9);
+          s.cosH = cosH;
           const ha = THREE.MathUtils.smoothstep(cosH, 0.03, 0.2);
           const day = THREE.MathUtils.smoothstep(nW.dot(sunDir), -0.06, 0.08);
           s.alpha = (forced ? 1 : ia * (NIGHT_ALPHA + (1 - NIGHT_ALPHA) * day)) * ha;
@@ -328,7 +333,7 @@ export function createFeaturesLayer(features: FeatureEntity[]): Layer & { readon
       labelOrder.length = 0;
       for (const g of groups) {
         if (!g.visible) continue;
-        for (const s of g.slots) if (s.onScreen && s.alpha > 0.02) labelOrder.push(s);
+        for (const s of g.slots) if (s.onScreen && s.alpha > 0.02 && s.cosH >= LABEL_MIN_COS) labelOrder.push(s);
       }
       if (labelOrder.length === 0) return;
       labelOrder.sort(byImportance);
