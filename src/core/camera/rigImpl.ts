@@ -891,7 +891,7 @@ export class CosmosCameraRig implements CameraRig {
     if (override !== undefined && override > 0 && Number.isFinite(override)) return override;
     const r = target.radiusM ?? 0;
     const fov = this.deps.fovYRad;
-    if (r > 0 && this.deps.store.getState().ui.inspectorOpen) return distanceForDiameterFraction(r, fov, INSPECT_DIAMETER_FRACTION);
+    if (r > 0 && this.deps.store.getState().ui.inspectorOpen) return distanceForDiameterFraction(Math.max(r, target.framingRadiusM ?? 0), fov, INSPECT_DIAMETER_FRACTION);
     const vd = target.viewDistance?.default;
     if (vd !== undefined && vd > 0) return vd;
     if (r > 0) return distanceForDiameterFraction(r, fov, DEFAULT_DIAMETER_FRACTION);

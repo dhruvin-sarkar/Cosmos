@@ -21,7 +21,7 @@ import {
   type CosmosStore,
 } from '../state/store';
 import type { AppCommands } from './commands';
-import { createTourRunner, GOLDEN_JOURNEY_PREVIEW, type TourRunner } from './tours';
+import { createTourRunner, GOLDEN_JOURNEY_PREVIEW, SOLAR_SYSTEM_TOUR, type TourRunner } from './tours';
 import { discoverDomains } from '../domains';
 
 export const HOME_FOCUS_ID = 'sol:earth';
@@ -269,7 +269,8 @@ export function createCosmos(opts: CreateCosmosOptions): CosmosApp {
     },
   };
 
-  tours = createTourRunner({ store, commands: () => commands });
+  tours = createTourRunner({ store, commands: () => commands, setView: (v, o) => rig.setView(v, o) });
+  tours.register(SOLAR_SYSTEM_TOUR);
   tours.register(GOLDEN_JOURNEY_PREVIEW);
   store.setState({ bookmarks: loadBookmarks() });
 

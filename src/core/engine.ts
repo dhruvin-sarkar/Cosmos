@@ -227,7 +227,7 @@ export function createEngine(opts: EngineOptions): Engine {
     onClamp: message => notice('info', message, 6000),
   });
   const assets: CosmosAssetLoader = createAssetLoader({ renderer, store });
-  const post = createPostPipeline({ renderer, scene, camera, halfFloat });
+  const post = createPostPipeline({ renderer, scene, camera, halfFloat, registry });
   const capturer: EnvironmentCapturer = createEnvironmentCapturer({
     renderer,
     scene,
@@ -345,6 +345,57 @@ export function createEngine(opts: EngineOptions): Engine {
   const camFwd = new THREE.Vector3(0, 0, -1);
   const viewProj = new THREE.Matrix4();
   const tmp = new THREE.Vector3();
+
+  // ── Label occlusion: hide labels of things behind a resolved body disc (the focus and its parent chain). ──
+  const occluders: { x: number; y: number; r: number; d: number; id: string }[] = [];
+  for (let i = 0; i < 3; i++) occluders.push({ x: 0, y: 0, r: 0, d: 0, id: '' });
+  const occScreen: ScreenPoint = { x: 0, y: 0, depthM: 0, visible: false };
+  const occWorld = new THREE.Vector3();
+  function occludeLabels(out: LabelCandidate[]): void {
+    let n = 0;
+    let id: string | null = ctx.focusEntityId;
+    for (let depth = 0; id && depth < 3; depth++) {
+      const e = registry.get(id);
+      if (!e) break;
+      if (e.radiusM && e.radiusM > 0) {
+        e.position(ctx.timeMs, occWorld);
+        const d = occWorld.distanceTo(ctx.cameraPosition);
+        ctx.project(occWorld, occScreen);
+        const r = 0.5 * ctx.pixelDiameter(e.radiusM, d);
+        if (occScreen.depthM > 0 && r > 6) {
+          const o = occluders[n++];
+          o.x = occScreen.x;
+          o.y = occScreen.y;
+          o.r = r;
+          o.d = d;
+          o.id = e.id;
+        }
+      }
+      id = e.parentId;
+    }
+    if (n === 0) return;
+    let w = 0;
+    for (let i = 0; i < out.length; i++) {
+      const c = out[i];
+      let hidden = false;
+      for (let k = 0; k < n && !hidden; k++) {
+        const o = occluders[k];
+        // A body that fills a good part of the frame needs no name tag (the breadcrumb and inspector name it);
+        // its edge-anchored label would otherwise sit on the HUD readouts.
+        if (c.entityId === o.id) {
+          hidden = o.r > 0.2 * ctx.viewport.height;
+          continue;
+        }
+        const dx = c.x - o.x;
+        const dy = c.y - o.y;
+        if (dx * dx + dy * dy > o.r * o.r) continue;
+        const ce = c.entityId ? registry.get(c.entityId) : undefined;
+        hidden = ce ? ce.position(ctx.timeMs, occWorld).distanceTo(ctx.cameraPosition) > o.d : true;
+      }
+      if (!hidden) out[w++] = c;
+    }
+    out.length = w;
+  }
 
   ctx = {
     frame: 0,
@@ -722,6 +773,7 @@ export function createEngine(opts: EngineOptions): Engine {
         }
       }
     }
+    occludeLabels(labelCandidates);
     labels.update(labelCandidates, {
       selectedId,
       hoveredId,
@@ -732,6 +784,7 @@ export function createEngine(opts: EngineOptions): Engine {
     });
 
     try {
+      post.update(ctx);
       post.render(dtReal);
       consecutiveRenderErrors = 0;
     } catch (err) {

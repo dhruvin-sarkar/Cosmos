@@ -25,6 +25,11 @@ export interface RulerLandmark {
 
 const GEO_RADIUS_M = 42_164e3; // geostationary orbit radius (IAU / ITU)
 const NEPTUNE_A_AU = 30.07; // JPL mean orbital elements
+const PLUTO_R_KM = 1_188.3; // New Horizons (Nimmo et al. 2017)
+const MARS_R_KM = 3_389.5; // IAU WGCCRE 2015 mean radius
+const JUPITER_R_KM = 69_911; // IAU WGCCRE 2015 mean radius
+const SATURN_RING_A_OUTER_KM = 136_775; // A ring outer edge (Cassini; Porco et al. 2005)
+const JUPITER_A_AU = 5.2038; // JPL mean orbital elements
 const HELIOPAUSE_AU = 120; // Voyager 1 crossing, 2012 (121.6 AU)
 const OORT_OUTER_AU = 1e5; // outer Oort cloud, order of magnitude (Oort 1950; poorly constrained)
 const PROXIMA_LY = 4.2465; // Gaia DR3 parallax 768.07 mas
@@ -37,11 +42,16 @@ const LANIAKEA_MPC = 160; // Tully et al. 2014 (≈ 520 Mly)
 const OBSERVABLE_RADIUS_GPC = 14.26; // comoving radius, Planck 2018 cosmology
 
 export const RULER_LANDMARKS: readonly RulerLandmark[] = [
+  { id: 'pluto', label: 'Pluto', widthM: 2 * PLUTO_R_KM * 1e3, entityId: 'sol:pluto', the: "Pluto's diameter", note: 'Diameter 2,377 km' },
+  { id: 'mars', label: 'Mars', widthM: 2 * MARS_R_KM * 1e3, entityId: 'sol:mars', the: "Mars's diameter", note: 'Diameter 6,779 km' },
   { id: 'earth', label: 'Earth', widthM: 2 * R_EARTH_MEAN_M, entityId: 'sol:earth', the: "Earth's diameter", note: 'Diameter 12,742 km' },
   { id: 'geo', label: 'Geostationary ring', widthM: 2 * GEO_RADIUS_M, the: 'the geostationary ring', note: 'Orbit radius 42,164 km' },
+  { id: 'jupiter', label: 'Jupiter', widthM: 2 * JUPITER_R_KM * 1e3, entityId: 'sol:jupiter', the: "Jupiter's diameter", note: 'Diameter 139,822 km, 11 Earths' },
+  { id: 'saturn-rings', label: "Saturn's rings", widthM: 2 * SATURN_RING_A_OUTER_KM * 1e3, entityId: 'sol:saturn', the: "Saturn's main rings", note: 'A ring outer edge 136,775 km from the centre' },
   { id: 'moon-orbit', label: "Moon's orbit", widthM: 2 * LUNAR_DISTANCE_M, entityId: 'sol:moon', the: "the Moon's orbit", note: 'Mean distance 384,399 km' },
   { id: 'sun', label: 'Sun', widthM: 2 * R_SUN_M, entityId: 'sol:sun', the: "the Sun's diameter", note: 'Diameter 1.39 million km' },
   { id: 'earth-orbit', label: "Earth's orbit", widthM: 2 * AU_M, the: "Earth's orbit", note: '1 AU from the Sun' },
+  { id: 'jupiter-orbit', label: "Jupiter's orbit", widthM: 2 * JUPITER_A_AU * AU_M, the: "Jupiter's orbit", note: '5.20 AU from the Sun' },
   { id: 'neptune-orbit', label: "Neptune's orbit", widthM: 2 * NEPTUNE_A_AU * AU_M, entityId: 'sol:neptune', the: "Neptune's orbit", note: '30.07 AU from the Sun' },
   { id: 'heliopause', label: 'Heliopause', widthM: 2 * HELIOPAUSE_AU * AU_M, the: 'the heliosphere', note: 'About 120 AU; crossed by Voyager 1 in 2012' },
   { id: 'oort', label: 'Oort cloud', widthM: 2 * OORT_OUTER_AU * AU_M, the: 'the Oort cloud', note: 'Outer edge near 100,000 AU (poorly constrained)' },

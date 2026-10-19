@@ -82,7 +82,7 @@ export const DEFAULT_OVERLAYS: Record<OverlayId, boolean> = {
   satellites: false,
   debris: false,
   spacecraft: true,
-  asteroids: false,
+  asteroids: true,
   constellations: false,
   'constellation-boundaries': false,
   'grid-equatorial': false,

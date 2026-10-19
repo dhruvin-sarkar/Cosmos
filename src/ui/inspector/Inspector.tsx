@@ -336,9 +336,9 @@ export function Inspector() {
         </p>
       )}
       {lede ? <p className="cx-insp-lede">{lede}</p> : state.status === 'loading' ? <Skeleton lines={2} /> : null}
-      {entity.aliases.length > 0 && (
+      {displayAliases(entity.name, entity.aliases).length > 0 && (
         <p className="cx-insp-ids">
-          {entity.aliases.slice(0, 4).map(a => <span key={a} className="cx-id">{a}</span>)}
+          {displayAliases(entity.name, entity.aliases).map(a => <span key={a} className="cx-id">{a}</span>)}
         </p>
       )}
 
@@ -382,3 +382,10 @@ export function Inspector() {
   );
 }
 
+
+/** Aliases worth showing: drop the name itself and any alias contained in a longer one ("α Ori" inside "58 α Ori"). */
+function displayAliases(name: string, aliases: readonly string[]): string[] {
+  const norm = (x: string): string => x.trim().toLowerCase();
+  const uniq = aliases.filter((a, i) => a && norm(a) !== norm(name) && aliases.findIndex(b => norm(b) === norm(a)) === i);
+  return uniq.filter(a => !uniq.some(b => b !== a && b.length > a.length && norm(b).includes(norm(a)))).slice(0, 4);
+}

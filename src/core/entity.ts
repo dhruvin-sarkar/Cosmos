@@ -57,6 +57,8 @@ export interface Entity {
   position(tMs: number, out: Vector3): Vector3;
   /** Optional velocity in m/s in the same frame (follow mode, inspector). */
   velocity?(tMs: number, out: Vector3): Vector3;
+  /** Radius the inspect view fits on screen when larger than radiusM (e.g. the outer edge of a ring system), meters. */
+  framingRadiusM?: number;
   /** Recommended camera distances for focusing, meters. */
   viewDistance?: { min: number; default: number; max?: number };
   /**
