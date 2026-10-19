@@ -14,6 +14,7 @@ import type { Entity } from '../../core/entity';
 import type { EngineServices, FrameContext, LabelCandidate, Layer, PickHit, ScreenPoint } from '../../core/types';
 import { AU_M, R_SUN_M } from '../../core/units';
 import { AtmosphereShell } from '../../render/materials/AtmosphereShell';
+import { EARTH_ATMOSPHERE, type AtmosphereParams } from '../../render/glsl/atmosphere';
 import { FRAGMENT_PRELUDE, LOGDEPTH_FRAGMENT, LOGDEPTH_VERTEX, VERTEX_PRELUDE } from '../../render/glsl/logdepth';
 import { EarthSurfaceMaterial } from './earthMaterial';
 import { MoonSurfaceMaterial } from './moonMaterial';
@@ -45,7 +46,7 @@ export const UMBRA_DISPLAY_GAIN = 4000;
  * Aurora display gain: emission per Earth radius of path for the strongest arcs. A bright arc (~100 kR in 557.7 nm) is
  * comparable to city lights in ISS night photographs; this gain puts it there at Kp ~ 5 (disclosed in the fact sheet).
  */
-const AURORA_GAIN = 6;
+const AURORA_GAIN = 3;
 /** Cloud drift: the cloud field is advected by climatological zonal winds; faded out at fast time rates. */
 const DRIFT_FADE_RATE_START = 1500;
 const DRIFT_FADE_RATE_END = 6000;
@@ -58,6 +59,26 @@ const EARTH_NORMAL_STRENGTH = 0.5;
  */
 const EARTH_HAZE_SCALE = 0.5;
 const MOON_NORMAL_STRENGTH = 1.0;
+/**
+ * Display limb for the scattering shell only: the real 8 km Rayleigh scale height makes the day-side limb a sub-pixel
+ * line at disc scale. The shell uses a 2.5x scale height with the scattering coefficients divided by 2.5, so the
+ * vertical optical depth (and the colour over the disc) is unchanged while the blue rim spans ~2 px in a full-disc view.
+ * The surface shader's sun transmittance keeps the physical atmosphere.
+ */
+const LIMB_H_FACTOR = 2.5;
+/** The exaggeration fades back to the physical scale height below these camera altitudes (Earth radii). */
+const LIMB_TRUE_ALT = 0.3;
+const LIMB_FULL_ALT = 2.0;
+const EARTH_LIMB_DISPLAY: AtmosphereParams = { ...EARTH_ATMOSPHERE, atmosphereHeightM: 160_000 };
+/** Rayleigh scale height / coefficients of the shell for exaggeration factor f (vertical optical depth preserved). */
+function setLimbFactor(u: AtmosphereShell['material']['uniforms'], f: number): void {
+  const R = EARTH_ATMOSPHERE.planetRadiusM;
+  const H = EARTH_ATMOSPHERE.rayleighScaleHeightM * f;
+  const b = EARTH_ATMOSPHERE.rayleighScattering;
+  u.uAtmRayleighH.value = H / R;
+  u.uAtmRayleighX.value = R / H;
+  u.uAtmRayleighBeta.value.set((b[0] * R) / f, (b[1] * R) / f, (b[2] * R) / f);
+}
 const DETAIL_START_PX = 400;
 const DETAIL_FULL_PX = 800;
 const MESH_MIN_PX = 1.5;
@@ -114,12 +135,23 @@ function tierForPx(px: number): Tier {
 }
 /**
  * Close range = camera within CLOSE_RANGE_IN radii of the centre (below ~2200 km altitude), where an 8K map (~5 km/texel)
- * is coarser than a pixel. Only there: the 16K day map on Ultra (~700 MB VRAM) and, on the 'high' (4K) profile, the 8K
- * day + cloud maps of the focused Earth (~+270 MB). Both are released beyond CLOSE_RANGE_OUT.
+ * is coarser than a pixel. Only there: the 16K day map on Ultra (~700 MB VRAM). Low orbit = below ~2000 km altitude
+ * (ISS, Hubble, Tiangong views, whatever is focused): on the 'high' (4K, Balanced) profile the 16K day map plus the 8K
+ * cloud and normal maps are forced (~+1 GB VRAM); on 'low' one tier less. Both are released beyond CLOSE_RANGE_OUT.
  */
 const CLOSE_RANGE_IN = 1.35;
 const CLOSE_RANGE_OUT = 1.7;
-const BOOST_MAP_INDICES = [0, 2] as const;
+const LOW_ORBIT_IN = 1 + 2_000_000 / R_EARTH_M;
+/** Map index (setupMaps order: day, night, clouds, specular, normal) -> tier forced in low orbit on the 'high' profile. */
+const BOOST_MAPS: readonly (readonly [number, Tier])[] = [[0, 'max'], [2, 'ultra'], [4, 'ultra']];
+/**
+ * In-scatter cap at low camera altitude: looking along the limb from 400-1000 km the single-scattering shell (no
+ * multiple-scattering loss) piles path radiance into a white veil over the ground, while ISS photographs show the
+ * surface clearly. Path radiance is scaled to LOW_ALT_HAZE below LOW_ALT_HAZE_FULL_M, back to 1 at LOW_ALT_HAZE_NONE_M.
+ */
+const LOW_ALT_HAZE = 0.6;
+const LOW_ALT_HAZE_FULL_M = 1_000_000;
+const LOW_ALT_HAZE_NONE_M = 2_500_000;
 
 export interface EarthMoonLayerOptions {
   earth: Entity;
@@ -133,7 +165,7 @@ export function createEarthMoonLayer(opts: EarthMoonLayerOptions): Layer {
   const moonGeo = new THREE.SphereGeometry(1, 160, 80).rotateX(Math.PI / 2);
   const pointGeo = new THREE.BufferGeometry();
   pointGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0], 3));
-  const atmosphere = new AtmosphereShell({ sunIntensity: SUN_IRRADIANCE_1AU, steps: 12 });
+  const atmosphere = new AtmosphereShell({ sunIntensity: SUN_IRRADIANCE_1AU, steps: 12, params: EARTH_LIMB_DISPLAY });
   atmosphere.name = 'sol:earth:atmosphere';
   atmosphere.renderOrder = 1;
   const auroraMat = new AuroraMaterial();
@@ -364,7 +396,11 @@ export function createEarthMoonLayer(opts: EarthMoonLayerOptions): Layer {
           atmosphere.position.copy(earth.mesh.position);
           atmosphere.scale.copy(earth.mesh.scale);
           atmosphere.sunDirectionWorld.copy(v1);
-          atmosphere.material.uniforms.uSunIntensity.value = eIrr * EARTH_HAZE_SCALE;
+          const alt = u.uCamPos.value.length() - 1;
+          const lowHaze = THREE.MathUtils.lerp(LOW_ALT_HAZE, 1,
+            THREE.MathUtils.smoothstep(alt, LOW_ALT_HAZE_FULL_M / R_EARTH_M, LOW_ALT_HAZE_NONE_M / R_EARTH_M));
+          atmosphere.material.uniforms.uSunIntensity.value = eIrr * EARTH_HAZE_SCALE * lowHaze;
+          setLimbFactor(atmosphere.material.uniforms, 1 + (LIMB_H_FACTOR - 1) * THREE.MathUtils.smoothstep(alt, LIMB_TRUE_ALT, LIMB_FULL_ALT));
         }
         // Clouds drift with the climatological zonal wind (simulation time); faded out when time runs fast, where the
         // bounded two-phase flow would visibly pulse.
@@ -412,13 +448,19 @@ export function createEarthMoonLayer(opts: EarthMoonLayerOptions): Layer {
         requestTier(earth);
         requestTier(moon);
         const range = earth.distanceM / (earth.radiusM * earth.enlarge);
-        const focused = ctx.focusEntityId === earth.entity.id;
-        if (!boosted && qualityMax === 'high' && focused && range < CLOSE_RANGE_IN) {
+        if (!boosted && qualityMax !== 'max' && range < LOW_ORBIT_IN) {
           boosted = true;
-          for (const i of BOOST_MAP_INDICES) earth.maps[i]?.request('ultra');
-        } else if (boosted && (qualityMax !== 'high' || !focused || range > CLOSE_RANGE_OUT)) {
+          const has16k = (services?.renderer.capabilities.maxTextureSize ?? 0) >= 16384;
+          // 'low' (Performance) profile: one step less (8K day, 4K clouds and normals), still ~4x the usual 2K.
+          const step = qualityMax === 'low' ? 1 : 0;
+          for (const [i, tier] of BOOST_MAPS) {
+            let t = TIER_ORDER[TIER_ORDER.indexOf(tier) - step]!;
+            if (t === 'max' && !has16k) t = 'ultra';
+            earth.maps[i]?.request(t);
+          }
+        } else if (boosted && (qualityMax === 'max' || range > CLOSE_RANGE_OUT)) {
           boosted = false;
-          for (const i of BOOST_MAP_INDICES) earth.maps[i]?.cap(qualityMax);
+          for (const [i] of BOOST_MAPS) earth.maps[i]?.cap(qualityMax);
         }
       }
     },

@@ -34,7 +34,7 @@ uniform sampler2D uNoise;  // 1-D periodic noise along magnetic longitude (R fin
 varying vec3 vPos;
 
 const float R_KM = 6371.0;
-const vec3 GREEN = vec3(0.10, 1.0, 0.30);
+const vec3 GREEN = vec3(0.25, 1.0, 0.45);
 const vec3 RED = vec3(1.0, 0.07, 0.10);
 const vec3 VIOLET = vec3(0.42, 0.10, 1.0);
 #ifndef STEPS
@@ -110,9 +110,9 @@ void main() {
     float patches = 0.45 + 0.55 * nz0.b;
     // Discrete arcs: a bright one at the equatorward edge, a weaker one poleward (substorm double oval), rayed along
     // the arc (curtains seen from above appear as fine bright striations along the band).
-    float arc = exp(-pow((x - 0.4) / 0.4, 2.0));
+    float arc = exp(-pow((x - 0.4) / 0.9, 2.0));
     float fold2 = 0.6 * sin(mlon * 5.0 - uTime * 0.017 + 2.0);
-    float arc2 = exp(-pow((x - 0.45 * width - 1.0 - fold2) / 0.35, 2.0)) * 0.45;
+    float arc2 = exp(-pow((x - 0.45 * width - 1.0 - fold2) / 0.6, 2.0)) * 0.2;
     float rays = texture2D(uNoise, vec2(u * 2.0 + uTime * 0.0011, 0.5)).r * 0.6 + texture2D(uNoise, vec2(u * 5.0 - uTime * 0.004, 0.5)).r * 0.4;
     rays = 0.35 + 0.65 * rays * rays;
     float surge = 0.4 + 0.6 * smoothstep(0.25, 0.75, texture2D(uNoise, vec2(u - uTime * 0.0006 + 0.37, 0.5)).a);
@@ -122,7 +122,8 @@ void main() {
     float pv = exp(-pow((h - 98.0) / 7.0, 2.0)) * 0.12;
     col += (GREEN * pg + RED * pr + VIOLET * pv) * (em * shadow);
   }
-  col *= uGain * dt;
+  // Long grazing paths at the limb would pile emission into a hard outline: normalise beyond ~300 km of shell path (about a vertical column).
+  col *= uGain * dt / max(1.0, (t1 - t0) * R_KM / 300.0);
   gl_FragColor = vec4(col, 1.0);
 }
 `;

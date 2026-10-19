@@ -90,7 +90,7 @@ const float CLOUD_HEIGHT = 0.0016;   // ~10 km in Earth radii
 const float CLOUD_ALBEDO = 0.78;
 // Open-ocean albedo (water-leaving + whitecaps, ~0.05 in the blue, darker in the red; Kirk 2011). The Blue Marble
 // ocean is near-black (2,5,20 sRGB), so the deep navy of DSCOVR EPIC frames needs this floor.
-const vec3 OCEAN_ALBEDO = vec3(0.010, 0.022, 0.048);
+const vec3 OCEAN_ALBEDO = vec3(0.012, 0.032, 0.085);
 const vec3 LIGHTS_TINT = vec3(1.0, 0.62, 0.28);   // high-pressure sodium dominated
 
 // Coverage map → opacity: the composite carries a thin veil almost everywhere; keep real decks, drop the veil.
@@ -154,20 +154,29 @@ void main() {
   float du = cloudDu(uv.y);
   float cloud = cloudAt(uv, gx, gy, du);
 
-  // Close range: the 4K maps are ~10 km/texel. Sub-texel noise (≈33 km and ≈13 km wavelengths) erodes cloud edges
-  // into cumulus-like structure and breaks up the land albedo; it only touches partial-coverage texels, so the observed
-  // cloud field and land cover are preserved at the texel scale. Each octave fades out before it would alias.
+  // Close range (low orbit): the maps are 2.4 km/texel (16K day) to 10 km/texel (4K). A coherent fbm micro-field
+  // (base wavelength ~20 km, octaves at ~7 and ~2 km, each faded out before it would alias) erodes partial-coverage
+  // cloud texels into clumped cumulus (decks stay solid, clear sky stays clear: no speckle) and gives land a
+  // micro-albedo and micro-relief texture. Illustrative sub-resolution structure; the observed cloud field and land
+  // cover are unchanged at the texel scale.
+  float detailN = 0.0;
   if (uDetail > 0.001) {
     float fw = length(fwidth(p));
-    float a1 = 1.0 - smoothstep(0.15, 0.4, fw * 1200.0);
-    float a2 = 1.0 - smoothstep(0.15, 0.4, fw * 3000.0);
-    float a3 = 1.0 - smoothstep(0.15, 0.4, fw * 8000.0);
-    float nc = simplexNoise3(p * 1200.0) * 0.6 * a1 + (a2 > 0.0 ? simplexNoise3(p * 3000.0) * 0.4 * a2 : 0.0);
-    // ~5 km octave: cumulus cells along deck edges, only visible from low orbit.
-    float nc3 = a3 > 0.0 ? simplexNoise3(p * 8000.0) * a3 : 0.0;
-    float edge = cloud * (1.0 - cloud);
-    cloud = clamp(cloud + (nc * 1.6 + nc3 * 0.7) * uDetail * edge * 1.2, 0.0, 1.0);
-    day *= 1.0 + 0.12 * nc * uDetail * (1.0 - ocean);
+    vec3 q = p * 320.0; // 1 noise unit ~ 20 km (6371 km / 320)
+    float a1 = 1.0 - smoothstep(0.25, 0.6, fw * 320.0);
+    float a2 = 1.0 - smoothstep(0.25, 0.6, fw * 960.0);
+    float a3 = 1.0 - smoothstep(0.25, 0.6, fw * 2880.0);
+    float n1 = a1 > 0.0 ? simplexNoise3(q) : 0.0;
+    float n2 = a2 > 0.0 ? simplexNoise3(q * 3.0 + 17.0) : 0.0;
+    float n3 = a3 > 0.0 ? simplexNoise3(q * 9.0 - 31.0) : 0.0;
+    detailN = (n1 * 0.55 * a1 + n2 * 0.3 * a2 + n3 * 0.15 * a3) * uDetail;
+    // Domain warp of the cloud lookup (~1.5 texels): magnified texels read as organic cumulus, not bilinear squares.
+    float nw = a1 > 0.0 ? simplexNoise3(q * 1.3 + 53.0) * a1 + n2 * 0.4 * a2 : 0.0;
+    vec2 warp = vec2(n1 * a1 + n3 * 0.4 * a3, 2.0 * nw) * (1.5 * uCloudTexel * uDetail);
+    cloud = cloudAt(uv + warp, gx, gy, du);
+    float edge = smoothstep(0.12, 0.4, cloud) * (1.0 - smoothstep(0.7, 0.95, cloud));
+    cloud = clamp(cloud + detailN * 0.7 * edge, 0.0, 1.0);
+    day *= 1.0 + 0.22 * detailN * (1.0 - ocean);
   }
 
   // Relief from the ETOPO normal map (OpenGL tangent space: R = east, G = north).
@@ -183,6 +192,18 @@ void main() {
       nm.xy += dm.xy * uNormalStrength * 0.6 * uDetail * rough;
     }
     n = normalize(east * nm.x + north * nm.y + p * max(nm.z, 0.05));
+  }
+  // Micro-relief from the same fbm field (derivative bump, Mikkelsen 2010): ~300 m amplitude on land, more in mountains.
+  if (uDetail > 0.001) {
+    float rough = uHasNormal > 0.5 ? smoothstep(0.02, 0.25, length(n - p)) : 0.0;
+    float h = detailN * (4.7e-5 + 1.4e-4 * rough) * (1.0 - ocean);
+    vec3 dpx = dFdx(p);
+    vec3 dpy = dFdy(p);
+    vec3 r1 = cross(dpy, n);
+    vec3 r2 = cross(n, dpx);
+    float det = dot(dpx, r1);
+    vec3 grad = sign(det) * (dFdx(h) * r1 + dFdy(h) * r2);
+    if (abs(det) > 1e-20) n = normalize(abs(det) * n - grad);
   }
 
   float muGeo = dot(p, L);
@@ -208,17 +229,22 @@ void main() {
   if (ocean > 0.01 && muGeo > -0.02) {
     vec3 H = normalize(L + V);
     float NdotH = max(dot(p, H), 0.0);
-    // Cox–Munk: mean-square slope 0.003 + 0.00512·U = 0.029 at U = 5 m/s → GGX α ≈ √(2·mss) ≈ 0.24. Surface wind varies
-    // across the glint (calm patches sharpen it, windy ones spread it): a large-scale field of U ≈ 2–9 m/s (illustrative).
+    // Cox–Munk: mean-square slope 0.003 + 0.00512·U = 0.029 at U = 5 m/s. Seen from orbit the glint is dominated by the
+    // large facets (the capillary part of the slope spectrum averages out over a pixel), so the lobe uses α² = mss / 2
+    // (α ≈ 0.12 at 5 m/s): a tight, bright glint instead of a broad grey sheen. Surface wind varies across the glint
+    // (calm patches sharpen it, windy ones spread it): a large-scale field of U ≈ 2–9 m/s (illustrative).
     float wind = 0.5 + 0.5 * simplexNoise3(p * 7.0);
-    float a2 = 2.0 * (0.003 + 0.00512 * mix(2.0, 9.0, wind));
+    float a2 = 0.5 * (0.003 + 0.00512 * mix(2.0, 9.0, wind));
     float F = 0.02 + 0.98 * pow(1.0 - max(dot(V, H), 0.0), 5.0);
     float NdotLs = max(muGeo, 0.0);
     float spec = ggxD(NdotH, a2) * smithVis(NdotLs, muV, a2) * F * NdotLs;
     // Skylight reflected by the sea (Fresnel-weighted, strongest toward the limb): blue sky radiance ≈ 3 % of the
     // diffuse sunlit-surface level, scaled by the local sun elevation.
     vec3 sky = vec3(0.30, 0.55, 1.0) * (0.03 * RECIPROCAL_PI * smoothstep(-0.05, 0.3, muGeo));
-    ground = ground * (1.0 - 0.6 * F * ocean) + vec3(spec * ocean) + sky * (F * ocean);
+    // The thin cloud veil that cloudCover() drops still scatters the direct beam: no glint through it. Coverage is taken
+    // from a ~3-mip-blurred lookup so scattered cumulus dims the glint smoothly instead of speckling it.
+    float clear = 1.0 - smoothstep(0.05, 0.45, cloudAt(uv, gx * 8.0, gy * 8.0, du));
+    ground = ground * (1.0 - 0.6 * F * ocean) + vec3(spec * ocean * clear) + sky * (F * ocean);
   }
   vec3 groundRad = ground * E * shadow;
 

@@ -209,6 +209,10 @@ export class ProgressiveMap {
     } finally {
       this.loading = false;
     }
+    // A cap() that arrived mid-climb was deferred: apply it now that the in-flight tier has landed.
+    if (!this.disposed && this.currentTier && TIER_ORDER.indexOf(this.currentTier) > TIER_ORDER.indexOf(this.wanted)) {
+      this.cap(this.wanted);
+    }
   }
 
   /** Decode off the main thread and resample to `maxWidth` (2:1 equirectangular) before the GPU upload. */
