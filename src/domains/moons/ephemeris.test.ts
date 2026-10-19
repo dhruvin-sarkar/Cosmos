@@ -1,0 +1,96 @@
+import * as Astronomy from 'astronomy-engine';
+import { Vector3 } from 'three';
+import { describe, expect, it } from 'vitest';
+import { AU_M } from '../../core/units';
+import { MOON_RECORDS } from './data';
+import { meanElementOffset, moonOffset, recordOf, solveKepler, subParentLonLat } from './ephemeris';
+
+const T0 = Date.UTC(2026, 9, 18, 12, 0, 0); // 2026-10-18 12:00 UTC
+const DEG = Math.PI / 180;
+const angleBetween = (a: Vector3, b: Vector3): number => Math.acos(Math.min(1, Math.max(-1, a.dot(b) / (a.length() * b.length()))));
+
+describe('moons ephemeris', () => {
+  it('Galilean positions equal astronomy-engine JupiterMoons (relative to Jupiter, EQJ)', () => {
+    const jm = Astronomy.JupiterMoons(Astronomy.MakeTime(new Date(T0)));
+    const v = new Vector3();
+    for (const id of ['io', 'europa', 'ganymede', 'callisto'] as const) {
+      moonOffset(recordOf(id), T0, v);
+      const ref = jm[id];
+      expect(v.x).toBeCloseTo(ref.x * AU_M, 0);
+      expect(v.y).toBeCloseTo(ref.y * AU_M, 0);
+      expect(v.z).toBeCloseTo(ref.z * AU_M, 0);
+    }
+  });
+
+  it('JPL mean elements place the Galileans within a few degrees of the L1.2 theory (as seen from Jupiter)', () => {
+    const a = new Vector3(), b = new Vector3();
+    for (const id of ['io', 'europa', 'ganymede', 'callisto']) {
+      const rec = recordOf(id);
+      for (const dt of [0, 400 * 86_400_000, -900 * 86_400_000]) {
+        moonOffset(rec, T0 + dt, a);
+        meanElementOffset(rec, T0 + dt, b);
+        const lim = id === 'io' ? 6 : 8; // mean-vs-true differences (resonance librations, short-period terms) are a few degrees
+        expect(angleBetween(a, b) / DEG).toBeLessThan(lim);
+        expect(Math.abs(a.length() / b.length() - 1)).toBeLessThan(0.05);
+      }
+    }
+  });
+
+  it('every moon stays between periapsis and apoapsis and advances at the tabulated sidereal rate', () => {
+    const v = new Vector3(), w = new Vector3();
+    for (const rec of MOON_RECORDS) {
+      const o = rec.orbit;
+      for (const dt of [0, 123456789, -987654321]) {
+        meanElementOffset(rec, T0 + dt, v);
+        const r = v.length() / 1000;
+        expect(r).toBeGreaterThanOrEqual(o.aKm * (1 - o.e) * 0.9999);
+        expect(r).toBeLessThanOrEqual(o.aKm * (1 + o.e) * 1.0001);
+      }
+      // For near-circular orbits the angle swept in 1/50 of a period equals 2π/50 within ~e.
+      const dt = (o.periodDays * 86_400_000) / 50;
+      meanElementOffset(rec, T0, v);
+      meanElementOffset(rec, T0 + dt, w);
+      const swept = angleBetween(v, w);
+      if (o.e < 0.05) expect(swept).toBeCloseTo((2 * Math.PI) / 50, 1);
+    }
+  });
+
+  it('solves Kepler’s equation', () => {
+    for (const e of [0, 0.1, 0.5, 0.75, 0.95]) {
+      for (const M of [-3, -1, 0.2, 1, 3, 10]) {
+        const E = solveKepler(M, e);
+        const m = ((M % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+        expect(E - e * Math.sin(E)).toBeCloseTo(m, 9);
+      }
+    }
+  });
+
+  it('JPL reference values: Titan mean distance and Io/Callisto periods', () => {
+    expect(recordOf('titan').orbit.aKm).toBe(1221900);
+    expect(recordOf('io').orbit.periodDays).toBeCloseTo(1.762732, 4);
+    expect(recordOf('callisto').orbit.periodDays).toBeCloseTo(16.690440, 4);
+  });
+
+  it('IAU frames of the mapped moons stay locked to the planet (stable sub-planet longitude over decades)', () => {
+    const J2000 = Date.UTC(2000, 0, 1, 12);
+    const T1 = Date.UTC(2013, 5, 1);
+    // Prime meridian is the sub-planet point for these; the others (Titan, Enceladus) have crater/other definitions but a stable offset.
+    const nearZero = new Set(['io', 'europa', 'ganymede', 'callisto', 'triton', 'charon']);
+    for (const id of ['io', 'europa', 'ganymede', 'callisto', 'titan', 'enceladus', 'triton', 'charon']) {
+      const rec = recordOf(id);
+      const a = subParentLonLat(rec, J2000).lonDeg, b = subParentLonLat(rec, T1).lonDeg, c = subParentLonLat(rec, T0).lonDeg;
+      const dif = (x: number, y: number): number => Math.abs(((x - y + 540) % 360) - 180);
+      expect(dif(a, b), id + ' drift ' + a + ' ' + b).toBeLessThan(8);
+      expect(dif(b, c), id + ' drift ' + b + ' ' + c).toBeLessThan(8);
+      if (nearZero.has(id)) expect(dif(c, 0), id).toBeLessThan(10);
+    }
+  });
+
+  it('untextured moons use an exactly tidally locked frame', () => {
+    for (const id of ['phobos', 'mimas', 'tethys', 'rhea', 'ariel', 'titania', 'proteus', 'iapetus']) {
+      const s = subParentLonLat(recordOf(id), T0);
+      expect(Math.abs(s.lonDeg), id).toBeLessThan(2 * (recordOf(id).orbit.e * 57.3) + 0.5);
+      expect(Math.abs(s.latDeg), id).toBeLessThan(2 + recordOf(id).orbit.iDeg);
+    }
+  });
+});
