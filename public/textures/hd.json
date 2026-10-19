@@ -221,7 +221,621 @@
    },
    "license": "public domain (NASA)",
    "source": "NASA Earth Observatory Blue Marble: Next Generation (Stockli, Simmon et al.), December 2004 MODIS composite incl. topography+bathymetry shading, 21600x10800 (500 m/px) resampled to 16384x8192 (lanczos3, JPEG q90 4:4:4)"
+  },
+  "callisto": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "USGS Astrogeology planetary WMS GALILEO_VOYAGER - NASA/JPL/USGS Galileo SSI + Voyager global mosaic",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/jupiter/callisto_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "8k": "textures/callisto/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 4115751
+   },
+   "notes": {
+    "color_8k": "GetMap EPSG:4326 as two 4096x4096 half-globe tiles stitched to 8192x4096. observedFraction=0.961; unobserved area filled smoothly and faded to mean colour (illustrative, no real detail); see coverage_* mask"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "USGS Astrogeology planetary WMS GALILEO_VOYAGER - NASA/JPL/USGS Galileo SSI + Voyager global mosaic"
+  },
+  "charon": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "USGS Astrogeology planetary WMS NEWHORIZONS_CHARON_MOSAIC - NASA/JHUAPL/SwRI New Horizons mosaic (2017); USGS",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/pluto/charon_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "normal",
+     "tier": "4k",
+     "name": "New Horizons stereo global DEM of Charon, 300 m/px (Schenk et al. 2018; USGS Astrogeology)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Charon_NewHorizons_Global_DEM_300m_Jul2017_16bit.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "8k": "textures/charon/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 2596930,
+    "normal_4k": 2217032
+   },
+   "notes": {
+    "color_8k": "GetMap EPSG:4326 as two 4096x4096 half-globe tiles stitched to 8192x4096. observedFraction=0.660; unobserved area filled smoothly and faded to mean colour (illustrative, no real detail); see coverage_* mask",
+    "normal_4k": "Tangent-space normal map (OpenGL +Y up) from the DEM resampled to 4096x2048; relief exaggerated x3 (app can undo with normalScale=1/3); height range -14123..6893 m; observed fraction 0.457 flattened; unobserved areas (and a 3 px rim) are forced flat"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "USGS Astrogeology planetary WMS NEWHORIZONS_CHARON_MOSAIC - NASA/JHUAPL/SwRI New Horizons mosaic (2017); USGS | New Horizons stereo global DEM of Charon, 300 m/px (Schenk et al. 2018; USGS Astrogeology)",
+   "normal": {
+    "4k": "textures/charon/normal_hd_4k.png"
+   },
+   "normalExaggeration": 3
+  },
+  "enceladus": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "USGS Astrogeology planetary WMS CASSINI - NASA/JPL-Caltech/SSI/USGS Cassini Enceladus global mosaic",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/saturn/enceladus_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "8k": "textures/enceladus/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 6052282
+   },
+   "notes": {
+    "color_8k": "GetMap EPSG:4326 as two 4096x4096 half-globe tiles stitched to 8192x4096. observedFraction=1.000"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "USGS Astrogeology planetary WMS CASSINI - NASA/JPL-Caltech/SSI/USGS Cassini Enceladus global mosaic"
+  },
+  "europa": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "USGS Astrogeology planetary WMS GALILEO_VOYAGER - NASA/JPL/USGS Galileo SSI + Voyager global mosaic",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/jupiter/europa_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "8k": "textures/europa/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 4610762
+   },
+   "notes": {
+    "color_8k": "GetMap EPSG:4326 as two 4096x4096 half-globe tiles stitched to 8192x4096. observedFraction=0.957; unobserved area filled smoothly and faded to mean colour (illustrative, no real detail); see coverage_* mask"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "USGS Astrogeology planetary WMS GALILEO_VOYAGER - NASA/JPL/USGS Galileo SSI + Voyager global mosaic"
+  },
+  "ganymede": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "USGS Astrogeology planetary WMS GALILEO_VOYAGER - NASA/JPL/USGS Galileo SSI + Voyager global mosaic",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/jupiter/ganymede_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "8k": "textures/ganymede/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 4233653
+   },
+   "notes": {
+    "color_8k": "GetMap EPSG:4326 as two 4096x4096 half-globe tiles stitched to 8192x4096. observedFraction=0.965; unobserved area filled smoothly and faded to mean colour (illustrative, no real detail); see coverage_* mask"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "USGS Astrogeology planetary WMS GALILEO_VOYAGER - NASA/JPL/USGS Galileo SSI + Voyager global mosaic"
+  },
+  "io": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "USGS Astrogeology planetary WMS SSI_VGR_color - NASA/JPL/USGS Galileo SSI + Voyager merged colour mosaic",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/jupiter/io_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "8k": "textures/io/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 7681063
+   },
+   "notes": {
+    "color_8k": "GetMap EPSG:4326 as two 4096x4096 half-globe tiles stitched to 8192x4096. observedFraction=1.000"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "USGS Astrogeology planetary WMS SSI_VGR_color - NASA/JPL/USGS Galileo SSI + Voyager merged colour mosaic"
+  },
+  "pluto": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "USGS Astrogeology planetary WMS NEWHORIZONS_PLUTO_MOSAIC - NASA/JHUAPL/SwRI New Horizons LORRI/MVIC mosaic (2017); USGS",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/pluto/pluto_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "normal",
+     "tier": "4k",
+     "name": "New Horizons LORRI/MVIC stereo+photoclinometry global DEM of Pluto, 300 m/px (Schenk et al. 2018, Icarus 314; USGS Astrogeology)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Pluto_NewHorizons_Global_DEM_300m_Jul2017_16bit.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "8k": "textures/pluto/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 3331968,
+    "normal_4k": 3151878
+   },
+   "notes": {
+    "color_8k": "GetMap EPSG:4326 as two 4096x4096 half-globe tiles stitched to 8192x4096. observedFraction=0.681; unobserved area filled smoothly and faded to mean colour (illustrative, no real detail); see coverage_* mask",
+    "normal_4k": "Tangent-space normal map (OpenGL +Y up) from the DEM resampled to 4096x2048; relief exaggerated x3 (app can undo with normalScale=1/3); height range -4085..6335 m; observed fraction 0.464 flattened; unobserved areas (and a 3 px rim) are forced flat"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "USGS Astrogeology planetary WMS NEWHORIZONS_PLUTO_MOSAIC - NASA/JHUAPL/SwRI New Horizons LORRI/MVIC mosaic (2017); USGS | New Horizons LORRI/MVIC stereo+photoclinometry global DEM of Pluto, 300 m/px (Schenk et al. 2018, Icarus 314; USGS Astrogeology)",
+   "normal": {
+    "4k": "textures/pluto/normal_hd_4k.png"
+   },
+   "normalExaggeration": 3
+  },
+  "titan": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "USGS Astrogeology planetary WMS CASSINI - NASA/JPL-Caltech/SSI Cassini ISS global map PIA19658; USGS",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/saturn/titan_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "8k": "textures/titan/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 3194565
+   },
+   "notes": {
+    "color_8k": "GetMap EPSG:4326 as two 4096x4096 half-globe tiles stitched to 8192x4096. observedFraction=1.000"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "USGS Astrogeology planetary WMS CASSINI - NASA/JPL-Caltech/SSI Cassini ISS global map PIA19658; USGS"
+  },
+  "triton": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "USGS Astrogeology planetary WMS TRITON_VOYAGER2 - NASA/JPL/USGS Voyager 2 Triton colour mosaic (P. Schenk, LPI)",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/neptune/triton_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "8k": "textures/triton/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 2064408
+   },
+   "notes": {
+    "color_8k": "GetMap EPSG:4326 as two 4096x4096 half-globe tiles stitched to 8192x4096. observedFraction=0.614; unobserved area filled smoothly and faded to mean colour (illustrative, no real detail); see coverage_* mask"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "USGS Astrogeology planetary WMS TRITON_VOYAGER2 - NASA/JPL/USGS Voyager 2 Triton colour mosaic (P. Schenk, LPI)"
+  },
+  "deimos": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "4k",
+     "name": "Viking Orbiter mosaic of Deimos (USGS Astrogeology WMS VIKING)",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/mars/deimos_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Viking Orbiter mosaic of Deimos (USGS Astrogeology WMS VIKING)",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/mars/deimos_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "4k": "textures/deimos/color_4k.jpg",
+    "1k": "textures/deimos/color_1k.jpg"
+   },
+   "bytes": {
+    "color_4k": 294581,
+    "color_1k": 29557
+   },
+   "notes": {
+    "color_4k": "Equirectangular map of an irregular body (draped on the sphere/shape model by the app: expect distortion). observedFraction=1.000; albedo-calibrated x0.201 to mean 0.07",
+    "color_1k": "Equirectangular map of an irregular body (draped on the sphere/shape model by the app: expect distortion). observedFraction=1.000; albedo-calibrated x0.201 to mean 0.07"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "Viking Orbiter mosaic of Deimos (USGS Astrogeology WMS VIKING) | Viking Orbiter mosaic of Deimos (USGS Astrogeology WMS VIKING)"
+  },
+  "dione": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "Cassini ISS + Voyager global mosaic of Dione, 154 m/px (USGS Astrogeology; Roatsch et al., DLR)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Dione_Cassini_Voyager_mosaic_global_154m.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "4k",
+     "name": "Cassini ISS + Voyager global mosaic of Dione, 154 m/px (USGS Astrogeology; Roatsch et al., DLR)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Dione_Cassini_Voyager_mosaic_global_154m.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Cassini ISS + Voyager global mosaic of Dione, 154 m/px (USGS Astrogeology; Roatsch et al., DLR)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Dione_Cassini_Voyager_mosaic_global_154m.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "8k": "textures/dione/color_8k.jpg",
+    "4k": "textures/dione/color_4k.jpg",
+    "1k": "textures/dione/color_1k.jpg"
+   },
+   "bytes": {
+    "color_8k": 6327225,
+    "color_4k": 2150795,
+    "color_1k": 190604
+   },
+   "notes": {
+    "color_8k": "Single-band mosaic rendered as neutral grey (no colour in this product); albedo-calibrated: mean linear luminance (|lat|<60) scaled x2.143 to 0.5 (LitBody has no extra gain)",
+    "color_4k": "Single-band mosaic rendered as neutral grey (no colour in this product); albedo-calibrated: mean linear luminance (|lat|<60) scaled x2.143 to 0.5 (LitBody has no extra gain)",
+    "color_1k": "Single-band mosaic rendered as neutral grey (no colour in this product); albedo-calibrated: mean linear luminance (|lat|<60) scaled x2.143 to 0.5 (LitBody has no extra gain)"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "Cassini ISS + Voyager global mosaic of Dione, 154 m/px (USGS Astrogeology; Roatsch et al., DLR) | Cassini ISS + Voyager global mosaic of Dione, 154 m/px (USGS Astrogeology; Roatsch et al., DLR) | Cassini ISS + Voyager global mosaic of Dione, 154 m/px (USGS Astrogeology; Roatsch et al., DLR)"
+  },
+  "hyperion": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "4k",
+     "name": "Voyager 2 / Cassini mosaic of Hyperion (USGS Astrogeology WMS VOYAGER2)",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/saturn/hyperion_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Voyager 2 / Cassini mosaic of Hyperion (USGS Astrogeology WMS VOYAGER2)",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/saturn/hyperion_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "4k": "textures/hyperion/color_4k.jpg",
+    "1k": "textures/hyperion/color_1k.jpg"
+   },
+   "bytes": {
+    "color_4k": 417225,
+    "color_1k": 43123
+   },
+   "notes": {
+    "color_4k": "Equirectangular map of an irregular body (draped on the sphere/shape model by the app: expect distortion). observedFraction=1.000; albedo-calibrated x0.627 to mean 0.25",
+    "color_1k": "Equirectangular map of an irregular body (draped on the sphere/shape model by the app: expect distortion). observedFraction=1.000; albedo-calibrated x0.627 to mean 0.25"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "Voyager 2 / Cassini mosaic of Hyperion (USGS Astrogeology WMS VOYAGER2) | Voyager 2 / Cassini mosaic of Hyperion (USGS Astrogeology WMS VOYAGER2)"
+  },
+  "iapetus": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "4k",
+     "name": "Cassini ISS + Voyager global mosaic of Iapetus, 783 m/px (USGS Astrogeology; label says positive-west but dark Cassini Regio sits at 90W, i.e. the data is east-positive)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Iapetus_Cassini_Voyager_mosaic_global_783m.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Cassini ISS + Voyager global mosaic of Iapetus, 783 m/px (USGS Astrogeology; label says positive-west but dark Cassini Regio sits at 90W, i.e. the data is east-positive)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Iapetus_Cassini_Voyager_mosaic_global_783m.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "4k": "textures/iapetus/color_4k.jpg",
+    "1k": "textures/iapetus/color_1k.jpg"
+   },
+   "bytes": {
+    "color_4k": 1445103,
+    "color_1k": 154161
+   },
+   "notes": {
+    "color_4k": "Single-band mosaic rendered as neutral grey (no colour in this product); albedo-calibrated: mean linear luminance (|lat|<60) scaled x1.762 to 0.3 (LitBody has no extra gain)",
+    "color_1k": "Single-band mosaic rendered as neutral grey (no colour in this product); albedo-calibrated: mean linear luminance (|lat|<60) scaled x1.762 to 0.3 (LitBody has no extra gain)"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "Cassini ISS + Voyager global mosaic of Iapetus, 783 m/px (USGS Astrogeology; label says positive-west but dark Cassini Regio sits at 90W, i.e. the data is east-positive) | Cassini ISS + Voyager global mosaic of Iapetus, 783 m/px (USGS Astrogeology; label says positive-west but dark Cassini Regio sits at 90W, i.e. the data is east-positive)"
+  },
+  "mimas": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "4k",
+     "name": "Cassini ISS global mosaic of Mimas (DLR; USGS Astrogeology)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mimas/Cassini_DLR_Mimas.zip",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Cassini ISS global mosaic of Mimas (DLR; USGS Astrogeology)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mimas/Cassini_DLR_Mimas.zip",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "4k": "textures/mimas/color_4k.jpg",
+    "1k": "textures/mimas/color_1k.jpg"
+   },
+   "bytes": {
+    "color_4k": 1253572,
+    "color_1k": 161856
+   },
+   "notes": {
+    "color_4k": "Single-band mosaic rendered as neutral grey (no colour in this product); albedo-calibrated: mean linear luminance (|lat|<60) scaled x2.707 to 0.5 (LitBody has no extra gain)",
+    "color_1k": "Single-band mosaic rendered as neutral grey (no colour in this product); albedo-calibrated: mean linear luminance (|lat|<60) scaled x2.707 to 0.5 (LitBody has no extra gain)"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "Cassini ISS global mosaic of Mimas (DLR; USGS Astrogeology) | Cassini ISS global mosaic of Mimas (DLR; USGS Astrogeology)"
+  },
+  "phobos": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "4k",
+     "name": "Viking Orbiter mosaic of Phobos (USGS Astrogeology WMS VIKING)",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/mars/phobos_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Viking Orbiter mosaic of Phobos (USGS Astrogeology WMS VIKING)",
+     "url": "https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/mars/phobos_simp_cyl.map",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "4k": "textures/phobos/color_4k.jpg",
+    "1k": "textures/phobos/color_1k.jpg"
+   },
+   "bytes": {
+    "color_4k": 679187,
+    "color_1k": 76632
+   },
+   "notes": {
+    "color_4k": "Equirectangular map of an irregular body (draped on the sphere/shape model by the app: expect distortion). observedFraction=1.000; albedo-calibrated x0.251 to mean 0.07",
+    "color_1k": "Equirectangular map of an irregular body (draped on the sphere/shape model by the app: expect distortion). observedFraction=1.000; albedo-calibrated x0.251 to mean 0.07"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "Viking Orbiter mosaic of Phobos (USGS Astrogeology WMS VIKING) | Viking Orbiter mosaic of Phobos (USGS Astrogeology WMS VIKING)"
+  },
+  "rhea": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "Cassini ISS + Voyager global mosaic of Rhea, 417 m/px (USGS Astrogeology; Roatsch et al., DLR)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Rhea_Cassini_Voyager_mosaic_global_417m.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "4k",
+     "name": "Cassini ISS + Voyager global mosaic of Rhea, 417 m/px (USGS Astrogeology; Roatsch et al., DLR)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Rhea_Cassini_Voyager_mosaic_global_417m.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Cassini ISS + Voyager global mosaic of Rhea, 417 m/px (USGS Astrogeology; Roatsch et al., DLR)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Rhea_Cassini_Voyager_mosaic_global_417m.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "8k": "textures/rhea/color_8k.jpg",
+    "4k": "textures/rhea/color_4k.jpg",
+    "1k": "textures/rhea/color_1k.jpg"
+   },
+   "bytes": {
+    "color_8k": 4285656,
+    "color_4k": 1522478,
+    "color_1k": 143356
+   },
+   "notes": {
+    "color_8k": "Single-band mosaic rendered as neutral grey (no colour in this product); albedo-calibrated: mean linear luminance (|lat|<60) scaled x3.103 to 0.5 (LitBody has no extra gain)",
+    "color_4k": "Single-band mosaic rendered as neutral grey (no colour in this product); albedo-calibrated: mean linear luminance (|lat|<60) scaled x3.103 to 0.5 (LitBody has no extra gain)",
+    "color_1k": "Single-band mosaic rendered as neutral grey (no colour in this product); albedo-calibrated: mean linear luminance (|lat|<60) scaled x3.103 to 0.5 (LitBody has no extra gain)"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "Cassini ISS + Voyager global mosaic of Rhea, 417 m/px (USGS Astrogeology; Roatsch et al., DLR) | Cassini ISS + Voyager global mosaic of Rhea, 417 m/px (USGS Astrogeology; Roatsch et al., DLR) | Cassini ISS + Voyager global mosaic of Rhea, 417 m/px (USGS Astrogeology; Roatsch et al., DLR)"
+  },
+  "tethys": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "Cassini ISS global mosaic of Tethys, 293 m/px (USGS Astrogeology; Roatsch et al., DLR)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Tethys_Cassini_mosaic_global_293m.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "4k",
+     "name": "Cassini ISS global mosaic of Tethys, 293 m/px (USGS Astrogeology; Roatsch et al., DLR)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Tethys_Cassini_mosaic_global_293m.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Cassini ISS global mosaic of Tethys, 293 m/px (USGS Astrogeology; Roatsch et al., DLR)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Tethys_Cassini_mosaic_global_293m.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "8k": "textures/tethys/color_8k.jpg",
+    "4k": "textures/tethys/color_4k.jpg",
+    "1k": "textures/tethys/color_1k.jpg"
+   },
+   "bytes": {
+    "color_8k": 5514696,
+    "color_4k": 1904691,
+    "color_1k": 188703
+   },
+   "notes": {
+    "color_8k": "Single-band mosaic rendered as neutral grey (no colour in this product); albedo-calibrated: mean linear luminance (|lat|<60) scaled x2.959 to 0.6 (LitBody has no extra gain)",
+    "color_4k": "Single-band mosaic rendered as neutral grey (no colour in this product); albedo-calibrated: mean linear luminance (|lat|<60) scaled x2.959 to 0.6 (LitBody has no extra gain)",
+    "color_1k": "Single-band mosaic rendered as neutral grey (no colour in this product); albedo-calibrated: mean linear luminance (|lat|<60) scaled x2.959 to 0.6 (LitBody has no extra gain)"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "Cassini ISS global mosaic of Tethys, 293 m/px (USGS Astrogeology; Roatsch et al., DLR) | Cassini ISS global mosaic of Tethys, 293 m/px (USGS Astrogeology; Roatsch et al., DLR) | Cassini ISS global mosaic of Tethys, 293 m/px (USGS Astrogeology; Roatsch et al., DLR)"
+  },
+  "ceres": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "Dawn FC global mosaic of Ceres, 20 px/deg (DLR; USGS Astrogeology), upsampled <=1.1x to 8k",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Ceres_Dawn_FC_DLR_global_20ppd_Oct2015.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "normal",
+     "tier": "4k",
+     "name": "Dawn FC HAMO stereo global DTM of Ceres, 60 px/deg (~135 m/px; Preusker et al. 2016, DLR; USGS Astrogeology)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Ceres_Dawn_FC_HAMO_DTM_DLR_Global_60ppd_Oct2016.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "8k": "textures/ceres/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 5030022,
+    "normal_4k": 5738212
+   },
+   "notes": {
+    "color_8k": "Single-band Dawn FC mosaic rendered as neutral grey (illumination shading is baked into the product). Albedo-matched to the existing 4k map (mean linear luma 0.1646) so the solar-domain tint pipeline stays consistent; the existing color_4k/1k are untouched.",
+    "normal_4k": "Tangent-space normal map (OpenGL +Y up) from the DEM resampled to 4096x2048; relief exaggerated x3 (app can undo with normalScale=1/3); height range -8245..10412 m; observed fraction 1.000 flattened; unobserved areas (and a 3 px rim) are forced flat"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "Dawn FC global mosaic of Ceres, 20 px/deg (DLR; USGS Astrogeology), upsampled <=1.1x to 8k | Dawn FC HAMO stereo global DTM of Ceres, 60 px/deg (~135 m/px; Preusker et al. 2016, DLR; USGS Astrogeology)",
+   "normal": {
+    "4k": "textures/ceres/normal_hd_4k.png"
+   },
+   "normalExaggeration": 3
+  },
+  "vesta": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "Dawn FC HAMO clear-filter global mosaic of Vesta, 74 px/deg (~60 m/px; DLR; USGS Astrogeology)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Vesta_Dawn_FC_HAMO_Mosaic_Global_74ppd.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "normal",
+     "tier": "4k",
+     "name": "Dawn FC HAMO stereo global DTM of Vesta, 48 px/deg (DLR; Preusker et al. 2016; USGS Astrogeology)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Vesta_Dawn_HAMO_DTM_DLR_Global_48ppd.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "8k": "textures/vesta/color_8k.jpg"
+   },
+   "bytes": {
+    "color_8k": 4966503,
+    "normal_4k": 5089493
+   },
+   "notes": {
+    "color_8k": "Single-band Dawn mosaic rendered as neutral grey (north pole in winter shadow was never imaged: black). Albedo-matched to the existing 4k map (mean linear luma 0.1537, x0.439) so the app tint pipeline stays consistent. See docs/data/textures-hd.md.",
+    "normal_4k": "Tangent-space normal map (OpenGL +Y up) from the DEM resampled to 4096x2048; relief exaggerated x2 (app can undo with normalScale=1/2); height range -17660..20481 m; observed fraction 1.000 flattened; unobserved areas (and a 3 px rim) are forced flat"
+   },
+   "license": "public domain (NASA/USGS)",
+   "source": "Dawn FC HAMO clear-filter global mosaic of Vesta, 74 px/deg (~60 m/px; DLR; USGS Astrogeology) | Dawn FC HAMO stereo global DTM of Vesta, 48 px/deg (DLR; Preusker et al. 2016; USGS Astrogeology)",
+   "normal": {
+    "4k": "textures/vesta/normal_hd_4k.png"
+   },
+   "normalExaggeration": 2
   }
  },
- "generated2": "2026-10-18T20:04:50.057Z"
+ "generated2": "2026-10-19T05:35:54.790Z"
 }
