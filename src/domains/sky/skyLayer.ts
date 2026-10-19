@@ -342,11 +342,15 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
       const s = fadeT * fadeT * (3 - 2 * fadeT);
       const u = mesh.material.uniforms;
       const k = runtime.exposureScale;
+      // Close to a planet the broad Hα/dust glow competes with the body: the enhanced composite drops to 40%
+      // inside 1e10 m of the focus and returns to full by 1e11 m.
+      const fx = Math.min(1, Math.max(0, Math.log10(Math.max(1, ctx.focusDistanceM) / 1e10)));
+      const closeDim = 0.4 + 0.6 * fx * fx * (3 - 2 * fx);
       const fadeFor = (slot: Slot): number => (slot.everywhere ? 1 : distanceFade);
       u.uMapB.value = active ? active.baked.rt.texture : null;
-      u.uWeightB.value = active ? active.exposure * k * fadeFor(active) * s : 0;
+      u.uWeightB.value = active ? active.exposure * k * fadeFor(active) * s * (active.baked.dataId === ENHANCED_KEY ? closeDim : 1) : 0;
       u.uMapA.value = outgoing ? outgoing.baked.rt.texture : null;
-      u.uWeightA.value = outgoing ? outgoing.exposure * k * fadeFor(outgoing) * (1 - s) : 0;
+      u.uWeightA.value = outgoing ? outgoing.exposure * k * fadeFor(outgoing) * (1 - s) * (outgoing.baked.dataId === ENHANCED_KEY ? closeDim : 1) : 0;
       mesh.visible = u.uWeightA.value > 0 || u.uWeightB.value > 0;
     },
     dispose() {

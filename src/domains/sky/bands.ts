@@ -109,7 +109,8 @@ export function resolveBand(file: SkyBandsFile | null, band: SpectralBandId): Sk
 
 /** Tiers to load, smallest first, ending at the one the quality profile asks for. */
 export function tiersFor(rec: SkyBandRecord, quality: QualityProfile['textureQuality']): SkyBandFile[] {
-  const want = quality === 'ultra' ? ['low', 'high', 'ultra'] : quality === 'high' ? ['low', 'high'] : ['low'];
+  // 'high' and 'ultra' both end at the largest delivered tier (8K visible; no 16K map exists yet).
+  const want = quality === 'low' ? ['low'] : ['low', 'high', 'ultra'];
   const out: SkyBandFile[] = [];
   for (const k of want) {
     const f = rec.files[k as 'low' | 'high' | 'ultra'];
