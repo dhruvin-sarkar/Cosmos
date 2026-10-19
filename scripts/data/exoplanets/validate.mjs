@@ -257,7 +257,7 @@ async function main() {
   check('51 Peg b present', !!peg, true, 0, 'Mayor & Queloz 1995, Nature 378, 355');
   if (peg) {
     check('51 Peg b period [d]', p.get(peg, 'pl_orbper'), 4.2308, 0.002, 'Butler et al. 2006 (4.230785 d)');
-    check('51 Peg b mass [M_earth]', p.get(peg, 'pl_bmasse'), 148, 20, 'Butler et al. 2006 M sin i = 0.472 M_J; Birkby et al. 2017 M = 0.46 M_J');
+    { const m = p.get(peg, 'pl_bmasse'), inc = p.get(peg, 'pl_orbincl'); check('51 Peg b M sin i [M_earth] (= mass*sin(i); archive default is now the true mass with i)', m != null && inc != null ? m * Math.sin(inc * Math.PI / 180) : m, 148, 20, 'Butler et al. 2006 M sin i = 0.472 M_J = 150 M_earth'); }
     check('51 Peg b discovery year', p.get(peg, 'disc_year'), 1995, 0, 'Mayor & Queloz 1995');
     check('51 Peg b discovery method', p.get(peg, 'discoverymethod'), 'Radial Velocity', 0, 'Mayor & Queloz 1995');
     const ps = sysOf(peg);

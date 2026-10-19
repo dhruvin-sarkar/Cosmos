@@ -15,7 +15,7 @@ import { log, fail, runMain, RAW_DIR, OUT_DIR, ensureDir, readMeta, readMaybeGz,
 import { RAW, OUT, PINS, HYG_CITATION, STELLARIUM_CITATION, VI49_CITATION, WGSN_CITATION, IAU_NAMES_CITATION } from './sources.mjs';
 import { IAU_CONSTELLATIONS, canonicalAbbr, IAU_CONSTELLATIONS_URL } from './constellation-names.mjs';
 import { parseWgsnHtml, parseWgsnLegacyTxt, designationKeys } from './wgsn.mjs';
-import { DEG, teffBallesteros, BV_MIN, BV_MAX, unitVec, raDecOf, angleDeg, meanDirection, SphericalRing, bayerFlamsteedDisplay, nameKey } from './astro.mjs';
+import { precessToJ2000Fn, DEG, teffBallesteros, BV_MIN, BV_MAX, unitVec, raDecOf, angleDeg, meanDirection, SphericalRing, bayerFlamsteedDisplay, nameKey } from './astro.mjs';
 
 export const DIST_SENTINEL_PC = 100000; // HYG: dist >= 100000 means missing/dubious parallax
 export const NAMED_MAG_LIMIT = 6.5;
@@ -421,52 +421,87 @@ export function loadStellarium() {
  * they are removed so 3-D renderers do not draw spurious segments to the pole.
  */
 export function loadVi49() {
-  const file = `${RAW_DIR}/${RAW.vi49Bound20}`;
-  if (!fs.existsSync(file)) fail('VI/49 bound_20.dat.gz missing - run fetch.mjs first.');
-  const text = readMaybeGz(file).toString('latin1');
-  const groups = [];
+  // Rebuilt from VI/49 constbnd.dat (B1875.0 polygons along meridians/parallels, CCW, B. Gray 2007): the
+  // J2000 file bound_20.dat is not polygon-ordered, so it is used only as a cross-check (see checkAgainstBound20).
+  const file = `${RAW_DIR}/vi49_constbnd.dat`;
+  if (!fs.existsSync(file)) fail('VI/49 constbnd.dat missing - run fetch.mjs first.');
+  const polys = [];
   let cur = null;
   let records = 0;
-  for (const line of text.split(/\r?\n/)) {
+  for (const line of fs.readFileSync(file, 'latin1').split(/\r?\n/)) {
     if (!line.trim()) continue;
-    const ra = Number(line.slice(0, 11));
-    const dec = Number(line.slice(12, 23));
-    const cst = line.slice(24, 28).trim();
-    const type = line.slice(29, 30).trim();
-    if (!Number.isFinite(ra) || !Number.isFinite(dec) || !cst) fail(`VI/49: malformed record "${line}"`);
-    if (ra < 0 || ra > 360 || dec < -90 || dec > 90) fail(`VI/49: out-of-range record "${line}"`);
+    const ra = Number(line.slice(0, 8)) * 15;
+    const dec = Number(line.slice(9, 18));
+    const cst = line.slice(19, 23).trim();
+    const adj = line.slice(24, 28).trim();
+    if (!Number.isFinite(ra) || !Number.isFinite(dec) || !cst) fail(`VI/49 constbnd: malformed record "${line}"`);
     records++;
-    if (!cur || cur.cst !== cst) {
-      cur = { cst, pts: [] };
-      groups.push(cur);
-    }
-    cur.pts.push([ra, dec, type]);
+    if (!adj) { cur = { cst, pts: [] }; polys.push(cur); }
+    cur.pts.push([ra, dec]);
   }
-  const rings = new Map(); // abbr -> [{ part, points:[[ra,dec],...], removedPolePoints }]
-  let removedPolePoints = 0;
-  for (const g of groups) {
+  const prec = precessToJ2000Fn(2405889.25587); // B1875.0
+  const rings = new Map();
+  const serCount = {};
+  for (const g of polys) {
     const abbr = canonicalAbbr(g.cst.replace(/[12]$/, ''));
     if (!abbr) fail(`VI/49: unknown constellation code "${g.cst}"`);
-    const pts = [];
-    for (const [ra, dec] of g.pts) {
-      if (Math.abs(dec) >= 89.9999) {
-        removedPolePoints++;
-        continue;
-      }
-      const raN = ra >= 360 ? ra - 360 : ra;
-      const last = pts[pts.length - 1];
-      if (last && Math.abs(last[0] - raN) < 1e-9 && Math.abs(last[1] - dec) < 1e-9) continue; // duplicate
-      pts.push([raN, dec]);
+    const pts = g.pts.slice(0, -1); // closing point repeats the origin
+    const dense = [];
+    for (let i = 0; i < pts.length; i++) {
+      const [r0, d0] = pts[i];
+      let [r1, d1] = pts[(i + 1) % pts.length];
+      let dr = r1 - r0;
+      if (dr > 180) dr -= 360; else if (dr < -180) dr += 360;
+      const steps = Math.max(1, Math.ceil(Math.max(Math.abs(dr), Math.abs(d1 - d0)))); // 1-deg grid in RA (parallels) or Dec (meridians)
+      for (let k = 0; k < steps; k++) dense.push([(r0 + (dr * k) / steps + 720) % 360, d0 + ((d1 - d0) * k) / steps]);
     }
-    // drop closing duplicate
-    if (pts.length > 1) {
-      const [a, b] = [pts[0], pts[pts.length - 1]];
-      if (Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9) pts.pop();
-    }
+    const pts2000 = dense.map(([ra, dec]) => {
+      const v = prec(unitVec(ra, dec));
+      const [r, d] = raDecOf(v);
+      return [r, d];
+    });
+    const n = (serCount[abbr] = (serCount[abbr] ?? 0) + 1);
     if (!rings.has(abbr)) rings.set(abbr, []);
-    rings.get(abbr).push({ part: g.cst, points: pts });
+    rings.get(abbr).push({ part: abbr === 'Ser' ? `SER${n}` : abbr.toUpperCase(), points: pts2000 });
   }
-  return { rings, records, groups: groups.length, removedPolePoints, meta: readMeta(file) };
+  checkAgainstBound20(rings);
+  return { rings, records, groups: polys.length, removedPolePoints: 0, meta: readMeta(file) };
+}
+
+/** Every J2000 vertex of VI/49 bound_20.dat must lie on our polyline of the same constellation (tolerance 15 arcsec). */
+function checkAgainstBound20(rings) {
+  const f = `${RAW_DIR}/${RAW.vi49Bound20}`;
+  if (!fs.existsSync(f)) return;
+  const segs = new Map();
+  for (const [abbr, parts] of rings) {
+    const list = [];
+    for (const p of parts) {
+      const v = p.points.map(([ra, dec]) => unitVec(ra, dec));
+      for (let i = 0; i < v.length; i++) list.push([v[i], v[(i + 1) % v.length]]);
+    }
+    segs.set(abbr.toUpperCase(), list);
+  }
+  let worst = 0, n = 0, bad = 0;
+  for (const line of readMaybeGz(f).toString('latin1').split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const ra = Number(line.slice(0, 11)), dec = Number(line.slice(12, 23));
+    const code = canonicalAbbr(line.slice(24, 28).trim().replace(/[12]$/, ''));
+    if (!code || Math.abs(dec) > 89.99) continue;
+    const p = unitVec(ra, dec);
+    let best = 1e9;
+    for (const [a, b] of segs.get(code.toUpperCase()) ?? []) {
+      const ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+      const L = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2];
+      let t = L ? ((p[0] - a[0]) * ab[0] + (p[1] - a[1]) * ab[1] + (p[2] - a[2]) * ab[2]) / L : 0;
+      t = Math.max(0, Math.min(1, t));
+      const q = [a[0] + t * ab[0] - p[0], a[1] + t * ab[1] - p[1], a[2] + t * ab[2] - p[2]];
+      best = Math.min(best, Math.hypot(q[0], q[1], q[2]));
+    }
+    const arcsec = (best * 180 / Math.PI) * 3600;
+    n++; worst = Math.max(worst, arcsec); if (arcsec > 15) bad++;
+  }
+  log(`VI/49 cross-check: ${n} bound_20 vertices, worst distance to rebuilt boundary ${worst.toFixed(1)} arcsec, ${bad} beyond 15 arcsec`);
+  if (bad > n * 0.002) fail(`VI/49 cross-check failed: ${bad}/${n} vertices off the rebuilt boundary`);
 }
 
 function vi49Version() {

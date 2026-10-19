@@ -238,14 +238,14 @@ export async function arxivSource(id) {
       // tar archives have "ustar" at offset 257
       if (unz.length > 262 && unz.toString('latin1', 257, 262) === 'ustar') {
         kind = 'tar.gz';
-        execFileSync('tar', ['-xzf', tmp.replace(/\//g, path.sep), '-C', dir.replace(/\//g, path.sep)], { stdio: 'pipe' });
+        execFileSync('tar', ['--force-local', '-xzf', tmp, '-C', dir], { stdio: 'pipe' });
       } else {
         kind = 'gz-single';
         fs.writeFileSync(`${dir}/main.tex`, unz);
       }
     } else if (r.buf.toString('latin1', 257, 262) === 'ustar') {
       kind = 'tar';
-      execFileSync('tar', ['-xf', tmp.replace(/\//g, path.sep), '-C', dir.replace(/\//g, path.sep)], { stdio: 'pipe' });
+      execFileSync('tar', ['--force-local', '-xf', tmp, '-C', dir], { stdio: 'pipe' });
     } else if (/\\document|\\begin\{/.test(r.buf.toString('latin1', 0, 5000))) {
       kind = 'tex';
       fs.writeFileSync(`${dir}/main.tex`, r.buf);

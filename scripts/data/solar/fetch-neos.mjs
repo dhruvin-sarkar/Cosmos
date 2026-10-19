@@ -4,8 +4,8 @@ import { fetchCached, qs, writeJSON, fileEntry, upsertManifest, JPL_SSD_LICENSE,
 
 const URL_ = 'https://ssd-api.jpl.nasa.gov/sbdb_query.api';
 const FIELDS = 'spkid,full_name,pdes,a,e,i,om,w,ma,epoch,tp,per,q,H,diameter,diameter_sigma,albedo,rot_per,moid,class,pha,condition_code,data_arc,n_obs_used,sigma_a,sigma_e,sigma_i,sigma_om,sigma_w,sigma_ma';
-const q1 = { fields: FIELDS, 'sb-kind': 'a', 'sb-group': 'pha' };
-const q2 = { fields: FIELDS, 'sb-kind': 'a', 'sb-group': 'neo', 'sb-cdata': JSON.stringify({ AND: ['H|LT|18'] }) };
+const q1 = { fields: FIELDS, 'full-prec': 1, 'sb-kind': 'a', 'sb-group': 'pha' };
+const q2 = { fields: FIELDS, 'full-prec': 1, 'sb-kind': 'a', 'sb-group': 'neo', 'sb-cdata': JSON.stringify({ AND: ['H|LT|18'] }) };
 const A = await fetchCached(`${URL_}?${qs(q1)}`, { cache: 'neos/pha.json', timeoutMs: 300000 });
 const B = await fetchCached(`${URL_}?${qs(q2)}`, { cache: 'neos/neo-H18.json', timeoutMs: 300000 });
 const ja = JSON.parse(A.text), jb = JSON.parse(B.text);

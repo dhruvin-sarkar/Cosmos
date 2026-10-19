@@ -1,0 +1,40 @@
+# Domain: galactic (`public/data/galactic/`)
+
+Reconstructed Milky Way model, Sgr A* lab, landmarks, Messier catalogue, cosmology constants. All files are static JSON (total ≈ 275 kB), built offline-reproducibly by `node scripts/data/galactic/build.mjs` (sub-builders: `build-{cosmology,sgra,milkyway,landmarks,messier}.mjs`; validation: `validate.mjs`; helpers `lib.mjs`, `refs.mjs`, `orbits.mjs`, `cosmo-math.mjs`). Manifest fragment: `public/data/galactic/manifest.part.json`.
+
+## Conventions (all files)
+- File header: `schemaVersion:1, generated (ISO UTC), domain, dataset, provenanceClass?`, plus a file-level `references` map (key → full citation: authors, year, journal, volume, page / DOI / bibcode).
+- **Quantity object** (shaped like `src/data/provenance.ts` but NOT identical: dimensionless unit is `null` not `''`; provenance is the string `ref` (key into `references`) instead of `source: SourceRef`; no per-value `provenance`; `uncertainty.kind` values such as `stdDev1Sigma`/`propagatedStdDev`/`monteCarloStdDev` are not in that type — the integrator needs a small adapter): `{value, unit, uncertainty:{kind, value | plus/minus, note?}, ref, note?}`. `uncertainty.kind`: `stdDev1Sigma`, `asymmetric68`, `monteCarloStdDev`, … `ref` is a key into `references`. Missing = `null` (never 0).
+- Transcription check: every literature number was asserted to occur literally in the authors' arXiv TeX source/abstract at build time (build fails otherwise); see `verification` blocks.
+- Angles in degrees, positions ICRS/J2000 unless noted. Galactic (l,b) via the Hipparcos matrix.
+
+## cosmology.json
+`parameters.{H0, omegaM, omegaLambda, omegaBh2, omegaCh2, omegaMh2, nS, sigma8, tau, lnA10s, zReionization, theta100MC, ageGyr, zLastScattering, soundHorizonAtLastScatteringComovingMpc, omegaK, TcmbK}` – Planck 2018 VI (A&A 641, A6) Table 2, column **TT,TE,EE+lowE+lensing+BAO** (H0 = 67.66 ± 0.42, age 13.787 Gyr, z* ≈ 1089.8). T_CMB = 2.7255 ± 0.0006 K (Fixsen 2009).
+`cmbDipole.{amplitudeMicroK (3362.08±0.99 µK), galacticLonDeg, galacticLatDeg, raDeg, decDeg, solarVelocityKmS}` – Planck 2018 I (solar dipole).
+`derived` (our computation, flat ΛCDM, Ω_r from T_CMB+N_eff=3.046, Simpson integration, uncertainties: D_M* by quadrature of the published r* and 100θ_MC errors (≈ ±21.5 Mpc); horizon by Monte-Carlo over H0 and ω_m=Ω_m h² (respects the Ω_m–h degeneracy; a conservative upper bound, ≈ ±0.13 Gly — it overestimates the age σ 0.047 vs published 0.020 Gyr, which is why `ageGyrComputed` uses the published σ)): `comovingDistanceToLastScatteringMpc` (13 880 Mpc), `…Gly`, `particleHorizonComovingMpc/Gly` (46.19 Gly radius), `particleHorizonDiameterGly`, `ageGyrComputed`, `hubbleDistanceMpc`, `hubbleTimeGyr`, `omegaRadiation`. Class: derived.
+
+## sgra.json
+- `blackHole.mass.{adopted, gravity2022, gravity2020, gravity2019, gillessen2017, eht2022}` (Msun; adopted = GRAVITY 2024 A&A 692 A242: 4.2996e6 ± 1.18e4 stat; mass ∝ R0²).
+- `blackHole.distanceR0.{adopted (8275.9±8.6 pc, GRAVITY 2024), …}`; `blackHole.ehtRing` (EHT 2022 I/V: ring diameter 51.8 ± 2.3 µas, fractional width, angular gravitational radius); `blackHole.spin` (**uncertain**; only constraints, state as such in UI); `blackHole.derived` (r_g, r_s km/AU, photon sphere, shadow radius, angular sizes – computed from adopted mass/distance).
+- `sStars.s2Gravity2020`: S2 elements from GRAVITY 2020 (A&A 636, L5) with 1σ errors: `semiMajorAxisMas` (125.058±0.041), `eccentricity` (0.884649), `inclinationDeg` (134.567), `longitudeAscendingNodeDeg` (228.171), `argumentPericentreDeg` (66.263), `periodYr` (16.0455), `tPeriYr` (2018.379, decimal year), plus `distanceR0Pc`, `centralMassMsun`, `fSchwarzschildPrecession`, `errorsMcmcMultiplier`.
+- `sStars.gillessen2017`: 40 stars (Gillessen+ 2017 ApJ 837, 30, VizieR J/ApJ/837/30 table3). `fields` order: `id, semiMajorAxisMas, semiMajorAxisErrMas, eccentricity, eccentricityErr, inclinationDeg, inclinationErrDeg, longitudeAscendingNodeDeg, …Err, argumentPericentreDeg, …Err, tPeriYr, tPeriErrYr, periodYr, periodErrYr, spectralClass, kMag, rescalingFactor, flag`; `rows` are arrays in that order, nulls for missing. Assumed R0 = 8323 pc, M = 4.28e6 Msun. S111 is formally hyperbolic (period null).
+- `sStars.conventions`: orbit frame = visual-binary (Thiele–Innes) on the sky plane centred on Sgr A*: x = North, y = East, z = line of sight positive **away** from observer; Ω = PA of ascending node (node where star recedes), N through E; ω from the ascending node along motion; i > 90° = clockwise on sky; time in decimal years.
+- `validation`, `verification`: Kepler/period consistency checks and literal-match records.
+
+## milkyway.json (reconstructed)
+`sun` (R0 8275.9 pc GRAVITY 2024, alternatives; z_sun 20.8±0.3 pc Bennett & Bovy 2019; circular speed; solar motion LSR; Sgr A* ICRS), `frames` (`icrsToGalacticMatrix` rows = Galactic x,y,z components: v_gal = M·v_icrs, ESA 1997 Hipparcos Eq. 1.5.11; `galacticCentreIcrs`), `spiralArms` (Reid+ 2019 ApJ 885, 131 Table 2; `fields`/`rows`: name, nMasers, tangencyLonDeg, betaMin/MaxDeg, betaKinkDeg, rKinkKpc(±), pitchInside/OutsideKinkDeg(±), widthKpc(±); law `ln(R/R_kink) = −(β−β_kink)·tanψ`, β in Reid's azimuth convention, see `conventions.reidAzimuth`; `centerLines`), `bar` (half length, angle to Sun–GC line, scale heights, mass, pattern speed – Wegg+ 2015, Portail+ 2017 etc.), `bulge`, `disk.{thin,thick,stellarDiskExtent,dust}`, `stellarHalo`, `global.{stellarMassMsun, baryonicMassMsun, virialRadiusKpc, starCountRange, diameterEstimatesKly}` (Bland-Hawthorn & Gerhard 2016 ARA&A 54, 529). Everything is a model reconstruction, not a map: per-field `ref` and the file `disclaimer` apply.
+
+## landmarks.json
+`objects[]` (185: 157 globular clusters + 28 curated) fields: `id, name, aliases[], type` (`galactic-centre, emission-nebula, dark-nebula, planetary-nebula, supernova-remnant, pulsar, star-forming-region, open-cluster, black-hole, globular-cluster`), `simbadMainId`, `raDeg, decDeg` (ICRS J2000), `lDeg, bDeg`, `distPc, distErrPc, distErrMinusPc, distErrPlusPc` (null if none), `distMethod, distRef` (bibcode), `distNote`, `xyzHelioPc` (Sun-centred Galactic Cartesian: x→GC, y→l=90°, z→NGP), `sizePc`, `massMsun`, `metallicityFeH` (GCs), `summary`, `source`, `provenanceClass`. Globular clusters: positions/[Fe/H] Harris 1996 (2010 ed.), distances Baumgardt & Vasiliev 2021 (statistical errors only). Open clusters: Hunt & Reffert 2023. BHs: Cyg X-1, V404 Cyg, Gaia BH1/BH2/BH3.
+
+## messier.json
+110 objects (apparentMag: SIMBAD V, except planetary nebulae and objects without SIMBAD flux, which use OpenNGC (CC BY-SA 4.0, ShareAlike applies, attribution in `references.openngc`) or Harris 1996/2010 integrated Vt for globulars; only M35 is null; see `apparentMagSource`): `messier (int), id ("m31"), designation, name, commonNames[], ngcIc[], aliases[], simbadMainId, simbadType, type, morphology, constellation, constellationAbbr, raDeg, decDeg, lDeg, bDeg, apparentMag, apparentMagBand, apparentMagSource, angularSizeArcmin{major,minor}, redshift, distPc, distMpc, distErrPc(+Minus/Plus), distMethod, distRef, distMedianPc, distEntries`. SIMBAD TAP (`mesDistance`, flux V, identifiers); gap magnitudes from OpenNGC (CC BY-SA 4.0).
+
+## Validation (`validate.mjs`, ALL OK)
+Finite numbers in all files; 110 Messier; ≥150 GCs; M31 at (10.685°, +41.269°); H0 67.66; T_CMB 2.7255; horizon 46.19 Gly; D_M(z*) = 13 880 Mpc (published ≈ 13.9 Gpc); Sgr A* 4.30e6 Msun; EHT ring 51.8 µas; R0 ≈ 8.28 kpc; S2 present; coordinate ranges.
+
+## Limitations
+Distances are statistical-error only (no zero-point systematics). Sgr A* spin is unconstrained. Milky Way structure (arms, bar angle, halo mass) is model-dependent and contested; derived cosmology uncertainties ignore parameter correlations.
+
+## Credits
+Acknowledge: SIMBAD/VizieR (CDS, Strasbourg); Planck Collaboration (2020); GRAVITY Collaboration; EHT Collaboration; Reid et al. 2019; Bland-Hawthorn & Gerhard 2016; Harris 1996/2010; Baumgardt & Vasiliev 2021; Hunt & Reffert 2023; OpenNGC (CC BY-SA 4.0).

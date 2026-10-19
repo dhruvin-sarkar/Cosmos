@@ -28,7 +28,7 @@ Shared helpers: `lib.mjs` (polite cached fetch, >=1.1 s per host, User-Agent `Co
 | jpl-horizons-spacecraft | JPL Horizons API | same. Credit: "NASA/JPL Horizons". |
 | naif-pck00011, naif-gm-de440 | NAIF generic kernels | free to use and redistribute unmodified; cite Archinal et al. 2018 (CeMDA 130:22) and Park et al. 2021 (AJ 161:105). |
 | nssdca-planetary-fact-sheets | NASA GSFC NSSDCA fact sheets | NASA content, not copyrighted; credit NASA. |
-| nasa-donki-space-weather | NASA CCMC DONKI via api.nasa.gov | NASA content; credit "NASA CCMC DONKI". |
+| nasa-donki-space-weather | NASA CCMC DONKI (keyless ccmc.gsfc.nasa.gov web service) | NASA content; credit "NASA CCMC DONKI". |
 | noaa-swpc-solar-cycle-indices | NOAA SWPC JSON | US Government work; sunspot numbers originate from SILSO / Royal Observatory of Belgium. |
 
 Dimorphos / DART literature: Thomas et al. 2023, Nature 616:448; Cheng et al. 2023, Nature 616:457; impact-parameter table of the DART papers (Nature 616, 2023). Hera status: ESA, "ESA's Hera targets early arrival at Didymos asteroids" (Oct 2025).
@@ -114,4 +114,8 @@ Fields: `id, name, fullname, designation, spkid, kind (asteroid|comet|interstell
 
 ## Status of space weather
 
-INCOMPLETE: NASA DONKI (api.nasa.gov and the keyless CCMC host) returned HTTP 503 / was unreachable throughout ingestion on 2026-10-18. `space-weather.json` therefore has `donkiStatus` starting with "unavailable", EMPTY `flares`, `cmes`, `geomagneticStorms` arrays (empty means not fetched, not zero activity) and a valid `solarCycle` series (last month 2026-09: SSN 60.3, F10.7 105.4 sfu). Re-run `node scripts/data/solar/fetch-space-weather.mjs` when DONKI recovers; it caches per half-year chunk in `data-raw/solar/donki/`, needs no code changes, and also adds the `nasa-donki-space-weather` manifest record. The NASA key is read only from `.env.ingest.local` inside the script and never logged.
+Complete (fix pass 2026-10-18). DONKI events were fetched from the keyless CCMC web service `https://ccmc.gsfc.nasa.gov/DONKI/WS/get/{FLR|CME|GST}` (note: no `kauai.` prefix; 60-day maximum range per request, so 30-day chunks are used). Result: 902 flares >= M1.0 (45 X-class, includes the 2024-10-03 X9.0 flare), 3463 CMEs, 43 geomagnetic storms; `donkiStatus` = "ok". api.nasa.gov DONKI still returned HTTP 503 and is not used.
+
+## Orbital element precision
+
+SBDB requests use `full-prec=1` (sbdb.api and sbdb_query.api), so `smallbodies.json`, `neos.json`, dwarf-planet orbits in `bodies.json` carry full double precision (`asteroids.bin` is Float32 and unchanged) (e.g. Apophis a = 0.92235922 AU, M = 175.33040 deg at epoch JD 2461200.5), not the display-rounded 3-4 digits returned by default.

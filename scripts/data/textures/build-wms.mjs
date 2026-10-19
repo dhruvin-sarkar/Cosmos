@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import { RAW_DIR, TEX_DIR, wmsGetMapUrl, download, log, relPublic } from './lib.mjs';
 import { toRaw, pullPushFill, writeVariants } from './process.mjs';
+import { sharp } from './lib.mjs';
 import { saveRecords } from './records.mjs';
 
 const USGS_LIC = 'Public domain (U.S. Government work; NASA/USGS data products). Credit: USGS Astrogeology Science Center';
@@ -32,19 +33,34 @@ for (const [body, c] of Object.entries(BODIES)) {
   const endpoint = wmsGetMapUrl({ mapfile: c.map, layer: c.layer, width: 4096, height: 2048, format: 'image/png', transparent: true });
   await download(endpoint, raw, { expectType: /^image\//, minBytes: 20000, skipHead: true, label: `${body}/${c.layer}` });
   let img = await toRaw(raw, { channels: 4 });
-  let observed = 1;
+  let observed = 1, cov = null;
   if (c.blackNoData) for (let i = 0; i < img.data.length; i += 4) if (img.data[i] <= 2 && img.data[i + 1] <= 2 && img.data[i + 2] <= 2) img.data[i + 3] = 0; // source paints unobserved areas pure black
   let minA = 255;
   for (let i = 3; i < img.data.length; i += 4) if (img.data[i] < minA) minA = img.data[i];
   if (minA < 128) {
     const f = pullPushFill(img);
-    img = f.img; observed = f.observedFraction;
+    img = f.img; observed = f.observedFraction; cov = f.coverage;
+    if (observed < 0.9) { // fade the interpolated (unobserved) area toward the mean observed colour, so no fake blurry detail is shown
+      const W = img.width, H = img.height, m = [0, 0, 0]; let n = 0;
+      for (let i = 0; i < W * H; i++) if (cov[i]) { m[0] += img.data[i * 3]; m[1] += img.data[i * 3 + 1]; m[2] += img.data[i * 3 + 2]; n++; }
+      const wb = await sharp(Buffer.from(cov.map((v) => (v ? 255 : 0))), { raw: { width: W, height: H, channels: 1 } }).blur(10).raw().toBuffer();
+      for (let i = 0; i < W * H; i++) { const k = cov[i] ? 1 : Math.min(1, (wb[i] / 255) * 1.5) * 0.6; if (k < 1) for (let c = 0; c < 3; c++) img.data[i * 3 + c] = Math.round(img.data[i * 3 + c] * k + (m[c] / n) * (1 - k)); }
+    }
     log(`  ${body}: observed fraction ${(observed * 100).toFixed(1)}% (rest filled smoothly)`);
   } else img = await toRaw(raw, { channels: 3 });
   const w = await writeVariants(img, [
     { file: `${base}_4k.jpg`, width: 4096, height: 2048, format: 'jpeg' },
     { file: `${base}_1k.jpg`, width: 1024, height: 512, format: 'jpeg' },
   ]);
+  let covFiles = null;
+  if (cov && observed < 0.9) {
+    const cw = await writeVariants({ data: Buffer.from(cov.map((v) => (v ? 255 : 0))), width: 4096, height: 2048, channels: 1 }, [
+      { file: `${outDir}/coverage_2k.png`, width: 2048, height: 1024, format: 'png', grey: true },
+      { file: `${outDir}/coverage_1k.png`, width: 1024, height: 512, format: 'png', grey: true },
+    ]);
+    covFiles = { high: relPublic(cw[0].file), low: relPublic(cw[1].file) };
+    saveRecords('wms', [{ key: `${body}/coverage`, body, map: 'coverage', files: covFiles, credit: c.credit, license: USGS_LIC, source: endpoint, notes: 'Observed-coverage mask (1 channel, 255 = real imaging, 0 = unobserved/filled). Unobserved areas of the colour map are faded to the mean observed colour; use this mask to hide or dim them (e.g. near poles).', provenanceClass: 'derived', retrieved: new Date().toISOString(), bytes: cw.map((x) => x.bytes) }]);
+  }
   saveRecords('wms', [{
     key: `${body}/${c.slot}`, body, map: c.slot, files: { high: relPublic(w[0].file), low: relPublic(w[1].file) },
     credit: c.credit, license: USGS_LIC, source: endpoint,

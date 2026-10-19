@@ -78,7 +78,20 @@ export async function fetchGcns({ refresh = process.argv.includes('--refresh') }
   assertDiskSpace(80e6, RAW.gcnsCsv);
   log(`TAP async query on ${PINS.gcns.tap}:\n  ${GCNS_QUERY}`);
   const retrieved = new Date().toISOString();
-  const { buf, jobUrl } = await tapAsync(GCNS_QUERY);
+  // Anonymous TAP async results are truncated at 50,000 rows, so fetch 24 RA bands of 15 deg and concatenate.
+  const parts = [];
+  let jobUrl = null;
+  for (let b = 0; b < 24; b++) {
+    const q = `${GCNS_QUERY} WHERE ra >= ${b * 15} AND ra < ${(b + 1) * 15}`;
+    const r = await tapAsync(q);
+    const t = r.buf.toString('utf8');
+    const nrows = t.split(String.fromCharCode(10)).filter(Boolean).length - 1;
+    if (nrows >= 50000) fail(`RA band ${b} hit the 50000-row cap; use narrower bands.`);
+    parts.push(b === 0 ? t : t.slice(t.indexOf(String.fromCharCode(10)) + 1));
+    jobUrl = r.jobUrl;
+    log(`  band ${b}: ${nrows} rows`);
+  }
+  const buf = Buffer.from(parts.map((t) => (t.endsWith(String.fromCharCode(10)) ? t : t + String.fromCharCode(10))).join(''), 'utf8');
   const text = buf.toString('utf8');
   const firstLine = text.slice(0, text.indexOf('\n'));
   if (!firstLine.includes('source_id') || !firstLine.includes('dist_50')) {

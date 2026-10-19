@@ -22,6 +22,8 @@ const clean = (s) => { const t = String(s ?? '').replace(/[,*\s]/g, ''); const n
 function sheetVal(file, labelRe, col = 1) {
   const html = rd(file);
   for (const t of P.parseHtmlTables(html)) for (const r of t.rows) if (r.length > col && labelRe.test(r[0])) return clean(r[col]);
+  // plain-text sheets (e.g. Earth) have no HTML tables: match "label   value" lines
+  for (const line of html.split(/\r?\n/)) { const t = line.trim(); if (labelRe.test(t)) { const m = t.split(/\s{2,}/); if (m.length > col) return clean(m[col]); } }
   return null;
 }
 const gm = (key) => { const v = gmk.get(key); return v ? v[0] : null; };

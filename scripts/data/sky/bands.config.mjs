@@ -155,7 +155,7 @@ export const BANDS = [
     citation: 'Voges W. et al. 1999, A&A 349, 389; Snowden S. L. et al. 1997, ApJ 485, 125.',
     reveals:
       'Soft X-rays come from gas heated to millions of degrees: the expanding shells of supernova remnants such as Vela and the Cygnus Loop, the hot "Local Bubble" that surrounds the Sun, superheated gas in clusters of galaxies, and matter falling onto black holes in distant active galaxies. Red marks the very softest X-rays (0.1–0.4 keV), which are absorbed even by thin clouds of gas; blue marks harder X-rays (0.5–2.4 keV) that travel farther.',
-    caveats: ['Counts-based maps (Poisson noise) at about 2′ native resolution, shown smoothed by resampling; soft X-rays are absorbed by neutral gas, so the Galactic plane looks dark in red.'],
+    caveats: ['Counts-based maps (Poisson noise) at about 2′ native resolution, shown smoothed by resampling; the all-sky survey has strong exposure/scan artefacts: bright fan-shaped streaks converge on the ecliptic poles and dark gaps appear where exposure was low (these are instrumental, not sky structure); soft X-rays are absorbed by neutral Galactic gas, which suppresses the low-energy (red) channel along the plane, so colours are orange/blue rather than uniformly dark.'],
   },
   {
     id: 'xray-erosita',

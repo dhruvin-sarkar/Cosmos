@@ -1,0 +1,35 @@
+#!/usr/bin/env node
+// Writes public/data/stars/manifest.part.json from the generated outputs (sizes/counts measured).
+import fs from 'node:fs';
+import { OUT_DIR, runMain, log } from './lib.mjs';
+import { HYG_CITATION, STELLARIUM_CITATION, VI49_CITATION, WGSN_CITATION, GCNS_CITATION } from './sources.mjs';
+
+const J = (f) => JSON.parse(fs.readFileSync(`${OUT_DIR}/${f}`, 'utf8'));
+const size = (f) => fs.statSync(`${OUT_DIR}/${f}`).size;
+const file = (f, records) => ({ path: `data/stars/${f}`, bytes: size(f), records });
+
+async function main() {
+  const h = J('stars.json'), named = J('stars-named.json'), hip = J('hip-index.json'), con = J('constellations.json'), sys = J('star-systems.json'), g = J('gaia-gcns.json');
+  const common = { cachePolicy: 'versioned offline snapshot; optional online refresh', normalization: 'scripts/data/stars/build.mjs' };
+  const hygBase = {
+    organization: 'David Nash / Astronexus (compiled from ESA Hipparcos, Yale BSC5, Gliese CNS3)',
+    mechanism: 'bulk CSV download (git LFS, pinned commit) -> Node build',
+    endpoint: h.source.url, query: null,
+    version: `HYG v4.4 (codeberg commit ${h.source.commit.slice(0, 7)})`,
+    retrieved: h.source.retrieved,
+    license: 'CC BY-SA 4.0 (share-alike: derived data files carry the same licence)',
+    licenseUrl: h.source.licenseUrl, citation: HYG_CITATION,
+    rateLimits: 'not documented (static file; fetched once, 1 request)',
+    updateCadence: 'irregular releases (v4.4 current as of 2026-10)', ...common, provenanceClass: 'derived',
+  };
+  const datasets = [
+    { ...hygBase, id: 'stars-hyg-field', name: 'HYG v4.4 3-D star field (109k stars)', purpose: 'Photometrically correct 3-D star field, LOD by magnitude prefix', fieldsUsed: ['ra', 'dec', 'dist', 'mag', 'absmag', 'ci'], fallback: 'Render only the bundled stars-named.json rows (apparent mag + ra/dec) as a billboard sky', files: [file('stars.bin', h.count), file('stars.json', 1)], limitations: 'Hipparcos-era parallaxes: distances beyond ~300 pc are uncertain; stars without parallax (10,224) are excluded from 3-D; Teff is a B-V black-body rendering aid, not measured; no extinction; epoch J2000.' },
+    { ...hygBase, id: 'stars-named-search', name: 'Named / designated / naked-eye star table', purpose: 'Search by name, Bayer/Flamsteed, Gliese, HIP/HD/HR; labels; multiple-star systems', organization: hygBase.organization + '; names cross-checked with IAU WGSN', fieldsUsed: ['proper', 'bayer', 'flam', 'gl', 'hip', 'hd', 'hr', 'spect', 'var', 'lum', 'comp', 'base'], files: [file('stars-named.json', named.count), file('hip-index.json', Object.keys(hip).length), file('star-systems.json', sys.count)], citation: HYG_CITATION + ' ' + WGSN_CITATION, fallback: 'Search disabled; show brightest-star labels only', limitations: 'Proper names: IAU WGSN where matched (569), else HYG (41). 226 rows have no usable distance (index null). luminositySolar is V-band, not bolometric.' },
+    { id: 'iau-wgsn-star-names', name: 'IAU Catalog of Star Names (WGSN)', organization: 'IAU Working Group on Star Names', purpose: 'Authoritative proper-name cross-check of HYG names', mechanism: 'HTML table (no structured API exists) + legacy 2022 text list', endpoint: 'https://exopla.net/star-names/modern-iau-star-names/', query: null, version: 'live table at retrieval', retrieved: named.nameCrossCheck.retrieved, license: 'Public IAU list; cite IAU WGSN', licenseUrl: null, citation: WGSN_CITATION, rateLimits: 'not documented', fieldsUsed: ['name', 'designation', 'HIP', 'HD', 'constellation'], updateCadence: 'WGSN adds names a few times per year', ...common, fallback: 'Use HYG proper names', files: [], limitations: 'Used only to correct/extend names inside stars-named.json (no separate output). 70 of 640 entries unmatched (stars not in HYG field).', provenanceClass: 'observed' },
+    { id: 'constellation-figures-boundaries', name: 'IAU constellation lines (Stellarium modern_iau) and boundaries (VizieR VI/49)', organization: 'Stellarium team; CDS / Davenhall & Leggett (Delporte 1930)', purpose: 'Constellation figures that distort in 3-D, labels and sky-area boundaries', mechanism: 'raw GitHub JSON (pinned commit) + CDS FTP flat files -> Node build (B1875 boundaries precessed to J2000, densified to 1 deg)', endpoint: con.source.lines.url + ' ; https://cdsarc.cds.unistra.fr/ftp/VI/49/constbnd.dat', query: null, version: 'Stellarium commit ' + con.source.lines.commit.slice(0, 7) + '; VI/49 ' + con.source.boundaries.version, retrieved: h.source.retrieved, license: 'Lines: CC BY-SA 4.0 (Stellarium modern_iau). Boundaries: CDS VizieR open data, cite catalogue.', licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', citation: STELLARIUM_CITATION + ' ' + VI49_CITATION, rateLimits: 'not documented', fieldsUsed: ['lines (HIP pairs)', 'RAhr', 'DEdeg', 'cst', 'adj'], updateCadence: 'static (boundaries 1930; figures change rarely)', ...common, fallback: 'Hide constellation overlay', files: [file('constellations.json', 88)], limitations: 'Figures are a cultural convention (one of several). 1 segment (UMa, HIP 55203) has an endpoint absent from HYG and 18 other endpoints lack parallax (no 3-D position; use lineStars RA/Dec). Boundaries reconstructed: B1875 edges precessed to J2000 and sampled at 1 deg; all 12,948 VI/49 J2000 vertices lie within 7.6 arcsec of them.', provenanceClass: 'reconstructed' },
+    { id: 'gaia-gcns-100pc', name: 'Gaia Catalogue of Nearby Stars (GCNS, EDR3, <=100 pc)', organization: 'ESA Gaia DPAC (Smart et al. 2021)', purpose: 'Catalog-adapter demo: complete 100 pc volume with HR-diagram colours', mechanism: 'ESA Gaia Archive TAP async ADQL (24 RA bands) -> CSV -> Float32 binary', endpoint: 'https://gea.esac.esa.int/tap-server/tap', query: g.source.query + ' WHERE ra >= a AND ra < b (24 bands of 15 deg)', version: 'Gaia EDR3 (GCNS table external.gaiaedr3_gcns_main_1)', retrieved: g.source.retrieved, license: 'ESA Gaia data licence: CC BY-NC 3.0 IGO (non-commercial, educational exhibition use)', licenseUrl: 'https://www.cosmos.esa.int/web/gaia-users/license', citation: GCNS_CITATION, rateLimits: 'anonymous async jobs capped at 50,000 rows per job (hence band splitting)', fieldsUsed: ['ra', 'dec', 'parallax', 'phot_g_mean_mag', 'phot_bp_mean_mag', 'phot_rp_mean_mag', 'dist_50'], updateCadence: 'Gaia DR4 due 2026-12-02 (NOT used); EDR3 static', cachePolicy: common.cachePolicy, normalization: 'scripts/data/stars/fetch-gcns.mjs + build-gcns.mjs', fallback: 'Use HYG field only', files: [file('gaia-gcns.bin', g.count), file('gaia-gcns.json', 1)], limitations: 'Positions at epoch J2016.0, not propagated. 431 rows lack G (dropped); 6,574 lack BP-RP (NaN). Distances are GCNS Bayesian medians. Contains faint dwarfs to G~21.', provenanceClass: 'observed' },
+  ];
+  fs.writeFileSync(`${OUT_DIR}/manifest.part.json`, JSON.stringify({ domain: 'stars', datasets }, null, 1));
+  log(`manifest.part.json written (${datasets.length} datasets)`);
+}
+runMain(import.meta.url, main, 'MANIFEST');

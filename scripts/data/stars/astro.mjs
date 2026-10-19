@@ -156,3 +156,23 @@ export function nameKey(s) {
     .trim()
     .toLowerCase();
 }
+
+// ------------------------------------------------------------ precession ----
+
+/** Precess an equatorial unit vector from epoch jd0 (TT-ish JD) to J2000.0 (IAU 1976 / Lieske 1977; Meeus ch. 21). */
+export function precessToJ2000Fn(jd0) {
+  const T = (jd0 - 2451545.0) / 36525; // epoch of the *given* coordinates, relative to J2000 (this is "t" with T=0 start)
+  // From epoch jd0 (start, "T" = (jd0-J2000)/36525) to J2000 (t = -T).
+  const t = -T;
+  const AS = Math.PI / 648000;
+  const zeta = ((2306.2181 + 1.39656 * T - 0.000139 * T * T) * t + (0.30188 - 0.000344 * T) * t * t + 0.017998 * t * t * t) * AS;
+  const z = ((2306.2181 + 1.39656 * T - 0.000139 * T * T) * t + (1.09468 + 0.000066 * T) * t * t + 0.018203 * t * t * t) * AS;
+  const th = ((2004.3109 - 0.85330 * T - 0.000217 * T * T) * t - (0.42665 + 0.000217 * T) * t * t - 0.041833 * t * t * t) * AS;
+  const [cz, sz, cth, sth, cze, sze] = [Math.cos(z), Math.sin(z), Math.cos(th), Math.sin(th), Math.cos(zeta), Math.sin(zeta)];
+  const P = [
+    [cze * cth * cz - sze * sz, -sze * cth * cz - cze * sz, -sth * cz],
+    [cze * cth * sz + sze * cz, -sze * cth * sz + cze * cz, -sth * sz],
+    [cze * sth, -sze * sth, cth],
+  ];
+  return (v) => [P[0][0] * v[0] + P[0][1] * v[1] + P[0][2] * v[2], P[1][0] * v[0] + P[1][1] * v[1] + P[1][2] * v[2], P[2][0] * v[0] + P[2][1] * v[1] + P[2][2] * v[2]];
+}

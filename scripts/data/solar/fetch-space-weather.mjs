@@ -6,7 +6,8 @@ import { writeJSON, fileEntry, upsertManifest, NASA_LICENSE, NASA_LICENSE_URL, U
 try { process.loadEnvFile('.env.ingest.local'); } catch { /* optional */ }
 const KEY = process.env.NASA_API_KEY || 'DEMO_KEY';
 const START = '2024-10-01', END = '2026-10-17';
-const chunks = [['2024-10-01', '2025-03-31'], ['2025-04-01', '2025-09-30'], ['2025-10-01', '2026-03-31'], ['2026-04-01', '2026-10-17']];
+const chunks = []; // CCMC limits requests to 60 days; use ~30-day chunks
+for (let t = Date.UTC(2024, 9, 1); t <= Date.UTC(2026, 9, 17); ) { const e = Math.min(t + 29 * 864e5, Date.UTC(2026, 9, 17)); chunks.push([new Date(t).toISOString().slice(0, 10), new Date(e).toISOString().slice(0, 10)]); t = e + 864e5; }
 fs.mkdirSync(`${RAW_DIR}/donki`, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -14,8 +15,8 @@ async function donki(type, a, b) {
   const cache = `${RAW_DIR}/donki/${type}-${a}_${b}.json`;
   if (fs.existsSync(cache)) return JSON.parse(fs.readFileSync(cache, 'utf8'));
   for (let attempt = 0; attempt < 4; attempt++) {
-    await sleep(1500);
-    const res = await fetch(`https://api.nasa.gov/DONKI/${type}?startDate=${a}&endDate=${b}&api_key=${encodeURIComponent(KEY)}`, { headers: { 'User-Agent': USER_AGENT } });
+    await sleep(1100);
+    const res = await fetch(`https://ccmc.gsfc.nasa.gov/DONKI/WS/get/${type}?startDate=${a}&endDate=${b}`, { headers: { 'User-Agent': USER_AGENT } });
     const text = await res.text();
     if (res.ok) {
       const j = text.trim() === '' ? [] : JSON.parse(text);
@@ -76,15 +77,15 @@ await writeJSON(p, doc);
 await upsertManifest([
   ...(!donkiOk ? [] : [{
     id: 'nasa-donki-space-weather', name: 'NASA DONKI solar flares, CMEs and geomagnetic storms (2024-10 to 2026-10)', organization: 'NASA CCMC (Space Weather Database Of Notifications, Knowledge, Information)',
-    purpose: 'Link solar activity to thermospheric heating and orbital-debris decay; Sun inspector', mechanism: 'api.nasa.gov DONKI REST API (FLR, CME, GST) -> JSON',
-    endpoint: 'https://api.nasa.gov/DONKI/{FLR|CME|GST}', query: 'startDate=<a>&endDate=<b>&api_key=<redacted> (4 half-year chunks, 2024-10-01..2026-10-17)',
+    purpose: 'Link solar activity to thermospheric heating and orbital-debris decay; Sun inspector', mechanism: 'CCMC DONKI web service (keyless; FLR, CME, GST) -> JSON',
+    endpoint: 'https://ccmc.gsfc.nasa.gov/DONKI/WS/get/{FLR|CME|GST}', query: 'startDate=<a>&endDate=<b> (30-day chunks, 2024-10-01..2026-10-17)',
     version: 'live archive state at retrieval', retrieved: doc.retrieved, license: NASA_LICENSE, licenseUrl: NASA_LICENSE_URL,
-    citation: 'NASA Community Coordinated Modeling Center (CCMC), DONKI database (https://kauai.ccmc.gsfc.nasa.gov/DONKI/).',
-    rateLimits: 'api.nasa.gov: 1,000 requests/hour per key (DEMO_KEY far lower: 30/hour, 50/day). Scripts make 12 requests, 1.5 s apart.',
+    citation: 'NASA Community Coordinated Modeling Center (CCMC), DONKI database (https://ccmc.gsfc.nasa.gov/DONKI/).',
+    rateLimits: 'Not documented; script makes ~75 requests, 1.5 s apart.',
     fieldsUsed: ['flrID', 'beginTime', 'peakTime', 'endTime', 'classType', 'activeRegionNum', 'sourceLocation', 'activityID', 'startTime', 'cmeAnalyses.*', 'gstID', 'allKpIndex'],
     updateCadence: 'continuous', cachePolicy: 'versioned offline snapshot; optional online refresh', normalization: 'scripts/data/solar/fetch-space-weather.mjs',
     fallback: 'Hide the space-weather timeline.', files: [await fileEntry(p, flares.length + cmes.length + storms.length)],
-    limitations: 'DONKI is a notification database curated by human forecasters: CME speed/type depend on the chosen analysis and some CMEs have none; flare class is the GOES-reported peak. Key-less CCMC host kauai.ccmc.gsfc.nasa.gov was unreachable at retrieval so api.nasa.gov was used.',
+    limitations: 'DONKI is a notification database curated by human forecasters: CME speed/type depend on the chosen analysis and some CMEs have none; flare class is the GOES-reported peak. Retrieved via the keyless ccmc.gsfc.nasa.gov web service.',
     provenanceClass: 'observed',
   }]),
   {

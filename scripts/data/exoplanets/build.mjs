@@ -601,7 +601,7 @@ function tsType(t) {
 }
 function fieldTable(specs) {
   const lines = ['| # | field | TS type | unit | description |', '|---|---|---|---|---|'];
-  specs.forEach((s, i) => lines.push(`| ${i} | \`${s.name}\` | ${tsType(s.type)} | ${mdEscape(s.unit ?? '—')} | ${mdEscape(s.desc)} |`));
+  specs.forEach((s, i) => lines.push(`| ${i} | \`${s.name}\` | ${mdEscape(tsType(s.type))} | ${mdEscape(s.unit ?? '—')} | ${mdEscape(s.desc)} |`));
   return lines.join('\n');
 }
 

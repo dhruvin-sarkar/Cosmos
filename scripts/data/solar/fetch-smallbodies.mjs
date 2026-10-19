@@ -18,13 +18,13 @@ const EL = { a: 'aAU', e: 'e', i: 'iDeg', om: 'nodeDeg', w: 'argPeriDeg', ma: 'm
 
 const out = []; let retrieved = null;
 for (const [id, sstr, kind] of TARGETS) {
-  const url = `${URL_}?${qs({ sstr, 'phys-par': 1, discovery: 1 })}`;
+  const url = `${URL_}?${qs({ sstr, 'phys-par': 1, discovery: 1, 'full-prec': 1 })}`;
   const r = await fetchJSON(url, { cache: `sbdb/${slug(id)}.json`, okStatus: [200, 300] });
   retrieved = r.retrieved;
   let j = r.json;
   if (j.list && !j.object) { // ambiguous: pick the first
     log('ambiguous', sstr, JSON.stringify(j.list.slice(0, 3)));
-    const r2 = await fetchJSON(`${URL_}?${qs({ sstr: j.list[0].pdes, 'phys-par': 1, discovery: 1 })}`, { cache: `sbdb/${slug(id)}-2.json` });
+    const r2 = await fetchJSON(`${URL_}?${qs({ sstr: j.list[0].pdes, 'phys-par': 1, discovery: 1, 'full-prec': 1 })}`, { cache: `sbdb/${slug(id)}-2.json` });
     j = r2.json;
   }
   assert(j.object && j.orbit, `SBDB: no object/orbit for ${sstr}: ${JSON.stringify(j).slice(0, 200)}`);
