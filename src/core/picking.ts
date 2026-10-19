@@ -7,6 +7,7 @@
  */
 import * as THREE from 'three';
 import type { Entity } from './entity';
+import { renderTransform } from './visualScale';
 import type { FrameContext, Layer, PickHit, ScreenPoint } from './types';
 
 export const DEFAULT_PICK_RADIUS_PX = 8;
@@ -61,15 +62,17 @@ export function createPicker(opts: PickerOptions): Picker {
 
   const fallback = (ctx: FrameContext, x: number, y: number, radiusPx: number): void => {
     for (const e of opts.entities()) {
+      let factor = 1;
       try {
-        e.position(ctx.timeMs, world);
+        // Drawn position and size (exhibition scale, src/core/visualScale.ts): the cursor hits what is on screen.
+        factor = renderTransform(e, ctx.timeMs, world);
       } catch {
         continue;
       }
       ctx.project(world, screen);
       if (!screen.visible) continue;
       const distanceM = world.distanceTo(ctx.cameraPosition);
-      const diskRadiusPx = e.radiusM && e.radiusM > 0 ? ctx.pixelDiameter(e.radiusM, distanceM) / 2 : 0;
+      const diskRadiusPx = e.radiusM && e.radiusM > 0 ? ctx.pixelDiameter(e.radiusM * factor, distanceM) / 2 : 0;
       if (diskRadiusPx * 2 < FALLBACK_MIN_DISK_PX && !opts.isLabelShown?.(e.id)) continue;
       const d = Math.hypot(screen.x - x, screen.y - y);
       if (d > Math.max(diskRadiusPx, radiusPx)) continue;

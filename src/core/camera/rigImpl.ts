@@ -7,6 +7,7 @@
  * (anchorId, offset) and re-anchors to the body whose sphere of influence contains the camera.
  */
 import * as THREE from 'three';
+import { renderPosition, renderRadius, stepVisualScale, updateScaleView } from '../visualScale';
 import type { CameraMode, CameraViewState, TravelOptions } from '../types';
 import type { Entity, EntityKind } from '../entity';
 import type { CameraFrameState, CameraRig, CameraRigDeps } from './rig';
@@ -268,6 +269,8 @@ export class CosmosCameraRig implements CameraRig {
   update(dtRealSec: number, timeMs: number): CameraFrameState {
     const dt = clamp(Number.isFinite(dtRealSec) ? dtRealSec : 0, 0, 0.1);
     this.lastTimeMs = timeMs;
+    const vsState = this.deps.store.getState();
+    stepVisualScale(dt, vsState.visualScale ?? 'exhibition', vsState.ui.reducedMotion);
     const input = this.controls.consume(this.input);
     const keys = this.controls.keys;
     const keyActive = keys.left || keys.right || keys.up || keys.down || keys.zoomIn || keys.zoomOut ||
@@ -281,6 +284,8 @@ export class CosmosCameraRig implements CameraRig {
     else this.stepOrbit(dt, timeMs, input);
 
     this.finishFrame(dt);
+    // Feed the exhibition-scale runtime with this frame's final pose (layers update after the rig).
+    updateScaleView(this.state.position, this.deps.getViewport().height, this.deps.fovYRad);
     return this.state;
   }
 
@@ -965,7 +970,7 @@ export class CosmosCameraRig implements CameraRig {
     const cs = this.chainState;
     for (let i = includeFocus ? 0 : 1; i < cs.length; i++) {
       const link = cs.links[i];
-      const r = link.entity?.radiusM ?? 0;
+      const r = link.entity ? renderRadius(link.entity, timeMs) : 0;
       if (!(r > 0)) continue;
       const min = r * OBSTACLE_CLAMP_FACTOR;
       const c = link.position;
@@ -975,7 +980,6 @@ export class CosmosCameraRig implements CameraRig {
       const k = min / dist;
       pos.set(c.x + dx * k, c.y + dy * k, c.z + dz * k);
     }
-    void timeMs;
   }
 
   private finishFrame(dt: number): void {
@@ -1051,9 +1055,10 @@ const SCRATCH = {
 const SAMPLE: ZoomPanSample = { widthM: 0, pan: 0, remaining: 0 };
 const EMPTY_INPUT: InputFrame = createInputFrame();
 
+/** Drawn position (exhibition scale aware, src/core/visualScale.ts) — what the camera frames and travels to. */
 function safePosition(entity: Entity, tMs: number, out: THREE.Vector3): boolean {
   try {
-    entity.position(tMs, out);
+    renderPosition(entity, tMs, out);
   } catch {
     return false;
   }

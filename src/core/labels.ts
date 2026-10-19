@@ -431,11 +431,51 @@ export function createLabelManager(opts: LabelManagerOptions): LabelManager {
     return true;
   };
 
+  // ── HUD exclusion zones: opaque-ish panels (inspector, [data-label-exclude]) block labels, so nothing ghosts
+  //    through them. Re-measured at most every 250 ms (no per-frame layout reads).
+  let exclusion = new Float32Array(16);
+  let exclusionCount = 0;
+  let exclusionAt = -Infinity;
+  const measureExclusions = (nowMs: number): void => {
+    if (nowMs - exclusionAt < 250 && nowMs >= exclusionAt) return;
+    exclusionAt = nowMs;
+    exclusionCount = 0;
+    const els = document.querySelectorAll('.cx-inspector, [data-label-exclude]');
+    if (els.length === 0) return;
+    const base = root.getBoundingClientRect();
+    els.forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1) return;
+      if (4 * exclusionCount + 4 > exclusion.length) {
+        const g = new Float32Array(exclusion.length * 2);
+        g.set(exclusion);
+        exclusion = g;
+      }
+      const k = 4 * exclusionCount++;
+      exclusion[k] = r.left - base.left;
+      exclusion[k + 1] = r.top - base.top;
+      exclusion[k + 2] = r.right - base.left;
+      exclusion[k + 3] = r.bottom - base.top;
+    });
+  };
+  const inExclusion = (x: number, y: number): boolean => {
+    for (let i = 0; i < exclusionCount; i++) {
+      const k = 4 * i;
+      if (x >= exclusion[k] && x <= exclusion[k + 2] && y >= exclusion[k + 1] && y <= exclusion[k + 3]) return true;
+    }
+    return false;
+  };
+
   const update = (candidates: readonly LabelCandidate[], f: LabelFrameInfo): void => {
     frameNo += 1;
     anchorCount = 0;
     shown = 0;
     resetGrid(f.viewport.width, f.viewport.height);
+    measureExclusions(f.nowMs);
+    for (let i = 0; i < exclusionCount; i++) {
+      const k = 4 * i;
+      insertRect(exclusion[k], exclusion[k + 1], exclusion[k + 2], exclusion[k + 3]);
+    }
     sortByPriority(candidates, f);
 
     let budgetUsed = 0;
@@ -446,6 +486,7 @@ export function createLabelManager(opts: LabelManagerOptions): LabelManager {
       const isHovered = c.entityId !== null && c.entityId === f.hoveredId;
       const forced = isSelected || isHovered;
       if (!forced && (!f.enabled || budgetUsed >= f.budget || (c.opacity ?? 1) <= 0.02)) continue;
+      if (exclusionCount > 0 && inExclusion(c.x, c.y)) continue;
       const flags = (isSelected ? FLAG_SELECTED : 0) | (isHovered ? FLAG_HOVERED : 0);
       if (!placeCandidate(c, f, forced, flags)) continue;
       shown += 1;

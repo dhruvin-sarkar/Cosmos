@@ -11,6 +11,7 @@ import type { Entity, EntityRegistry } from '../entity';
 import type { Crumb } from '../../state/store';
 import { smoothstep } from '../scale';
 import { isFiniteVec } from './vec';
+import { renderPosition } from '../visualScale';
 
 /** Decades above log10(separation) where a parent starts to take over the focus. */
 export const CHAIN_BLEND_OFFSET_DECADES = 0.6;
@@ -138,9 +139,10 @@ export class FocusChainEvaluator {
   }
 }
 
+/** Drawn position (exhibition scale aware): focus points follow what is on screen. */
 function safePosition(entity: Entity, tMs: number, out: Vector3): boolean {
   try {
-    entity.position(tMs, out);
+    renderPosition(entity, tMs, out);
   } catch {
     return false;
   }

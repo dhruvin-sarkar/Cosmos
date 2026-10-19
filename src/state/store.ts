@@ -9,6 +9,7 @@
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { CameraMode, EffectiveQuality, OverlayId, QualityPreset, SpectralBandId } from '../core/types';
 import type { LabId } from '../core/entity';
+import type { VisualScaleMode } from '../core/visualScale';
 
 export interface Crumb {
   id: string;
@@ -55,6 +56,12 @@ export interface CosmosState {
   };
   time: { simTimeMs: number; rate: number; paused: boolean };
   overlays: Record<OverlayId, boolean>;
+  /**
+   * Exhibition scale (default): bodies drawn enlarged for visibility, shrinking to true size near the camera
+   * (src/core/visualScale.ts, docs/design/VISUAL_SCALE.md). 'true' = everything at its real size. Change it through
+   * setVisualScale() so the legacy 'enlarge-bodies' overlay stays in step.
+   */
+  visualScale: VisualScaleMode;
   spectral: { band: SpectralBandId };
   quality: { preset: QualityPreset; effective: EffectiveQuality; fps: number };
   lab: { active: LabId | null; params: Record<string, unknown> | null };
@@ -79,8 +86,8 @@ export type CosmosStore = StoreApi<CosmosState>;
 export const DEFAULT_OVERLAYS: Record<OverlayId, boolean> = {
   labels: true,
   orbits: true,
-  satellites: false,
-  debris: false,
+  satellites: true,
+  debris: true,
   spacecraft: true,
   asteroids: true,
   constellations: false,
@@ -92,7 +99,8 @@ export const DEFAULT_OVERLAYS: Record<OverlayId, boolean> = {
   'milkyway-procedural': true,
   'scale-markers': true,
   'light-travel': false,
-  'enlarge-bodies': false,
+  // Legacy alias of visualScale === 'exhibition' for layers that have not adopted src/core/visualScale.ts yet.
+  'enlarge-bodies': true,
 };
 
 function prefersReducedMotion(): boolean {
@@ -112,6 +120,7 @@ export function initialState(): CosmosState {
     view: { scaleLog10: 7.4, focusDistanceM: 2.5e7, breadcrumb: [], frameLabel: '' },
     time: { simTimeMs: Date.now(), rate: 1, paused: false },
     overlays: { ...DEFAULT_OVERLAYS },
+    visualScale: 'exhibition',
     spectral: { band: 'visible' },
     quality: { preset: 'auto', effective: 'balanced', fps: 0 },
     lab: { active: null, params: null },
@@ -147,4 +156,9 @@ export function pushNotice(store: CosmosStore, notice: Omit<Notice, 'id'>): stri
 
 export function dismissNotice(store: CosmosStore, id: string): void {
   store.setState(s => ({ notices: s.notices.filter(n => n.id !== id) }));
+}
+
+/** Switch Exhibition ⇄ True scale (keeps the legacy 'enlarge-bodies' overlay in step). */
+export function setVisualScale(store: CosmosStore, mode: VisualScaleMode): void {
+  store.setState(s => ({ visualScale: mode, overlays: { ...s.overlays, 'enlarge-bodies': mode === 'exhibition' } }));
 }

@@ -46,6 +46,7 @@ import { createPostPipeline, type PostPipeline } from './post';
 import { createQualityController, pickInitialQuality, type QualityController } from './quality';
 import { createPerfMonitor, type PerfMonitor } from './perf';
 import { createEnvironmentCapturer, type EnvironmentCapturer } from './env';
+import { renderPosition, renderTransform } from './visualScale';
 
 export const CAMERA_FOV_DEG = 50;
 export const CAMERA_NEAR_UNITS = 1e-5;
@@ -358,10 +359,11 @@ export function createEngine(opts: EngineOptions): Engine {
       const e = registry.get(id);
       if (!e) break;
       if (e.radiusM && e.radiusM > 0) {
-        e.position(ctx.timeMs, occWorld);
+        // Drawn (exhibition-scale) disc: position and radius from src/core/visualScale.ts (identity when unregistered).
+        const f = renderTransform(e, ctx.timeMs, occWorld);
         const d = occWorld.distanceTo(ctx.cameraPosition);
         ctx.project(occWorld, occScreen);
-        const r = 0.5 * ctx.pixelDiameter(e.radiusM, d);
+        const r = 0.5 * ctx.pixelDiameter(e.radiusM * f, d);
         if (occScreen.depthM > 0 && r > 6) {
           const o = occluders[n++];
           o.x = occScreen.x;
@@ -390,7 +392,7 @@ export function createEngine(opts: EngineOptions): Engine {
         const dy = c.y - o.y;
         if (dx * dx + dy * dy > o.r * o.r) continue;
         const ce = c.entityId ? registry.get(c.entityId) : undefined;
-        hidden = ce ? ce.position(ctx.timeMs, occWorld).distanceTo(ctx.cameraPosition) > o.d : true;
+        hidden = ce ? renderPosition(ce, ctx.timeMs, occWorld).distanceTo(ctx.cameraPosition) > o.d : true;
       }
       if (!hidden) out[w++] = c;
     }
