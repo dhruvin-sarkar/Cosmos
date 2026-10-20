@@ -1,0 +1,42 @@
+/* Black-hole approach readout: an instrument plate (capsule ink, hairline, tabular figures), right of centre above the rails. */
+.cx-bh-readout {
+  position: absolute;
+  right: calc(var(--ruler-w, 72px) + var(--sp-6, 24px));
+  bottom: calc(var(--rail-h, 96px) + var(--sp-6, 24px));
+  width: 340px;
+  padding: var(--sp-3, 12px) var(--sp-4, 16px);
+  background: var(--capsule, oklch(0.16 0 0 / 0.84));
+  border: var(--hairline-w, 1px) solid var(--hairline-strong, oklch(1 0 0 / 0.26));
+  border-radius: var(--radius-md, 10px);
+  color: var(--text-primary, oklch(0.93 0 0));
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  line-height: 1.35;
+  pointer-events: auto;
+  z-index: 5;
+}
+.cx-bh-readout[hidden] { display: none; }
+.cx-bh-readout__head { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--sp-2, 8px); }
+.cx-bh-readout__name { font-weight: 600; letter-spacing: 0.01em; }
+.cx-bh-readout__dist { color: var(--text-secondary, oklch(0.8 0 0)); font-size: 13px; }
+.cx-bh-readout__grid { display: grid; grid-template-columns: auto 1fr; gap: 4px var(--sp-3, 12px); margin: 0; }
+.cx-bh-readout__grid dt { color: var(--text-tertiary, oklch(0.7 0 0)); }
+.cx-bh-readout__grid dd { margin: 0; }
+.cx-bh-readout__note { margin: var(--sp-2, 8px) 0 0; color: var(--text-tertiary, oklch(0.7 0 0)); font-size: 12px; }
+.cx-bh-readout__lab {
+  margin-top: var(--sp-2, 8px);
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--accent, oklch(0.85 0.1 88));
+  border: var(--hairline-w, 1px) solid var(--accent-line, oklch(0.85 0.1 88 / 0.7));
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cx-bh-readout__lab:hover { background: var(--accent-soft, oklch(0.85 0.1 88 / 0.14)); }
+.cx-bh-readout__lab:focus-visible { outline: 2px solid var(--focus-ring-color, oklch(0.85 0.1 88)); outline-offset: 2px; }
+.cx-bh-readout__real { display: grid; grid-template-columns: 64px 1fr; gap: var(--sp-3, 12px); align-items: center; margin: var(--sp-2, 8px) 0 0; }
+.cx-bh-readout__real[hidden] { display: none; }
+.cx-bh-readout__real img { width: 64px; height: 64px; object-fit: cover; object-position: 50% 45%; border-radius: var(--radius-sm, 6px); background: #000; }
+.cx-bh-readout__real figcaption { color: var(--text-tertiary, oklch(0.7 0 0)); font-size: 12px; }
