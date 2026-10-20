@@ -9,6 +9,7 @@ import type { Entity } from '../../core/entity';
 import { AU_M, R_SUN_M } from '../../core/units';
 import { FRAGMENT_PRELUDE, LOGDEPTH_FRAGMENT, LOGDEPTH_VERTEX, VERTEX_PRELUDE } from '../../render/glsl/logdepth';
 import { lodBlend, type LodBlend } from '../../render/lod';
+import { PSF_GLSL } from '../../render/glsl/psf';
 import { OrbitLine } from '../../render/orbitBuilder';
 import { exhibitionDisplayGain, exposureState, sunPosition, SUN_SCENE_IRRADIANCE_1AU } from '../solar/ephemeris';
 import { resolveBodyTexture } from '../solar/textures';
@@ -44,8 +45,10 @@ attribute vec3 aColor;
 attribute float aSize;
 uniform float uPixelRatio;
 varying vec3 vColor;
+varying float vSizePx;
 void main() {
   vColor = aColor;
+  vSizePx = aSize;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   gl_PointSize = aSize * uPixelRatio;
   ${LOGDEPTH_VERTEX}
@@ -53,10 +56,14 @@ void main() {
 
 const POINT_FRAGMENT = /* glsl */ `
 ${FRAGMENT_PRELUDE}
+uniform float uPixelRatio;
 varying vec3 vColor;
+varying float vSizePx;
+${PSF_GLSL}
 void main() {
   vec2 d = gl_PointCoord - 0.5;
-  float a = exp(-dot(d, d) * 16.0);
+  // exp(-16|d|²) (σ = size/√32) averaged over each pixel (render-kit PSF): no sampling twinkle while the dot moves.
+  float a = psfPixelGauss(d * vSizePx, vSizePx * 0.1767767, 0.5 / uPixelRatio);
   if (a < 0.01) discard;
   gl_FragColor = vec4(vColor * a, 1.0);
   ${LOGDEPTH_FRAGMENT}
@@ -199,6 +206,10 @@ export function createMoonsLayer(entities: Entity[]): Layer {
       if (v.meanLum <= 0) v.meanLum = meanLinearLuminance(t) ?? 0.3;
       const width = (t.image as { width?: number } | null)?.width ?? 1024;
       v.material.setMap(t, v.meanLum, MOON_LOOKS[v.rec.id].albedo, width);
+    }, { isCancelled: () => !visuals.includes(v) });
+    // Partial mosaics (Voyager 2 Uranian moons): the coverage mask marks the imaged area; the rest is the illustrative fill.
+    void resolveBodyTexture(svc.assets, svc.renderer, dir, 'coverage', quality, 'linear', (t) => {
+      if (visuals.includes(v)) v.material.setCoverage(t);
     }, { isCancelled: () => !visuals.includes(v) });
   };
 
@@ -373,7 +384,10 @@ export function createMoonsLayer(entities: Entity[]): Layer {
         const sepFade = smooth(3, 10, v.sepPx);
         if (v.lod.point > 0.001 && sepFade > 0.001) {
           tmp2.subVectors(ctx.cameraPosition, v.world).normalize();
-          const phase = 0.5 * (1 + tmp2.dot(sunDir));
+          // Lambert-sphere phase function (sin α + (π − α) cos α)/π, as the solar layer: integrated flux, not lit fraction.
+          const cosPh = THREE.MathUtils.clamp(tmp2.dot(sunDir), -1, 1);
+          const aPh = Math.acos(cosPh);
+          const phase = (Math.sin(aPh) + (Math.PI - aPh) * cosPh) / Math.PI;
           const L = (look.albedo * E0) / Math.PI * phase;
           const areaPx = Math.PI * 0.25 * v.shownPx * v.shownPx;
           // Floor: a moon must read as a clear dot from planet-system distances (major moons brighter), like the naked-eye Galileans.

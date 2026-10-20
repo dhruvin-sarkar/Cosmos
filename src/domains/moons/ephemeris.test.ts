@@ -2,7 +2,7 @@ import * as Astronomy from 'astronomy-engine';
 import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { AU_M } from '../../core/units';
-import { MOON_RECORDS } from './data';
+import { MOON_LOOKS, MOON_RECORDS } from './data';
 import { meanElementOffset, moonOffset, recordOf, solveKepler, subParentLonLat } from './ephemeris';
 
 const T0 = Date.UTC(2026, 9, 18, 12, 0, 0); // 2026-10-18 12:00 UTC
@@ -87,10 +87,31 @@ describe('moons ephemeris', () => {
   });
 
   it('untextured moons use an exactly tidally locked frame', () => {
-    for (const id of ['phobos', 'mimas', 'tethys', 'rhea', 'ariel', 'titania', 'proteus', 'iapetus']) {
+    // Moons with a mosaic follow their IAU frame instead (the map longitudes are defined by it).
+    const ids = ['phobos', 'mimas', 'tethys', 'rhea', 'ariel', 'titania', 'proteus', 'amalthea', 'iapetus'].filter((id) => !MOON_LOOKS[id]?.texture);
+    expect(ids.length).toBeGreaterThan(0);
+    for (const id of ids) {
       const s = subParentLonLat(recordOf(id), T0);
       expect(Math.abs(s.lonDeg), id).toBeLessThan(2 * (recordOf(id).orbit.e * 57.3) + 0.5);
       expect(Math.abs(s.latDeg), id).toBeLessThan(2 + recordOf(id).orbit.iDeg);
+    }
+  });
+
+  // JPL Horizons (SSD API, VECTORS, CENTER=500@699, ICRF, km) at 2026-10-18 12:00 TDB. SKIPPED: the JPL mean-element
+  // orbits (SAT441 table, epoch J2000) propagated to 2026 put Tethys/Dione/Rhea/Iapetus 58-158 deg away from these
+  // positions (Mimas 25 deg incl. its 43 deg resonance libration). Enable once the Saturnian orbits are fixed.
+  it.skip('Saturnian moons sit near their JPL Horizons positions (2026-10-18)', () => {
+    const H: Record<string, [number, number, number]> = {
+      enceladus: [-2.348360292876383e5, -3.887079320534974e4, 2.304768678392082e4],
+      tethys: [4.261175748916178e4, 2.904538555843362e5, -2.579166352320153e4],
+      dione: [6.557890798040564e4, -3.718401112451365e5, 2.162238971910894e4],
+      rhea: [5.159428588552371e5, -9.929248267815373e4, -3.509825786187185e4],
+      iapetus: [3.352518450396704e6, -4.52219523761395e5, -7.511071380037798e5],
+    };
+    const v = new Vector3();
+    for (const [id, h] of Object.entries(H)) {
+      moonOffset(recordOf(id), Date.UTC(2026, 9, 18, 12), v);
+      expect((new Vector3(...h).multiplyScalar(1000).angleTo(v) * 180) / Math.PI, id).toBeLessThan(5);
     }
   });
 });

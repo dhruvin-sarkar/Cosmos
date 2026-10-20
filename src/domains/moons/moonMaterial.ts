@@ -45,6 +45,8 @@ export class MoonMaterial extends THREE.ShaderMaterial {
     uMap: { value: THREE.Texture | null };
     uHasMap: { value: number };
     uMapGain: { value: number };
+    uCoverage: { value: THREE.Texture | null };
+    uHasCoverage: { value: number };
     uAlbedo: { value: number };
     uColor: { value: THREE.Color };
     uRampDark: { value: THREE.Vector3 };
@@ -82,6 +84,8 @@ export class MoonMaterial extends THREE.ShaderMaterial {
         uMap: { value: null },
         uHasMap: { value: 0 },
         uMapGain: { value: 1 },
+        uCoverage: { value: null },
+        uHasCoverage: { value: 0 },
         uAlbedo: { value: opts.albedo },
         uColor: { value: opts.color.clone() },
         uRampDark: { value: opts.rampDark.clone() },
@@ -122,6 +126,12 @@ export class MoonMaterial extends THREE.ShaderMaterial {
     this.uniforms.uMapGain.value = albedo / Math.max(meanLinear, 0.02);
     this.uniforms.uTexel.value = texelsAround;
   }
+
+  /** Bind the mosaic's coverage mask (1 = imaged). Unimaged areas get the illustrative procedural relief/mottling. */
+  setCoverage(tex: THREE.Texture): void {
+    this.uniforms.uCoverage.value = tex;
+    this.uniforms.uHasCoverage.value = 1;
+  }
 }
 
 const VERTEX_SHADER = /* glsl */ `
@@ -142,6 +152,8 @@ ${FRAGMENT_PRELUDE}
 ${SHADOW_GLSL}
 uniform sampler2D uMap;
 uniform float uHasMap;
+uniform sampler2D uCoverage;
+uniform float uHasCoverage;
 uniform float uMapGain;
 uniform float uAlbedo;
 uniform vec3 uColor;
@@ -250,20 +262,21 @@ void main() {
   // ── relief ──
   vec3 grad = vec3(0.0);
   float pxFoot = length(fwidth(dir));                    // direction change per pixel
+  // 1 where no imagery exists (whole body when unmapped; the coverage mask's holes when mapped).
+  float unseen = uHasMap > 0.5 ? (uHasCoverage > 0.5 ? 1.0 - sampleEquirect(uCoverage, dir).r : 0.0) : 1.0;
   if (uDetail > 0.0) {
     if (uCraters > 0.0) {
       float seed = uSeed * 13.7;
       float dens = clamp(0.30 * uCraters, 0.0, 0.95);
-      float amp = (uSpecial == 5 ? 1.6 : 1.0) * (uHasMap > 0.5 ? 0.14 : (uRealShape > 0.5 ? 0.13 : 0.3));
-      bool mapped = uHasMap > 0.5;
+      float amp = (uSpecial == 5 ? 1.6 : 1.0) * mix(0.14, uRealShape > 0.5 ? 0.13 : 0.3, unseen);
       // cells per radian-ish; fade octaves whose cells are smaller than ~2.5 px
       float c0 = 5.0, c1 = 12.0, c2 = 28.0, c3 = 66.0;
       float f0 = 1.0 - smoothstep(0.25, 0.5, pxFoot * c0 * 2.5);
       float f1 = 1.0 - smoothstep(0.25, 0.5, pxFoot * c1 * 2.5);
       float f2 = 1.0 - smoothstep(0.25, 0.5, pxFoot * c2 * 2.5);
       float f3 = 1.0 - smoothstep(0.25, 0.5, pxFoot * c3 * 2.5);
-      if (!mapped && uRealShape < 0.5 && f0 > 0.01) grad += craterOctave(dir, c0, dens * 0.55, f0, seed, amp * 1.1);
-      if (!mapped && uRealShape < 0.5 && f1 > 0.01) grad += craterOctave(dir, c1, dens * 0.8, f1, seed + 3.0, amp);
+      if (unseen > 0.01 && uRealShape < 0.5 && f0 > 0.01) grad += craterOctave(dir, c0, dens * 0.55, f0, seed, amp * 1.1 * unseen);
+      if (unseen > 0.01 && uRealShape < 0.5 && f1 > 0.01) grad += craterOctave(dir, c1, dens * 0.8, f1, seed + 3.0, amp * unseen);
       if (f2 > 0.01) grad += craterOctave(dir, c2, dens, f2, seed + 7.0, amp * 0.9);
       if (f3 > 0.01) grad += craterOctave(dir, c3, dens, f3, seed + 11.0, amp * 0.8);
     }
@@ -298,10 +311,11 @@ void main() {
   if (uMottling > 0.0 && uDetail > 0.0) {
     float mm = fbm(dir * 3.2 + uSeed * 1.7) - 0.5;
     mm += 0.5 * (fbm(dir * 9.0 + uSeed * 3.1) - 0.5);
-    albedo *= 1.0 + uMottling * 1.1 * mm;
+    albedo *= 1.0 + uMottling * 1.1 * mm * unseen;
   }
   // Specials
-  if (uSpecial == 1) {                                     // Iapetus: dark leading hemisphere (apex at 90°W = -y), tapering poleward
+  // Procedural stand-ins below only paint over bodies WITHOUT a mosaic (a real map already carries these features).
+  if (uSpecial == 1 && uHasMap < 0.5) {                    // Iapetus: dark leading hemisphere (apex at 90°W = -y), tapering poleward
     float apex = dot(dir, vec3(0.0, -1.0, 0.0));
     float edge = apex + 0.20 * (fbm(dir * 5.0 + 3.0) - 0.5) + 0.35 * (abs(dir.z) - 0.35);
     float dark = smoothstep(0.05, 0.22, edge);
@@ -311,7 +325,7 @@ void main() {
   } else if (uSpecial == 2) {                              // Charon: red-brown polar cap ("Mordor Macula")
     float cap = smoothstep(1.05, 1.35, lat + 0.10 * (fbm(dir * 6.0) - 0.5));   // north of ~60°N only
     albedo *= mix(vec3(1.0), vec3(1.33, 0.87, 0.73), cap * 0.9);
-  } else if (uSpecial == 9) {                              // Miranda: patchwork of bright/dark provinces
+  } else if (uSpecial == 9 && uHasMap < 0.5) {             // Miranda: patchwork of bright/dark provinces
     float pm = smoothstep(0.35, 0.65, fbm(dir * 2.4 + 5.0));
     albedo *= mix(0.72, 1.25, pm);
   } else if (uSpecial == 5) {                              // Hyperion: reddish-brown dark material pooled on the pit floors (sponge look)
@@ -321,6 +335,7 @@ void main() {
     float lines = 0.0;
     float wmin = max(0.0012, pxFoot * 1.1);
     for (int i = 0; i < 14; i++) {
+      if (uHasMap > 0.5) break;                            // the Galileo/Voyager mosaic carries the real large lineae
       vec3 h = hash33(vec3(float(i) * 1.7 + uSeed, 3.1, 7.7));
       vec3 nrm = normalize(h * 2.0 - 1.0 + vec3(0.001));
       float c0 = (hash33(h * 91.0).x - 0.5) * 1.5;                           // small circles: offset from a great circle
