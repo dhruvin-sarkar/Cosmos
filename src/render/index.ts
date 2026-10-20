@@ -7,6 +7,7 @@ export * from './glsl/kepler';
 export * from './glsl/noise';
 export * from './glsl/atmosphere';
 export * from './glsl/shadow';
+export * from './glsl/psf';
 
 export * from './materials/PointStarMaterial';
 export * from './materials/GlowSpriteMaterial';

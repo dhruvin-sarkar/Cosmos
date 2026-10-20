@@ -16,6 +16,17 @@
  *
  * Bloom only picks up exposure-scaled values above ~display white (soft knee from 0.8, full at 1.6), so a
  * sunlit surface never hazes; the Sun, specular glints and hot emitters do.
+ *
+ * Anti-aliasing (decision): MSAA on the HDR scene target (Ultra 4×, Balanced 2×) + mipmapped, 16× anisotropic
+ * textures + analytic coverage AA in the kit's lines and pixel-integrated PSFs for stars and far bodies
+ * (src/render/glsl/psf.ts). No TAA: with a floating origin and 10⁻³ → 10²⁶ m zooms the history reprojection would
+ * ghost/smear point sources (stars are the subject here), and no SMAA/FXAA: post-tonemap edge filters soften the
+ * star PSFs and HUD-adjacent hairlines while MSAA already resolves geometric edges in linear HDR.
+ *
+ * Tone mapper (decision, compared on Earth, Mars, Jupiter and the Sun): AgX with a 0.6 'Punchy' look. Khronos PBR
+ * Neutral is available for comparison (CinematicPass.settings.toneMapper = 'neutral'): it keeps albedo hues exact
+ * below ~0.76 but clips emissive HDR sources (the Sun, hot stars) to flat white discs with hue shifts at the
+ * shoulder, and the overlay tokens (src/render/tonemap.ts) are calibrated through AgX.
  */
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';

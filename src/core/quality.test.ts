@@ -42,7 +42,7 @@ describe('quality presets', () => {
 
 describe('pickInitialQuality', () => {
   const cases: Array<[string, string]> = [
-    ['ANGLE (NVIDIA, NVIDIA GeForce RTX 3050 Laptop GPU (0x000025A2) Direct3D11 vs_5_0 ps_5_0, D3D11)', 'balanced'],
+    ['ANGLE (NVIDIA, NVIDIA GeForce RTX 3050 Laptop GPU (0x000025A2) Direct3D11 vs_5_0 ps_5_0, D3D11)', 'ultra'],
     ['ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Direct3D11 vs_5_0 ps_5_0, D3D11)', 'ultra'],
     ['ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 Ti Direct3D11 vs_5_0 ps_5_0, D3D11)', 'balanced'],
     ['ANGLE (NVIDIA, NVIDIA GeForce MX450 Direct3D11 vs_5_0 ps_5_0, D3D11)', 'performance'],
@@ -118,6 +118,24 @@ describe('createQualityController', () => {
     expect(q.effective).toBe('balanced');
     run(q, now, 45_000, gpu(6));
     expect(q.effective).toBe('ultra');
+  });
+
+  it('never trades resolution for CPU-bound frames', () => {
+    const q = createQualityController({ preset: 'auto', autoBase: 'balanced' });
+    run(q, 0, 6000, { intervalMs: 20, cpuMs: 19, gpuMs: 5 });
+    expect(q.profile.renderScale).toBe(1);
+  });
+
+  it('ignores loading hitches (long main-thread tasks)', () => {
+    const q = createQualityController({ preset: 'auto', autoBase: 'balanced' });
+    let now = 0;
+    for (let i = 0; i < 40; i++) {
+      now = run(q, now, 100, gpu(6));
+      now += 400;
+      q.sample({ intervalMs: 400, cpuMs: 380, gpuMs: 6 }, now);
+    }
+    expect(q.profile.renderScale).toBe(1);
+    expect(q.effective).not.toBe('performance');
   });
 
   it('works without a GPU timer using the frame interval', () => {

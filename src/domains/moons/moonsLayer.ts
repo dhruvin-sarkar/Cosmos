@@ -15,7 +15,8 @@ import { exhibitionDisplayGain, exposureState, sunPosition, SUN_SCENE_IRRADIANCE
 import { resolveBodyTexture } from '../solar/textures';
 import { MOON_LOOKS, MOON_RECORDS, PARENT_ENTITY, PARENT_INFO, SIDEREAL_DAYS, moonEntityId, type MoonRecord } from './data';
 import { moonOffset, moonRotation } from './ephemeris';
-import { createEllipsoidGeometry, createIrregularGeometry, parseShapeModel } from './geometry';
+import { createEllipsoidGeometry, parseShapeModel } from './geometry';
+import { createIrregularGeometryAsync } from './geometryAsync';
 import { DetachedHaze, PlumeSystem, enceladusPlumeSpec, ioPlumeSpec } from './effects';
 import { createSatelliteSystemTransform, mapSatelliteOffset, registerScaledBody, renderTransform, satelliteSystem } from '../../core/visualScale';
 import { MoonMaterial, type MoonSpecial } from './moonMaterial';
@@ -113,14 +114,15 @@ interface MoonVisual {
   dot: [number, number, number];
 }
 
-function buildGeometry(rec: MoonRecord, radiusM: number): THREE.BufferGeometry {
+/** Ellipsoids are built at once; irregular shapes (50-110 ms each) in the geometry worker (perf). */
+function buildGeometry(rec: MoonRecord, radiusM: number): THREE.BufferGeometry | Promise<THREE.BufferGeometry> {
   const look = MOON_LOOKS[rec.id];
   const m = radiusM / 1000;
   const radii: [number, number, number] = [rec.radiiKm[0] / m, rec.radiiKm[1] / m, rec.radiiKm[2] / m];
   if (look.irregular) {
     const feats = (FEATURES[rec.id] ?? []).map((f) => ({ dir: dirOf(f.lon, f.lat), radius: f.radius, depth: f.depth }));
     const seed = Array.from(rec.id).reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
-    return createIrregularGeometry(radii, { seed, craters: Math.round(26 * look.craters), detail: 30, features: feats, lumpiness: rec.id === 'hyperion' ? 0.07 : 0.05 });
+    return createIrregularGeometryAsync(radii, { seed, craters: Math.round(26 * look.craters), detail: 30, features: feats, lumpiness: rec.id === 'hyperion' ? 0.07 : 0.05 });
   }
   return createEllipsoidGeometry(radii, 128, 64);
 }
@@ -433,8 +435,18 @@ export function createMoonsLayer(entities: Entity[]): Layer {
         if (!v.geometryBuilt) {
           v.geometryBuilt = true;
           const g = buildGeometry(rec, v.radiusM);
-          v.mesh.geometry = g;
-          disposables.push(g);
+          if (g instanceof Promise) {
+            const placeholder = v.mesh.geometry;
+            void g.then((geo) => {
+              // A mission shape model may have been swapped in meanwhile: keep it.
+              if (!visuals.includes(v) || v.mesh.geometry !== placeholder) return geo.dispose();
+              v.mesh.geometry = geo;
+              disposables.push(geo);
+            });
+          } else {
+            v.mesh.geometry = g;
+            disposables.push(g);
+          }
         }
         if (!v.shapeRequested && SHAPE_MODELS[rec.id] && v.shownPx > 24) {
           v.shapeRequested = true;

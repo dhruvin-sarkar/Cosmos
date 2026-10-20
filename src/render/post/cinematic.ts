@@ -14,7 +14,7 @@ import { FullScreenQuad, Pass } from 'three/addons/postprocessing/Pass.js';
 import { PhysicalBloom, type BloomSettings } from './bloom';
 import { ExposureController, ExposureMeter, type MeterReading } from './exposure';
 import { createSunScreen, SunVisibility, type SunScreen } from './glare';
-import { AGX_GLSL, FULLSCREEN_VERT } from './shaders';
+import { AGX_GLSL, FULLSCREEN_VERT, NAN_GLSL } from './shaders';
 
 /** Peak grain amplitude as a fraction of display luminance (VISUAL_DIRECTION: ≤ 1.5 %). */
 export const GRAIN_AMOUNT = 0.012;
@@ -40,6 +40,8 @@ export interface CinematicSettings {
   vignette: number;
   /** AgX 'Punchy' look strength (0 = base AgX, 1 = Punchy). */
   look: number;
+  /** Display transform: AgX (default) or Khronos PBR Neutral (comparison / alternative). */
+  toneMapper: 'agx' | 'neutral';
 }
 
 const COMPOSITE_FRAG = /* glsl */ `
@@ -60,8 +62,10 @@ uniform float uAspect;
 uniform float uFrame;
 uniform float uGrain;
 uniform float uLook;
+uniform float uToneMapper;
 varying vec2 vUv;
 ${AGX_GLSL}
+${NAN_GLSL}
 float ign(vec2 p) {
   return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
 }
@@ -93,13 +97,15 @@ vec3 sunGlare(vec2 uv, float gain) {
 }
 void main() {
   vec3 c = texture2D(tScene, vUv).rgb;
+  // A stray NaN texel from any material must not reach AgX (undefined clamp → white/black specks).
+  if (anyNan(c)) c = vec3(0.0);
   float gain = uGlareGain * texture2D(tGlareVis, vec2(0.5)).r;
   if (gain > 1e-4) c += sunGlare(vUv, gain);
   c = c * uExposure + texture2D(tBloom, vUv).rgb * uBloomIntensity;
   vec2 q = (vUv - 0.5) * vec2(uAspect, 1.0);
   float r = clamp(length(q) / length(vec2(uAspect, 1.0) * 0.5), 0.0, 1.0);
   c *= 1.0 - uVignette * r * r * r;
-  c = linearToSrgb(agx(c, uLook));
+  c = linearToSrgb(uToneMapper > 0.5 ? pbrNeutral(c) : agx(c, uLook));
   // Dither (±0.5 LSB, interleaved gradient noise) + fine grain, both off in true black.
   float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
   vec2 p = gl_FragCoord.xy + vec2(5.588238, 3.1415) * uFrame;
@@ -127,6 +133,7 @@ export class CinematicPass extends Pass {
     metering: true,
     vignette: VIGNETTE_AMOUNT,
     look: AGX_LOOK_AMOUNT,
+    toneMapper: 'agx',
   };
   /** Cosmic Ruler scale of the current frame (set by the pipeline before render). */
   scaleLog10 = 7;
@@ -142,6 +149,7 @@ export class CinematicPass extends Pass {
   private readonly visibility: SunVisibility;
   private readonly quad: FullScreenQuad;
   private readonly composite: THREE.ShaderMaterial;
+  private meterClock = 0;
   private readonly onMeter = (reading: MeterReading): void => this.exposure.meter(reading);
 
   constructor(halfFloat: boolean) {
@@ -171,6 +179,7 @@ export class CinematicPass extends Pass {
         uFrame: { value: 0 },
         uGrain: { value: GRAIN_AMOUNT },
         uLook: { value: AGX_LOOK_AMOUNT },
+        uToneMapper: { value: 0 },
       },
       vertexShader: FULLSCREEN_VERT,
       fragmentShader: COMPOSITE_FRAG,
@@ -210,7 +219,13 @@ export class CinematicPass extends Pass {
     const s = this.settings;
     this.frame++;
 
-    if (s.metering && this.frame % 3 === 0) this.meter.measure(renderer, src, this.onMeter);
+    // Meter at 4 Hz (adaptation tau >= 0.45 s) whatever the frame rate: each readback is a synchronous GPU-process round trip in Chrome
+    // (getBufferSubData), and exposure adaptation is time-based, so faster readings buy nothing (perf).
+    this.meterClock += dt;
+    if (s.metering && this.meterClock >= 0.25 && !this.meter.busy) {
+      this.meterClock = 0;
+      this.meter.measure(renderer, src, this.onMeter);
+    }
     if (!s.metering) this.exposure.state.coverage = null;
     const exposure = Math.pow(2, this.exposure.update(this.scaleLog10, dt));
 
@@ -242,6 +257,7 @@ export class CinematicPass extends Pass {
     u.uSpikes.value = s.spikes;
     u.uVignette.value = s.vignette;
     u.uLook.value = s.look;
+    u.uToneMapper.value = s.toneMapper === 'neutral' ? 1 : 0;
     u.uAspect.value = this.width / this.height;
     if (!this.staticGrain) this.grainFrame = (this.grainFrame + 1) % 64;
     u.uFrame.value = this.grainFrame;

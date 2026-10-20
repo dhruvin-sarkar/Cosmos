@@ -2,7 +2,10 @@
  * Single-scattering planetary atmosphere (Rayleigh + Mie), cheap enough for a full-screen limb at 60 FPS.
  *
  * Model: exponential density profiles ρ(h) = exp(−h/H). Along the view ray we take ATMOSPHERE_STEPS midpoint
- * samples; at each one the optical depth toward the Sun is the analytic Chapman grazing-incidence
+ * samples, clustered quadratically around the ray's closest approach to the planet centre (the lowest altitude,
+ * where the density peaks: on a limb ray the density is a Gaussian ~√(2RH) ≈ 320 km wide on Earth, narrower than a
+ * uniform step) — t = t_c ∓ L·u², dt = 2Lu·du — which removes the banding/crawl of uniform steps along the limb
+ * and near the ground at equal cost; at each one the optical depth toward the Sun is the analytic Chapman grazing-incidence
  * approximation (Schüler 2012, "An Approximation to the Chapman Grazing-Incidence Function for Atmospheric
  * Scattering", GPU Pro 3) instead of a nested march, which also yields the Earth's shadow / soft terminator
  * (the Sun-ray optical depth explodes below the geometric horizon). Phase functions: Rayleigh
@@ -168,7 +171,12 @@ vec4 atmosphereScatter(vec3 ro, vec3 rd, float tMax, vec3 sunDir) {
   float t0 = max(tTop.x, 0.0);
   float t1 = min(tTop.y, tMax);
   if (t1 <= t0) return vec4(0.0);
-  float dt = (t1 - t0) / float(ATMOSPHERE_STEPS);
+  // Closest approach to the centre (lowest altitude) inside [t0, t1]; legs of length a before it and b after it.
+  float tc = clamp(-dot(ro, rd), t0, t1);
+  float a = tc - t0;
+  float b = t1 - tc;
+  float sc = a / max(a + b, 1e-9);
+  float invN = 1.0 / float(ATMOSPHERE_STEPS);
   float mu = dot(rd, sunDir);
   float phaseR = atmRayleighPhase(mu);
   float phaseM = atmMiePhase(mu, uAtmMieG);
@@ -178,7 +186,20 @@ vec4 atmosphereScatter(vec3 ro, vec3 rd, float tMax, vec3 sunDir) {
   float odR = 0.0;   // view-ray Rayleigh column (planet radii)
   float odM = 0.0;   // view-ray Mie column
   for (int i = 0; i < ATMOSPHERE_STEPS; i++) {
-    vec3 p = ro + rd * (t0 + (float(i) + 0.5) * dt);
+    float sm = (float(i) + 0.5) * invN;
+    float t;
+    float dt;
+    if (sm < sc) {
+      float u = (sc - sm) / sc;
+      t = tc - a * u * u;
+      dt = 2.0 * a * u / sc * invN;
+    } else {
+      float w = max(1.0 - sc, 1e-6);
+      float u = (sm - sc) / w;
+      t = tc + b * u * u;
+      dt = 2.0 * b * u / w * invN;
+    }
+    vec3 p = ro + rd * t;
     float alt = max(length(p) - 1.0, 0.0);
     float dR = exp(-alt / uAtmRayleighH) * dt;
     float dM = exp(-alt / uAtmMieH) * dt;

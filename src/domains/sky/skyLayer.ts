@@ -7,6 +7,7 @@
  */
 import * as THREE from 'three';
 import type { EngineServices, FrameContext, Layer, QualityProfile, SpectralBandId } from '../../core/types';
+import { sliceUpload } from '../../core/perf';
 import { PC_M } from '../../core/units';
 import { bakeSkyMap } from './bake';
 import { bakeEnhanced, ENHANCED_TUNING, STORE_SCALE } from './enhanced';
@@ -192,7 +193,8 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
     const disp = bandDisplay(rec.id);
     try {
       for (let i = start; i < tiers.length && !disposed; i++) {
-        const tex = await svc.assets.textureAsync(tiers[i].path, { colorSpace: 'srgb' });
+        // Big tiers go up in slices over a few frames instead of one 80-180 ms upload at bake time (perf).
+        const tex = await sliceUpload(renderer, await svc.assets.textureAsync(tiers[i].path, { colorSpace: 'srgb' }));
         if (disposed) {
           tex.dispose();
           return;
@@ -237,7 +239,7 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
     let haTier = '';
     let dust: THREE.Texture | null = null;
     const tex = (path: string | undefined): Promise<THREE.Texture | null> =>
-      path ? assets.textureAsync(path, { colorSpace: 'srgb' }).catch(() => null) : Promise.resolve(null);
+      path ? assets.textureAsync(path, { colorSpace: 'srgb' }).then(t => sliceUpload(renderer, t)).catch(() => null) : Promise.resolve(null);
     try {
       dust = await tex(firRec?.files.low?.path ?? firRec?.files.high?.path);
       for (let i = start; i < tiers.length && !disposed; i++) {
@@ -251,7 +253,7 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
             haTier = wantHa;
           }
         }
-        const vis = await assets.textureAsync(tiers[i].path, { colorSpace: 'srgb' });
+        const vis = await sliceUpload(renderer, await assets.textureAsync(tiers[i].path, { colorSpace: 'srgb' }));
         if (disposed) {
           vis.dispose();
           return;

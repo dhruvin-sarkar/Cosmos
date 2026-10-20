@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { psfErf, psfPixelGauss, psfSprite } from './glsl/psf';
 import {
   blackbodyChroma,
   blackbodyLinearSrgb,
@@ -140,5 +141,51 @@ describe('chunking helpers', () => {
     const chunk = 1e20, local = 1e6 + 5;
     expect(Math.fround(local) - 1e6).toBe(5);
     expect(Math.fround(chunk + local) - chunk).not.toBe(local);
+  });
+});
+
+
+describe('pixel-integrated PSF', () => {
+  it('erf approximation matches reference values (A&S table 7.1)', () => {
+    expect(psfErf(0.5)).toBeCloseTo(0.5204999, 3);
+    expect(psfErf(1)).toBeCloseTo(0.8427008, 3);
+    expect(psfErf(-2)).toBeCloseTo(-0.9953223, 3);
+  });
+  it('conserves flux at any sub-pixel offset (no sampling twinkle)', () => {
+    const sigma = 0.6;
+    const total = (ox: number, oy: number): number => {
+      let s = 0;
+      for (let y = -6; y <= 6; y++) for (let x = -6; x <= 6; x++) s += psfPixelGauss(x - ox, y - oy, sigma, 0.5);
+      return s;
+    };
+    const ref = 2 * Math.PI * sigma * sigma;
+    for (const [ox, oy] of [[0, 0], [0.5, 0], [0.25, 0.4], [0.5, 0.5]]) expect(total(ox, oy) / ref).toBeCloseTo(1, 2);
+  });
+});
+
+describe('padded PSF sprite', () => {
+  // Rasterise a sprite of gl_PointSize = (size + 2)·dpr at a sub-pixel position: the summed flux (CSS px² units) must be
+  // ~1 and nearly independent of the position (no twinkle), for 1–2.5 px dots at DPR 1 and 2.
+  const flux = (size: number, dpr: number, fx: number, fy: number): number => {
+    const sigma = 0.35 + 0.15 * size;
+    const n = (size + 2) * dpr; // sprite edge in device px
+    const x0 = fx - n / 2, y0 = fy - n / 2; // sprite origin relative to the pixel grid
+    let sum = 0;
+    for (let py = Math.floor(y0); py <= Math.ceil(y0 + n); py++)
+      for (let px = Math.floor(x0); px <= Math.ceil(x0 + n); px++) {
+        const cx = px + 0.5, cy = py + 0.5;
+        const u = (cx - x0) / n, v = (cy - y0) / n;
+        if (u < 0 || u > 1 || v < 0 || v > 1) continue;
+        sum += psfSprite(u, v, size, sigma, dpr) / (dpr * dpr);
+      }
+    return sum;
+  };
+  it.each([[1, 1], [2.5, 1], [1, 1.25], [1, 1.5], [1, 2]])('size %s px at DPR %s', (size, dpr) => {
+    const f: number[] = [];
+    for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) f.push(flux(size, dpr, i / 8, j / 8));
+    const lo = Math.min(...f), hi = Math.max(...f);
+    expect(lo).toBeGreaterThan(0.9);
+    expect(hi).toBeLessThan(1.05);
+    expect((hi - lo) / hi).toBeLessThan(0.04);
   });
 });

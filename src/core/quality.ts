@@ -9,8 +9,11 @@
  *    at full resolution. An upgrade that is followed by a step-down within its probation window is
  *    remembered and not retried for a minute (hysteresis against oscillation).
  *
- * Frame cost: with a GPU timer, max(CPU, GPU) time. Without one, the rAF interval — which vsync caps at
- * the refresh period — so headroom is then inferred from a steady interval plus a light main thread.
+ * Frame cost: with a GPU timer, dynamic resolution follows GPU time alone (pixel count changes GPU cost only,
+ * so a CPU-bound frame must never cost resolution) and preset steps follow max(CPU, GPU). Without a timer, the
+ * rAF interval — which vsync caps at the refresh period — so headroom is then inferred from a steady interval
+ * plus a light main thread. Hitches (a main-thread task over HITCH_CPU_MS: texture decode, shader compile, GC)
+ * are not load and are skipped unless they persist.
  */
 import type { EffectiveQuality, QualityPreset, QualityProfile } from './types';
 
@@ -100,7 +103,8 @@ function tierFromGpuString(raw: string): EffectiveQuality {
   if (/mali|adreno|powervr|videocore|tegra|apple gpu/.test(gpu)) return 'performance';
 
   const rtx = /rtx\s*(\d{4})/.exec(gpu);
-  if (rtx && !/rtx\s*a\d/.test(gpu)) return Number(rtx[1]) % 100 >= 60 ? 'ultra' : 'balanced';
+  // RTX xx50 and up: Ultra measured at 3.6–6.2 ms GPU (1600×900) on the exhibition RTX 3050 Laptop; Auto steps down if needed.
+  if (rtx && !/rtx\s*a\d/.test(gpu)) return Number(rtx[1]) % 100 >= 50 ? 'ultra' : 'balanced';
   if (/\bgtx\b|quadro|rtx\s*a\d|tesla|titan/.test(gpu)) return 'balanced';
   if (/\bmx\s*\d{3}\b/.test(gpu)) return 'performance';
 
@@ -191,6 +195,11 @@ export interface QualityControllerOptions {
 
 const round2 = (x: number): number => Math.round(x * 100) / 100;
 
+/** Main-thread time above which a frame is a hitch (asset decode, shader compile, GC), not sustained load. */
+export const HITCH_CPU_MS = 45;
+/** Consecutive hitch frames after which they count as real load. */
+const HITCH_PERSIST_FRAMES = 20;
+
 export function createQualityController(opts: QualityControllerOptions): QualityController {
   const k: AutoQualityTuning = { ...DEFAULT_AUTO_TUNING, ...opts.tuning };
   let preset: QualityPreset = opts.preset;
@@ -199,7 +208,9 @@ export function createQualityController(opts: QualityControllerOptions): Quality
   let profile = qualityProfile(QUALITY_TIERS[tier], renderScale);
 
   let emaLoad = 0;
+  let emaRes = 0;
   let emaCpu = 0;
+  let hitchRun = 0;
   let lastSampleAt = Number.NaN;
   let lastScaleChangeAt = Number.NEGATIVE_INFINITY;
   let severeSince: number | null = null;
@@ -248,22 +259,35 @@ export function createQualityController(opts: QualityControllerOptions): Quality
       if (preset !== 'auto') return false;
       const interval = Math.min(Math.max(timing.intervalMs, 0), 250);
       const hasGpuTimer = timing.gpuMs !== null;
-      const load = Math.min(hasGpuTimer ? Math.max(timing.cpuMs, timing.gpuMs as number) : interval, 250);
       const cpu = Math.min(Math.max(timing.cpuMs, 0), 250);
+      const gpuMs = Math.min(Math.max(timing.gpuMs ?? 0, 0), 250);
+      // Hitch: a long main-thread task, a GPU spike (8K texture upload) or, without a timer, a stalled interval.
+      const hitch = cpu > HITCH_CPU_MS || gpuMs > HITCH_CPU_MS || (!hasGpuTimer && interval > HITCH_CPU_MS);
+      if (hitch && ++hitchRun < HITCH_PERSIST_FRAMES) {
+        // A one-off stall: the next frame's interval is not representative either; restart the EMA clock.
+        if (!Number.isNaN(lastSampleAt)) lastSampleAt = now;
+        return false;
+      }
+      if (!hitch) hitchRun = 0;
+      const load = Math.min(hasGpuTimer ? Math.max(cpu, gpuMs) : interval, 250);
+      // Resolution only changes GPU cost: steer it by GPU time when a timer exists.
+      const resLoad = hasGpuTimer ? gpuMs : load;
 
       if (Number.isNaN(lastSampleAt)) {
         emaLoad = load;
+        emaRes = resLoad;
         emaCpu = cpu;
       } else {
         const alpha = 1 - Math.exp(-Math.max(0, now - lastSampleAt) / k.emaTimeConstantMs);
         emaLoad += alpha * (load - emaLoad);
+        emaRes += alpha * (resLoad - emaRes);
         emaCpu += alpha * (cpu - emaCpu);
       }
       lastSampleAt = now;
 
       const meetsVsync = emaLoad <= k.targetMs * 1.08;
-      const over = emaLoad > k.scaleDownAboveMs;
-      const under = hasGpuTimer ? emaLoad < k.scaleUpBelowMs : meetsVsync && emaCpu < k.targetMs * 0.5;
+      const over = emaRes > k.scaleDownAboveMs;
+      const under = hasGpuTimer ? emaRes < k.scaleUpBelowMs : meetsVsync && emaCpu < k.targetMs * 0.5;
       const severe = emaLoad > k.tierDownAboveMs;
       const idle = hasGpuTimer ? emaLoad < k.tierUpBelowMs : meetsVsync && emaCpu < k.targetMs * 0.4;
 
@@ -275,14 +299,14 @@ export function createQualityController(opts: QualityControllerOptions): Quality
       // scale that meets a budget is predicted as scale·√(budget/cost); without one, step blindly.
       if (over && renderScale > k.minRenderScale && now - lastScaleChangeAt >= k.scaleDownCooldownMs) {
         const predicted = hasGpuTimer
-          ? renderScale * Math.sqrt((k.targetMs * 0.9) / emaLoad)
+          ? renderScale * Math.sqrt((k.targetMs * 0.9) / emaRes)
           : renderScale - (emaLoad > k.targetMs * 1.5 ? 2 : 1) * step;
         const next = Math.min(renderScale - step, Math.max(renderScale - 4 * step, floorToStep(predicted)));
         renderScale = Math.max(k.minRenderScale, round2(next));
         lastScaleChangeAt = now;
         changed = true;
       } else if (!over && under && renderScale < k.maxRenderScale && now - lastScaleChangeAt >= k.scaleUpCooldownMs) {
-        const predicted = hasGpuTimer ? renderScale * Math.sqrt((k.targetMs * 0.8) / Math.max(emaLoad, 1)) : renderScale + step;
+        const predicted = hasGpuTimer ? renderScale * Math.sqrt((k.targetMs * 0.8) / Math.max(emaRes, 1)) : renderScale + step;
         const next = Math.max(renderScale + step, Math.min(renderScale + 4 * step, floorToStep(predicted)));
         renderScale = Math.min(k.maxRenderScale, round2(next));
         lastScaleChangeAt = now;

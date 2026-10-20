@@ -23,7 +23,7 @@
  */
 import * as THREE from 'three';
 import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
-import { FULLSCREEN_VERT, LUMA_GLSL } from './shaders';
+import { FULLSCREEN_VERT, LUMA_GLSL, NAN_GLSL } from './shaders';
 
 export type ExposureMode = 'auto' | 'manual';
 
@@ -192,6 +192,7 @@ uniform float uFloor;
 uniform float uHigh;
 varying vec2 vUv;
 ${LUMA_GLSL}
+${NAN_GLSL}
 void main() {
   // 4 bilinear taps per meter cell (each covers ~1/64 of the frame per axis).
   vec2 o = vec2(0.25 / ${GRID}.0);
@@ -199,6 +200,7 @@ void main() {
   for (int i = 0; i < 4; i++) {
     vec2 off = vec2(i == 0 || i == 2 ? -o.x : o.x, i < 2 ? -o.y : o.y);
     float l = lumaRec709(texture2D(tSrc, vUv + off).rgb);
+    if (nanBits(l)) l = 0.0; // a stray NaN texel must not poison the meter
     float lg = clamp(log2(max(l, 1e-8)), ${LOG_MIN}.0, ${LOG_MAX}.0);
     float w = step(uFloor, l);
     float h = step(uHigh, l);

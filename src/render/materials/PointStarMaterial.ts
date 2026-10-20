@@ -19,6 +19,7 @@ import { FRAGMENT_PRELUDE, LOGDEPTH_FRAGMENT, LOGDEPTH_FRAGMENT_AT_INFINITY, LOG
 import { BLACKBODY_GLSL } from '../glsl/blackbody';
 import { PHOTOMETRY_GLSL } from '../glsl/photometry';
 import { PC_M } from '../../core/units';
+import { PSF_GLSL } from '../glsl/psf';
 
 export interface PointStarMaterialOptions {
   /** 'apparent': aMag is the apparent magnitude. 'absolute': aMag is M and the distance comes from the vertex position. */
@@ -181,6 +182,8 @@ const FRAGMENT_SHADER = /* glsl */ `
 ${FRAGMENT_PRELUDE}
 
 uniform float uPsfSigma;
+uniform float uPixelRatio;
+${PSF_GLSL}
 
 varying vec3 vColor;
 varying float vCorePeak;
@@ -192,7 +195,8 @@ void main() {
   float r2 = dot(d, d);
   float r = sqrt(r2);
   if (r > vRadiusPx) discard;
-  float core = vCorePeak * exp(-0.5 * r2 / (uPsfSigma * uPsfSigma));
+  // Pixel-integrated core: flux-conserving at any sub-pixel offset (no sampling twinkle).
+  float core = vCorePeak * psfPixelGauss(d, uPsfSigma, 0.5 / uPixelRatio);
   float alpha = ${HALO_ALPHA_SIGMAS.toFixed(1)} * uPsfSigma;
   float halo = vHaloPeak * pow(1.0 + r2 / (alpha * alpha), -${HALO_BETA.toFixed(2)});
   // Taper the clipped wing to zero at the sprite edge so no square or ring edge shows.

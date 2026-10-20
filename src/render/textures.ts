@@ -9,7 +9,7 @@ import * as THREE from 'three';
 export interface TextureConfig {
   /** 'srgb' for colour, 'linear' for data. */
   colorSpace?: 'srgb' | 'linear';
-  /** Requested anisotropy (clamped to the GPU max). Default 8. */
+  /** Requested anisotropy (clamped to the GPU max). Default 16 (crisp at grazing angles near the limb; ~free on desktop GPUs). */
   anisotropy?: number;
   mipmaps?: boolean;
   wrapS?: THREE.Wrapping;
@@ -24,7 +24,7 @@ export function configureTexture<T extends THREE.Texture>(tex: T, renderer: THRE
   tex.minFilter = mip ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;
   tex.magFilter = THREE.LinearFilter;
   const maxAniso = renderer ? renderer.capabilities.getMaxAnisotropy() : 1;
-  tex.anisotropy = Math.max(1, Math.min(cfg.anisotropy ?? 8, maxAniso));
+  tex.anisotropy = Math.max(1, Math.min(cfg.anisotropy ?? 16, maxAniso));
   if (cfg.wrapS !== undefined) tex.wrapS = cfg.wrapS;
   if (cfg.wrapT !== undefined) tex.wrapT = cfg.wrapT;
   tex.needsUpdate = true;

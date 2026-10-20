@@ -3,7 +3,10 @@
  *
  * Eclipse factor = visible fraction of the solar disc, from the exact overlap area of two discs in the
  * small-angle (planar) approximation; solar limb darkening is ignored (≲ 10 % error inside the
- * penumbra, none outside it). Ring transmittance along a slant path uses the ring's normal optical depth
+ * penumbra, none outside it). For occluders more than 8× the solar disc (a planet seen from its rings or moons, the
+ * Earth from the Moon) the exact overlap is ill-conditioned in float32 (terms ~10⁶× their difference, acos near ±1)
+ * and the limb is treated as a straight edge instead (circular-segment fraction, error < 1 %); always clamped to
+ * [0, 1] (no bright specks on shadow edges). Ring transmittance along a slant path uses the ring's normal optical depth
  * τₙ = −ln(1 − α) from the strip's alpha, so T = exp(−τₙ/|μ₀|) — rings get more opaque at low sun angles.
  */
 import { COMMON_GLSL } from './common';
@@ -11,12 +14,16 @@ import { COMMON_GLSL } from './common';
 /** Visible fraction of a disc of angular radius `sun` partially covered by a disc `occ` at separation `sep` (radians). */
 export function discVisibleFraction(sunRad: number, occRad: number, sepRad: number): number {
   if (sepRad >= sunRad + occRad) return 1;
+  if (occRad > 8 * sunRad) {
+    const h = Math.min(1, Math.max(-1, (sepRad - occRad) / sunRad));
+    return Math.min(1, Math.max(0, 1 - (Math.acos(h) - h * Math.sqrt(Math.max(1 - h * h, 0))) / Math.PI));
+  }
   if (sepRad <= Math.abs(occRad - sunRad)) return occRad >= sunRad ? 0 : 1 - (occRad * occRad) / (sunRad * sunRad);
   const s2 = sunRad * sunRad, o2 = occRad * occRad, d2 = sepRad * sepRad;
   const a1 = s2 * Math.acos(Math.min(1, Math.max(-1, (d2 + s2 - o2) / (2 * sepRad * sunRad))));
   const a2 = o2 * Math.acos(Math.min(1, Math.max(-1, (d2 + o2 - s2) / (2 * sepRad * occRad))));
   const k = 0.5 * Math.sqrt(Math.max(0, (-sepRad + sunRad + occRad) * (sepRad + sunRad - occRad) * (sepRad - sunRad + occRad) * (sepRad + sunRad + occRad)));
-  return 1 - (a1 + a2 - k) / (Math.PI * s2);
+  return Math.min(1, Math.max(0, 1 - (a1 + a2 - k) / (Math.PI * s2)));
 }
 
 /**
@@ -34,12 +41,16 @@ ${COMMON_GLSL}
 
 float discVisibleFraction(float sunR, float occR, float sep) {
   if (sep >= sunR + occR) return 1.0;
+  if (occR > 8.0 * sunR) {
+    float h = clamp((sep - occR) / sunR, -1.0, 1.0);
+    return clamp(1.0 - (acos(h) - h * sqrt(max(1.0 - h * h, 0.0))) / PI, 0.0, 1.0);
+  }
   if (sep <= abs(occR - sunR)) return occR >= sunR ? 0.0 : 1.0 - (occR * occR) / (sunR * sunR);
   float s2 = sunR * sunR, o2 = occR * occR, d2 = sep * sep;
   float a1 = s2 * acos(clamp((d2 + s2 - o2) / (2.0 * sep * sunR), -1.0, 1.0));
   float a2 = o2 * acos(clamp((d2 + o2 - s2) / (2.0 * sep * occR), -1.0, 1.0));
   float k = 0.5 * sqrt(max(0.0, (-sep + sunR + occR) * (sep + sunR - occR) * (sep - sunR + occR) * (sep + sunR + occR)));
-  return 1.0 - (a1 + a2 - k) / (PI * s2);
+  return clamp(1.0 - (a1 + a2 - k) / (PI * s2), 0.0, 1.0);
 }
 
 float sphereShadow(vec3 p, vec3 sunDir, float sunAngularRadius, vec3 occluderCenter, float occluderRadius) {

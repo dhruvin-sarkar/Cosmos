@@ -44,7 +44,7 @@ import { createPicker, DEFAULT_PICK_RADIUS_PX, TOUCH_PICK_RADIUS_PX, type Picker
 import { createLabelManager, labelTier, labelViewBudget, type LabelManager } from './labels';
 import { createPostPipeline, type PostPipeline } from './post';
 import { createQualityController, pickInitialQuality, type QualityController } from './quality';
-import { createPerfMonitor, type PerfMonitor } from './perf';
+import { createPerfMonitor, createShaderWarmup, type PerfMonitor } from './perf';
 import { createEnvironmentCapturer, type EnvironmentCapturer } from './env';
 import { renderPosition, renderTransform } from './visualScale';
 
@@ -177,6 +177,8 @@ export function createEngine(opts: EngineOptions): Engine {
     throw new WebGLUnsupportedError(`Could not create a WebGL 2 context: ${errorText(err)}`);
   }
   renderer.setClearColor(0x000000, 1);
+  // Shader info-log queries are synchronous GPU-process round trips per program; keep them for development only (perf).
+  renderer.debug.checkShaderErrors = import.meta.env.DEV;
   renderer.info.autoReset = false;
   store.setState(s => ({ boot: { ...s.boot, webgl: 'ok' } }));
 
@@ -229,6 +231,7 @@ export function createEngine(opts: EngineOptions): Engine {
   });
   const assets: CosmosAssetLoader = createAssetLoader({ renderer, store });
   const post = createPostPipeline({ renderer, scene, camera, halfFloat, registry });
+  const shaderWarmup = createShaderWarmup(renderer, scene, camera);
   const capturer: EnvironmentCapturer = createEnvironmentCapturer({
     renderer,
     scene,
@@ -815,6 +818,7 @@ export function createEngine(opts: EngineOptions): Engine {
       discCount: occDiscCount,
     });
 
+    shaderWarmup.gate(now);
     try {
       post.update(ctx);
       post.render(dtReal);
@@ -826,6 +830,7 @@ export function createEngine(opts: EngineOptions): Engine {
     }
     const end = performance.now();
     perfMon.endFrame(end);
+    shaderWarmup.tick(end);
 
     // Skip the first second: shader compilation and uploads make start-up frames unrepresentative.
     if (quality.preset === 'auto' && now - firstFrameMs > QUALITY_WARMUP_MS) {
@@ -918,6 +923,7 @@ export function createEngine(opts: EngineOptions): Engine {
     capturer.dispose();
     post.dispose();
     perfMon.dispose();
+    shaderWarmup.dispose();
     assets.dispose();
     events.clear();
     renderer.dispose();

@@ -30,6 +30,15 @@ export const LUMA_GLSL = /* glsl */ `
 float lumaRec709(vec3 c) { return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
 `;
 
+/**
+ * NaN test on the bit pattern. isnan() is NOT usable: ANGLE's D3D11 back end (the exhibition laptop) compiles it
+ * with fast-math and folds it to false (FXC warning X3577), so a stray NaN texel from any material would pass.
+ */
+export const NAN_GLSL = /* glsl */ `
+bool nanBits(float x) { return (floatBitsToUint(x) & 0x7fffffffu) > 0x7f800000u; }
+bool anyNan(vec3 v) { return nanBits(v.r) || nanBits(v.g) || nanBits(v.b); }
+`;
+
 export const AGX_GLSL = /* glsl */ `
 // AgX "Punchy" look (Blender/Sobotka): ASC CDL power 1.35 + saturation 1.4 about Rec.709 luma, applied in the
 // display-encoded AgX space (after the sigmoid, before the outset). Base AgX desaturates lit mid-highs into pastels;
@@ -69,6 +78,21 @@ vec3 agx(vec3 color, float look) {
   color = OUTSET * agxLook(agxContrastApprox(color), look);
   color = pow(max(color, vec3(0.0)), vec3(2.2));
   return clamp(REC2020_TO_SRGB * color, 0.0, 1.0);
+}
+// Khronos PBR Neutral (2024; three.js NeutralToneMapping): identity below ~0.76, then a hue-preserving shoulder.
+vec3 pbrNeutral(vec3 color) {
+  const float START = 0.76;
+  const float DESAT = 0.15;
+  float x = min(color.r, min(color.g, color.b));
+  float offset = x < 0.08 ? x - 6.25 * x * x : 0.04;
+  color -= offset;
+  float peak = max(color.r, max(color.g, color.b));
+  if (peak < START) return color;
+  float d = 1.0 - START;
+  float newPeak = 1.0 - d * d / (peak + d - START);
+  color *= newPeak / peak;
+  float g = 1.0 - 1.0 / (DESAT * (peak - newPeak) + 1.0);
+  return clamp(mix(color, vec3(newPeak), g), 0.0, 1.0);
 }
 vec3 linearToSrgb(vec3 c) {
   return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c));

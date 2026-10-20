@@ -19,6 +19,7 @@ import { BLACKBODY_GLSL } from '../../render/glsl/blackbody';
 import { PHOTOMETRY_GLSL } from '../../render/glsl/photometry';
 import { PC_M } from '../../core/units';
 import { COMPRESS_START, HANDOVER_END, HANDOVER_START, SKY_EXPOSURE, SKY_LIMIT_MAG, type SkyExposure } from './photometry';
+import { PSF_GLSL } from '../../render/glsl/psf';
 
 const HALO_ALPHA_SIGMAS = 4.0;
 const HALO_BETA = 2.2;
@@ -142,6 +143,8 @@ const FRAGMENT_SHADER = /* glsl */ `
 ${FRAGMENT_PRELUDE}
 
 uniform float uPsfSigma;
+uniform float uPixelRatio;
+${PSF_GLSL}
 
 varying vec3 vColor;
 varying float vCorePeak;
@@ -153,7 +156,8 @@ void main() {
   float r2 = dot(d, d);
   float r = sqrt(r2);
   if (r > vRadiusPx) discard;
-  float core = vCorePeak * exp(-0.5 * r2 / (uPsfSigma * uPsfSigma));
+  // Pixel-integrated core: flux-conserving at any sub-pixel offset (no sampling twinkle).
+  float core = vCorePeak * psfPixelGauss(d, uPsfSigma, 0.5 / uPixelRatio);
   float alpha = ${HALO_ALPHA_SIGMAS.toFixed(1)} * uPsfSigma;
   float halo = vHaloPeak * pow(1.0 + r2 / (alpha * alpha), -${HALO_BETA.toFixed(2)});
   halo *= 1.0 - smoothstep(0.7 * vRadiusPx, vRadiusPx, r);

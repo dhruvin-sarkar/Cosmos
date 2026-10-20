@@ -15,7 +15,7 @@
  */
 import * as THREE from 'three';
 import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
-import { FULLSCREEN_VERT, LUMA_GLSL } from './shaders';
+import { FULLSCREEN_VERT, LUMA_GLSL, NAN_GLSL } from './shaders';
 
 export interface BloomSettings {
   /** Number of mip levels (≥ 2). */
@@ -46,7 +46,18 @@ uniform float uThreshold;
 uniform float uKnee;
 varying vec2 vUv;
 ${LUMA_GLSL}
+${NAN_GLSL}
+#ifdef PREFILTER
+// Scene-linear input is untrusted: one NaN texel (a 0/0 in any material) would otherwise spread through the whole
+// mip chain into a screen-sized white blob. NaN -> 0, ±Inf -> half-float range.
+vec3 s(vec2 o) {
+  vec3 v = texture2D(tSrc, vUv + o * uTexel).rgb;
+  if (anyNan(v)) return vec3(0.0);
+  return clamp(v, 0.0, 65504.0);
+}
+#else
 vec3 s(vec2 o) { return texture2D(tSrc, vUv + o * uTexel).rgb; }
+#endif
 #ifdef PREFILTER
 vec3 karis(vec3 a, vec3 b, vec3 c, vec3 d) {
   vec3 m = (a + b + c + d) * 0.25;

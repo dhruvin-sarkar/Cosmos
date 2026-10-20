@@ -187,7 +187,9 @@ export function createStarsLayer(opts: StarsLayerOptions): Layer & { debug: Star
         attributes: { aMag: { array: mag, itemSize: 1 }, aTeff: { array: teff, itemSize: 1 } },
         absMag: mag,
         material,
-        targetPointsPerChunk: wantNear ? 512 : 4096,
+        // Field chunks of 16k points: ~4x fewer draw calls than 4k (CPU submission cost), culling granularity is irrelevant
+        // from inside the Solar System where every chunk surrounds the camera (perf).
+        targetPointsPerChunk: wantNear ? 512 : 16384,
       });
       return { cloud, map };
     };
