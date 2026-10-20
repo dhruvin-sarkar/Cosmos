@@ -17,6 +17,7 @@ import { QuantityView } from '../components/QuantityView';
 import { Skeleton } from '../components/Spinner';
 import { Tooltip } from '../components/Tooltip';
 import { EmptyState } from '../components/Misc';
+import { hasInterior } from '../interiors/data';
 import { classificationFrom, INSPECTOR_SECTIONS, labsOf, nameSize, quickFacts, sectionsFor, type InspectorSectionId } from './facts';
 
 const ORBITING = new Set(['planet', 'dwarf-planet', 'moon', 'exoplanet', 'satellite', 'space-station', 'rocket-body', 'debris', 'asteroid', 'comet']);
@@ -54,8 +55,10 @@ export function FactRow({ fact, sheet }: { fact: Fact; sheet: FactSheet | null }
   const q = fact.quantity;
   const source = fact.source ?? q?.source;
   const model = q?.model;
+  // Prose values (an atmosphere's composition, a discovery note) span both columns in body type.
+  const wide = !q && (fact.text?.trim().length ?? 0) > 26;
   return (
-    <div className="cx-fact">
+    <div className={cx('cx-fact', wide && 'cx-fact--wide')}>
       <dt className="cx-fact__label">
         {fact.help ? (
           <Tooltip content={fact.help}>
@@ -187,6 +190,11 @@ function Actions({ entity }: { entity: Entity }) {
       {(caps.has('focus') || caps.has('travel')) && (
         <Button variant="primary" onClick={() => void commands.focus(entity.id)}>
           Fly to {entity.name}
+        </Button>
+      )}
+      {hasInterior(entity.id) && (
+        <Button onClick={() => void import('../interiors/open').then(m => m.openInterior(entity.id))}>
+          See inside {entity.name}
         </Button>
       )}
       {labs.map(l => (
@@ -349,6 +357,14 @@ export function Inspector() {
         <p className="cx-insp-ids">
           {displayAliases(entity.name, entity.aliases).map(a => <span key={a} className="cx-id">{a}</span>)}
         </p>
+      )}
+
+      {hasInterior(entity.id) && (
+        <div className="cx-actions">
+          <Button size="sm" data-testid="inspector-inside" onClick={() => void import('../interiors/open').then(m => m.openInterior(entity.id))}>
+            Inside {entity.name}: cutaway
+          </Button>
+        </div>
       )}
 
       {state.status === 'loading' && <Skeleton lines={4} className="cx-insp-skeleton" />}

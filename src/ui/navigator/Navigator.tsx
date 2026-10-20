@@ -17,6 +17,7 @@ import { setNavigatorOpen, useNavFocusId, useNavigatorOpen, useSystemTree, useTh
 import { useNavigatorShortcuts } from './keys';
 import { useLabelTravel } from './labelTravel';
 import { useFocusFramed } from './framing';
+import { hasInterior } from '../interiors/data';
 import './navigator.css';
 
 const C = 299_792_458;
@@ -109,6 +110,33 @@ function SystemSection({ body, focusId, tick, onGo }: { body: NavBody; focusId: 
   );
 }
 
+/** "Inside the worlds": opens the interior cutaway (src/ui/interiors) of every body with interior data. */
+function InsideSection({ tree }: { tree: ReturnType<typeof useSystemTree> }) {
+  const worlds = [tree.sun, ...tree.bodies.flatMap(b => [b.entity, ...b.satellites])].filter(
+    (e): e is Entity => e != null && hasInterior(e.id),
+  );
+  if (worlds.length === 0) return null;
+  const open = (id: string): void => {
+    setNavigatorOpen(false);
+    void import('../interiors/open').then(m => m.openInterior(id));
+  };
+  return (
+    <section className="cx-nav__group" data-testid="nav-inside">
+      <h3 className="cx-nav__group-title">Inside the worlds</h3>
+      <ul className="cx-nav-chips">
+        {worlds.map(e => (
+          <li key={e.id}>
+            <button type="button" data-nav-item="" className="cx-nav-chip" aria-label={`See inside ${e.name}`} onClick={() => open(e.id)}>
+              <Thumb entity={e} size={22} />
+              <span>{e.name}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function moveFocus(root: HTMLElement, dir: 1 | -1): void {
   const items = Array.from(root.querySelectorAll<HTMLElement>('[data-nav-item]'));
   if (items.length === 0) return;
@@ -184,6 +212,7 @@ function OpenNavigatorPanel() {
             <SystemSection key={b.entity.id} body={b} focusId={focusId} tick={tick} onGo={go} />
           ))}
         </ol>
+        <InsideSection tree={tree} />
         {tree.spacecraft.length > 0 && (
           <section className="cx-nav__group">
             <h3 className="cx-nav__group-title">Spacecraft</h3>
