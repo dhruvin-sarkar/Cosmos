@@ -6,7 +6,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { cx } from '../lib/dom';
 import { useCosmos } from '../hooks';
-import { Kbd } from '../components/Kbd';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Tooltip } from '../components/Tooltip';
 import { pillLabel, systemBodyOf } from './tree';
 import { useNavFocusId, useSystemTree } from './state';
 import { useFocusFramed } from './framing';
@@ -45,10 +46,20 @@ export function MoonStrip() {
   }, [sys, updateEdges]);
   if (!sys || sys.satellites.length === 0 || lab) return null;
   const items = [sys.entity, ...sys.satellites];
+  const at = items.findIndex(e => e.id === focusId);
+  const step = (d: -1 | 1): void => {
+    const n = items.length;
+    const target = items[((at < 0 ? 0 : at) + d + n) % n];
+    if (target) void focus(target.id);
+  };
   return (
     <div className="cx-moonstrip-band">
       <nav className="cx-moonstrip" aria-label={`${sys.entity.name} system`}>
-        <Kbd keys="[" size="sm" className="cx-moonstrip__key" />
+        <Tooltip content="Previous in this system" shortcut="[" side="top">
+          <button type="button" className="cx-moonstrip__key cursor-target" aria-label="Previous in this system" aria-keyshortcuts="[" onClick={() => step(-1)}>
+            <ChevronLeft size={16} aria-hidden />
+          </button>
+        </Tooltip>
         <ol ref={listRef} onScroll={updateEdges} className={cx(edges.left && 'fade-left', edges.right && 'fade-right')}>
           {items.map((e, i) => {
             const here = e.id === focusId;
@@ -57,24 +68,28 @@ export function MoonStrip() {
               <li key={e.id} className={cx(i === 0 && 'is-primary')}>
                 <button
                   type="button"
-                  className={cx('cx-moonstrip__item', here && 'is-here')}
+                  className={cx('cx-moonstrip__item', 'cursor-target', here && 'is-here')}
+                  data-cursor-label={here ? undefined : `Fly to ${e.name}`}
                   aria-current={here ? 'location' : undefined}
                   aria-label={label !== e.name ? e.name : undefined}
-                  title={e.name}
                   onClick={ev => {
                     // A mouse click should not leave a focus ring next to the "you are here" ring once [ ] move on.
                     if (ev.detail > 0) ev.currentTarget.blur();
                     void focus(e.id);
                   }}
                 >
-                  {e.kind === 'moon' || i === 0 ? <Thumb entity={e} size={22} /> : <span className="cx-nav-glyph" aria-hidden="true" />}
+                  {e.kind === 'moon' || i === 0 ? <Thumb entity={e} size={24} /> : <span className="cx-nav-glyph" aria-hidden="true" />}
                   <span className="cx-moonstrip__name">{label}</span>
                 </button>
               </li>
             );
           })}
         </ol>
-        <Kbd keys="]" size="sm" className="cx-moonstrip__key" />
+        <Tooltip content="Next in this system" shortcut="]" side="top">
+          <button type="button" className="cx-moonstrip__key cursor-target" aria-label="Next in this system" aria-keyshortcuts="]" onClick={() => step(1)}>
+            <ChevronRight size={16} aria-hidden />
+          </button>
+        </Tooltip>
       </nav>
     </div>
   );

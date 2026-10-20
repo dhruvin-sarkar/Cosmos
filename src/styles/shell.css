@@ -1,0 +1,709 @@
+/*
+ * Shell chrome: the top band (breadcrumb, time capsule, search, scale disclosure, toolbar) and the bottom band
+ * (planet rail and the satellite strip). System and rationale: docs/design/UI_SYSTEM.md.
+ *
+ * Floating instruments are capsules (radius 999) on --capsule with a machined --edge; panels are 14 px plates.
+ * Nothing here re-samples the canvas (no backdrop-filter) and nothing animates layout properties.
+ */
+
+/* ── Top band ────────────────────────────────────────────────────────────────────────────── */
+.cx-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: grid;
+  /* The right column never shrinks below its controls; the breadcrumb gives way (and collapses its middle). */
+  grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr);
+  align-items: start;
+  column-gap: var(--sp-4);
+  padding: calc((var(--topbar-h) - var(--hit)) / 2) var(--hud-gutter) 0;
+  pointer-events: none;
+}
+.cx-topbar > * {
+  pointer-events: auto;
+}
+.cx-topbar__lead {
+  container: lead / inline-size;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc((var(--topbar-h) - var(--hit)) / 2);
+  min-width: 0;
+  pointer-events: none;
+}
+.cx-topbar__lead > * {
+  pointer-events: auto;
+}
+
+/* Breadcrumb: where you are, zooming out to the left */
+.cx-crumbs {
+  max-width: 100%;
+  min-width: 0;
+}
+.cx-crumbs ol {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  list-style: none;
+  min-width: 0;
+  height: var(--hit);
+  overflow: hidden;
+}
+.cx-crumbs li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  white-space: nowrap;
+}
+.cx-crumbs li.is-here {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.cx-crumbs__sep {
+  padding: 0 7px;
+  color: oklch(1 0 0 / 0.32);
+  font: 300 15px/1 var(--font-ui);
+}
+.cx-crumbs__link,
+.cx-crumbs__here {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit);
+  font: 450 14px/1.2 var(--font-ui);
+  text-shadow: var(--text-halo);
+}
+.cx-crumbs__link {
+  padding: 0 4px;
+  margin: 0 -4px;
+  border-radius: var(--r-xs);
+  color: var(--text-secondary);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.cx-crumbs__link:hover {
+  color: var(--text-primary);
+}
+.cx-crumbs__here {
+  color: var(--text-primary);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cx-crumbs__more {
+  display: none;
+  align-items: center;
+  color: var(--text-tertiary);
+  font: 450 14px/1 var(--font-ui);
+}
+@container lead (max-width: 640px) {
+  .cx-crumbs li.is-middle {
+    display: none;
+  }
+  .cx-crumbs__more {
+    display: inline-flex;
+  }
+}
+@container lead (max-width: 300px) {
+  .cx-crumbs li.is-root,
+  .cx-crumbs li.is-root + li .cx-crumbs__sep {
+    display: none;
+  }
+}
+
+/* Search trigger: the one wide field at top centre */
+.cx-search-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: clamp(240px, 21vw, 400px);
+  height: var(--hit);
+  padding: 0 7px 0 16px;
+  border-radius: var(--r-pill);
+  background: var(--capsule);
+  box-shadow: var(--edge);
+  color: var(--text-secondary);
+  font: 450 14px/1 var(--font-ui);
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+.cx-search-trigger:hover {
+  background: var(--capsule-hover);
+  box-shadow: var(--edge-strong);
+  color: var(--text-primary);
+}
+.cx-search-trigger:active {
+  transform: scale(0.99);
+}
+.cx-search-trigger__text {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cx-topbar__right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  min-width: 0;
+  height: var(--hit);
+}
+
+/* Toolbar: one capsule, three groups (travel, view, utilities) separated by hairlines */
+.cx-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: var(--hit);
+  padding: 3px;
+  border-radius: var(--r-pill);
+  background: var(--capsule);
+  box-shadow: var(--edge);
+}
+.cx-toolbar__sep {
+  flex: none;
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--hairline-strong);
+}
+.cx-bar-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: calc(var(--hit) - 6px);
+  min-width: calc(var(--hit) - 6px);
+  padding: 0 13px 0 11px;
+  border-radius: var(--r-pill);
+  font: 500 13.5px/1 var(--font-ui);
+  letter-spacing: 0.005em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+.cx-bar-btn__icon {
+  flex: none;
+  color: var(--text-tertiary);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.cx-bar-btn:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+.cx-bar-btn:hover .cx-bar-btn__icon {
+  color: var(--text-primary);
+}
+.cx-bar-btn:active {
+  background: var(--surface-pressed);
+}
+.cx-bar-btn.is-on {
+  color: var(--text-primary);
+  background: oklch(1 0 0 / 0.11);
+}
+.cx-bar-btn.is-on .cx-bar-btn__icon {
+  color: var(--accent);
+}
+.cx-bar-btn--icon {
+  padding: 0;
+}
+.cx-bar-btn__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cx-bar-btn__value {
+  font: 500 11.5px/1 var(--font-ui);
+  color: var(--accent);
+  padding: 3px 7px;
+  border-radius: var(--r-pill);
+  box-shadow: inset 0 0 0 1px oklch(0.85 0.1 88 / 0.45);
+}
+
+/* ── Time capsule (top-left, under the breadcrumb) ──────────────────────────────────────── */
+.cx-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: var(--timebar-h);
+  padding: 3px 4px 3px 3px;
+  border-radius: var(--r-pill);
+  background: var(--capsule);
+  box-shadow: var(--edge);
+  font-variant-numeric: tabular-nums;
+}
+.cx-time__play {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: calc(var(--timebar-h) - 6px);
+  height: calc(var(--timebar-h) - 6px);
+  border-radius: var(--r-round);
+  background: oklch(1 0 0 / 0.09);
+  color: var(--text-primary);
+  transition: background-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+.cx-time__play:hover {
+  background: oklch(1 0 0 / 0.16);
+}
+.cx-time__play:active {
+  transform: scale(0.96);
+}
+/* Paused is a state worth noticing: the transport button takes the brass ring. */
+.cx-time.is-paused .cx-time__play {
+  box-shadow: var(--edge-accent);
+  color: var(--accent);
+}
+.cx-time__play-icon {
+  transform: translateX(1px); /* optical centre of the triangle */
+}
+.cx-time__date {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 9px;
+  height: calc(var(--timebar-h) - 6px);
+  padding: 0 12px;
+  border-radius: var(--r-pill);
+  font: 500 14px/calc(var(--timebar-h) - 6px) var(--font-ui);
+  color: var(--text-primary);
+  white-space: nowrap;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.cx-time__date:hover,
+.cx-time__date[aria-expanded='true'] {
+  background: var(--surface-hover);
+}
+.cx-time__clock {
+  color: var(--text-secondary);
+  font-weight: 450;
+  font-size: 13px;
+}
+.cx-time__sep {
+  flex: none;
+  width: 1px;
+  height: 18px;
+  margin: 0 2px;
+  background: var(--hairline-strong);
+}
+.cx-time__rate {
+  display: inline-flex;
+  align-items: center;
+}
+.cx-time .cx-time__step {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: var(--r-round);
+  color: var(--text-secondary);
+}
+.cx-time .cx-time__step:hover {
+  color: var(--text-primary);
+}
+.cx-time__words {
+  min-width: 18ch;
+  padding: 0 2px;
+  text-align: center;
+  font: 450 13px/1 var(--font-ui);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.cx-time.is-paused .cx-time__words {
+  color: var(--accent);
+}
+.cx-time__now.cx-btn {
+  height: 32px;
+  min-height: 32px;
+  padding: 0 12px 0 10px;
+  margin-left: 2px;
+  border-radius: var(--r-pill);
+}
+.cx-time__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 12px 0 10px;
+  margin-left: 2px;
+  font: 500 12.5px/1 var(--font-ui);
+  color: var(--text-secondary);
+  cursor: default;
+}
+.cx-time__live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 3px oklch(0.8 0.1 155 / 0.18);
+}
+
+/* ── Bottom band: the planet rail and the satellite strip ───────────────────────────────── */
+.cx-bottom {
+  position: absolute;
+  left: var(--hud-gutter);
+  right: calc(var(--ruler-w) + 8px);
+  bottom: 0;
+  height: var(--bottom-h);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--sp-4);
+  padding-bottom: 8px;
+  pointer-events: none;
+  transition: left var(--dur-slow) var(--ease-settle);
+}
+.cx-hud.has-column .cx-bottom {
+  left: calc(var(--column-w) + var(--sp-2));
+}
+.cx-hud.has-lab .cx-bottom {
+  left: calc(var(--lab-w) + var(--sp-2));
+}
+.cx-bottom > * {
+  pointer-events: auto;
+}
+.cx-bottom > .cx-strip {
+  pointer-events: none;
+}
+.cx-strip {
+  position: relative;
+  flex: 0 1 1240px;
+  min-width: 0;
+}
+.cx-strip--empty {
+  height: 1px;
+}
+.cx-rail {
+  display: grid;
+  grid-template-columns: minmax(104px, auto) minmax(0, 1fr) minmax(104px, auto);
+  align-items: start;
+  gap: var(--sp-2);
+  height: 68px;
+}
+.cx-rail > * {
+  pointer-events: auto;
+}
+.cx-rail__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 40px;
+  margin-top: 1px;
+  padding: 0 14px 0 8px;
+  border-radius: var(--r-pill);
+  font: 500 13px/1 var(--font-ui);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  justify-self: start;
+  text-shadow: var(--text-halo);
+  transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+.cx-rail__step--next {
+  justify-self: end;
+  padding: 0 8px 0 14px;
+}
+.cx-rail__step:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--capsule);
+}
+.cx-rail__step:disabled {
+  visibility: hidden;
+}
+.cx-rail__track {
+  position: relative;
+  height: 100%;
+  margin: 0 40px;
+  list-style: none;
+  pointer-events: none !important;
+}
+/* The axis runs through the centres of the marks and fades out at both ends (the system continues). */
+.cx-rail__axis {
+  position: absolute;
+  left: -40px;
+  right: -40px;
+  top: 21px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--hairline-strong) 40px, var(--hairline-strong) calc(100% - 40px), transparent);
+}
+.cx-rail__track li {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+.cx-rail__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 56px;
+  padding: 4px 8px 6px;
+  border-radius: 14px;
+  color: var(--text-secondary);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.cx-rail__mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  /* A disc of night breaks the axis behind each body. */
+  background: radial-gradient(circle, oklch(0 0 0) 55%, transparent 57%);
+  transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-settle);
+}
+.cx-rail__body:hover .cx-rail__mark {
+  box-shadow: inset 0 0 0 1px var(--hairline-bold);
+  transform: scale(1.06);
+}
+.cx-rail__body.is-focus .cx-rail__mark {
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+  transform: none;
+}
+.cx-rail__name {
+  font: 500 13px/1 var(--font-ui);
+  white-space: nowrap;
+  text-shadow: var(--text-halo);
+}
+.cx-rail__body:hover {
+  color: var(--text-primary);
+}
+.cx-rail__body.is-focus {
+  color: var(--text-primary);
+}
+.cx-rail__body.is-focus .cx-rail__name {
+  font-weight: 650;
+}
+.cx-return-demo {
+  flex: none;
+  margin-bottom: 14px;
+}
+
+/* Satellite strip: the focused planet and its moons and spacecraft, centred above the rail */
+.cx-moonstrip-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 6px);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.cx-moonstrip {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--r-pill);
+  background: var(--capsule);
+  box-shadow: var(--edge);
+  pointer-events: auto;
+  animation: cx-rise var(--dur-base) var(--ease-settle);
+}
+.cx-moonstrip ol {
+  min-width: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 24px;
+}
+.cx-moonstrip li {
+  flex: none;
+  scroll-snap-align: center;
+}
+.cx-moonstrip ol.fade-left {
+  mask-image: linear-gradient(to right, transparent 0, #000 32px);
+}
+.cx-moonstrip ol.fade-right {
+  mask-image: linear-gradient(to left, transparent 0, #000 32px);
+}
+.cx-moonstrip ol.fade-left.fade-right {
+  mask-image: linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%);
+}
+.cx-moonstrip li.is-primary {
+  padding-right: 3px;
+  margin-right: 3px;
+  border-right: 1px solid var(--hairline-strong);
+}
+.cx-moonstrip__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px 0 7px;
+  border-radius: var(--r-pill);
+  font: 500 13.5px/1 var(--font-ui);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+.cx-moonstrip__item:hover,
+.cx-moonstrip__item:focus-visible {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+.cx-moonstrip__item.is-here {
+  color: var(--text-primary);
+  background: oklch(1 0 0 / 0.11);
+}
+.cx-moonstrip__item .cx-nav-thumb {
+  transition: box-shadow var(--dur-base) var(--ease-out);
+}
+.cx-moonstrip__item.is-here .cx-nav-thumb {
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px oklch(0.11 0 0), 0 0 0 3.5px var(--accent);
+}
+.cx-moonstrip__item.is-here .cx-nav-glyph::before {
+  border-color: var(--accent);
+}
+.cx-moonstrip__name {
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cx-moonstrip__key {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-round);
+  color: var(--text-secondary);
+  transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+.cx-moonstrip__key:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+@keyframes cx-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Exhibition (kiosk) sizing: 56 px targets, larger type ──────────────────────────────── */
+[data-exhibition='true'] .cx-bar-btn,
+[data-exhibition='true'] .cx-crumbs__link,
+[data-exhibition='true'] .cx-crumbs__here,
+[data-exhibition='true'] .cx-search-trigger,
+[data-exhibition='true'] .cx-time__date {
+  font-size: 16.5px;
+}
+[data-exhibition='true'] .cx-time__words,
+[data-exhibition='true'] .cx-time__clock {
+  font-size: 15px;
+}
+[data-exhibition='true'] .cx-time .cx-time__step,
+[data-exhibition='true'] .cx-time__now.cx-btn,
+[data-exhibition='true'] .cx-time__live {
+  width: auto;
+  height: 44px;
+  min-height: 44px;
+}
+[data-exhibition='true'] .cx-time .cx-time__step {
+  width: 44px;
+}
+[data-exhibition='true'] .cx-rail {
+  height: 84px;
+}
+[data-exhibition='true'] .cx-rail__name,
+[data-exhibition='true'] .cx-rail__step {
+  font-size: 16px;
+}
+[data-exhibition='true'] .cx-rail__step {
+  height: 52px;
+}
+[data-exhibition='true'] .cx-rail__mark {
+  width: 44px;
+  height: 44px;
+}
+[data-exhibition='true'] .cx-rail__axis {
+  top: 26px;
+}
+[data-exhibition='true'] .cx-moonstrip__item {
+  height: 50px;
+  font-size: 16.5px;
+}
+[data-exhibition='true'] .cx-moonstrip__key {
+  width: 44px;
+  height: 44px;
+}
+
+/* ── Responsive: the toolbar sheds labels before anything collides ──────────────────────── */
+@media (max-width: 1679px) {
+  .cx-toolbar .cx-bar-btn:not(.cx-nav-trigger):not(.cx-ev-trigger) {
+    padding: 0;
+  }
+  .cx-toolbar .cx-bar-btn:not(.cx-nav-trigger):not(.cx-ev-trigger) .cx-bar-btn__label {
+    display: none;
+  }
+}
+@media (max-width: 1439px) {
+  .cx-search-trigger {
+    width: auto;
+    padding: 0 7px 0 13px;
+  }
+  .cx-search-trigger__text {
+    display: none;
+  }
+  .cx-rail__step-name {
+    display: none;
+  }
+  .cx-rail {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+  }
+  .cx-rail__step,
+  .cx-rail__step--next {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+@media (max-width: 1199px) {
+  .cx-toolbar .cx-bar-btn {
+    padding: 0;
+  }
+  .cx-toolbar .cx-bar-btn__label {
+    display: none;
+  }
+  .cx-rail__name {
+    font-size: 12px;
+  }
+}
+@media (max-width: 899px) {
+  .cx-moonstrip__key {
+    display: none;
+  }
+  .cx-rail__track {
+    margin: 0 24px;
+  }
+}
+
+/* Exhibition: the ruler's landmarks and readout line and the inspector's classification read from 1–2 m. */
+[data-exhibition='true'] .cx-ruler__landmark {
+  font-size: 15px;
+}
+[data-exhibition='true'] .cx-ruler__line {
+  font-size: 15.5px;
+  max-width: 300px;
+}
+[data-exhibition='true'] .cx-insp-class {
+  font-size: 16px;
+}

@@ -1,4 +1,4 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Component, Suspense, type ErrorInfo, type ReactNode } from 'react';
 import { useCommands, useCosmos } from '../hooks';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/Misc';
@@ -53,7 +53,10 @@ export function LabDrawer() {
   const Panel = entry.Component;
   return (
     <LabBoundary key={active} onClose={close}>
-      <Panel labId={active} params={params} onClose={close} />
+      {/* Lab panels are code-split (React.lazy in src/labs/<id>/index.ts): the shell shows while the chunk loads. */}
+      <Suspense fallback={<LabShell title={entry.meta.title} modified={false} onReset={() => undefined} onClose={close} />}>
+        <Panel labId={active} params={params} onClose={close} />
+      </Suspense>
     </LabBoundary>
   );
 }

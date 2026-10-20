@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pause, Play, RotateCcw } from 'lucide-react';
+import { cx } from '../lib/dom';
 import { useCommands, useCosmosShallow } from '../hooks';
 import { formatSimDate } from '../format';
 import { Popover } from '../components/Popover';
@@ -55,7 +56,11 @@ function DateJump({ simTimeMs, onDone }: { simTimeMs: number; onDone(): void }) 
   );
 }
 
-/** Bottom-left time instrument: circular play/pause, rate stepper (with reverse), UTC date readout, "Now". */
+/**
+ * The time capsule (top-left, under the breadcrumb: where you are, then when). Play / pause, the UTC date and time
+ * (opens "Go to a date"), the rate stepper in words with reverse, and Now. When the clock runs live at real time the
+ * Now slot reads "Live" instead of offering a no-op button.
+ */
 export function TimeControls() {
   const commands = useCommands();
   const t = useCosmosShallow(s => ({ ms: s.time.simTimeMs, rate: s.time.rate, paused: s.time.paused }));
@@ -65,27 +70,64 @@ export function TimeControls() {
   const nearNow = Math.abs(t.ms - Date.now()) < 120_000 && t.rate === 1 && !t.paused;
 
   return (
-    <div className="cx-time" role="group" aria-label="Time">
-      <Tooltip content={t.paused ? 'Play' : 'Pause'} shortcut="Space" side="top">
-        <button type="button" className="cx-time__play" aria-label={t.paused ? 'Play' : 'Pause'} aria-keyshortcuts="Space" onClick={() => commands.togglePause()}>
-          {t.paused ? <Play size={18} aria-hidden /> : <Pause size={18} aria-hidden />}
+    <div className={cx('cx-time', t.paused && 'is-paused')} role="group" aria-label="Time">
+      <Tooltip content={t.paused ? 'Play' : 'Pause'} shortcut="Space" side="bottom">
+        <button
+          type="button"
+          className="cx-time__play cursor-target"
+          aria-label={t.paused ? 'Play' : 'Pause'}
+          aria-keyshortcuts="Space"
+          onClick={() => commands.togglePause()}
+        >
+          {t.paused ? <Play size={16} aria-hidden className="cx-time__play-icon" /> : <Pause size={16} aria-hidden />}
         </button>
       </Tooltip>
-      
-      <button ref={dateRef} type="button" className="cx-time__date cx-num" aria-label={`Simulation time ${formatSimDate(t.ms, { style: 'long' })}. Change date`} aria-expanded={jumpOpen} aria-haspopup="dialog" onClick={() => setJumpOpen(o => !o)}>
+      <button
+        ref={dateRef}
+        type="button"
+        className="cx-time__date cx-num cursor-target"
+        data-cursor-label="Go to a date"
+        aria-label={`Simulation time ${formatSimDate(t.ms, { style: 'long' })}. Change date`}
+        aria-expanded={jumpOpen}
+        aria-haspopup="dialog"
+        onClick={() => setJumpOpen(o => !o)}
+      >
         <span className="cx-time__day">{formatSimDate(t.ms, { style: 'date' })}</span>
         <span className="cx-time__clock">{formatSimDate(t.ms, { style: 'time', seconds: true })}</span>
       </button>
+      <span className="cx-time__sep" aria-hidden="true" />
       <div className="cx-time__rate">
-        <IconButton label="Slower or reverse" icon={ChevronLeft} shortcut="," tooltipSide="top" onClick={() => commands.setTimeRate(stepRate(t.rate, -1))} />
-        <span className="cx-time__words" aria-live="polite">{words}</span>
-        <IconButton label="Faster" icon={ChevronRight} shortcut="." tooltipSide="top" onClick={() => commands.setTimeRate(stepRate(t.rate, 1))} />
+        <IconButton
+          label="Slower or reverse"
+          icon={ChevronLeft}
+          shortcut=","
+          size="sm"
+          tooltipSide="bottom"
+          className="cx-time__step"
+          onClick={() => commands.setTimeRate(stepRate(t.rate, -1))}
+        />
+        <span className={cx('cx-time__words', t.rate < 0 && 'is-reverse')} aria-live="polite">{words}</span>
+        <IconButton
+          label="Faster"
+          icon={ChevronRight}
+          shortcut="."
+          size="sm"
+          tooltipSide="bottom"
+          className="cx-time__step"
+          onClick={() => commands.setTimeRate(stepRate(t.rate, 1))}
+        />
       </div>
-      
-      <Button variant="quiet" size="sm" className="cx-time__now" disabled={nearNow} onClick={() => commands.timeToNow()}>
-        Now
-      </Button>
-      <Popover open={jumpOpen} onClose={() => setJumpOpen(false)} anchorRef={dateRef} label="Go to a date" side="top" align="start">
+      {nearNow ? (
+        <span className="cx-time__live" title="The clock shows the present moment">
+          <span className="cx-time__live-dot" aria-hidden="true" />
+          Live
+        </span>
+      ) : (
+        <Button variant="quiet" size="sm" className="cx-time__now" icon={RotateCcw} onClick={() => commands.timeToNow()}>
+          Now
+        </Button>
+      )}
+      <Popover open={jumpOpen} onClose={() => setJumpOpen(false)} anchorRef={dateRef} label="Go to a date" side="bottom" align="start">
         <DateJump simTimeMs={t.ms} onDone={() => setJumpOpen(false)} />
       </Popover>
     </div>

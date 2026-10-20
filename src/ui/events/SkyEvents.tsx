@@ -4,7 +4,7 @@
  * src/science/events.ts; this file only renders and drives AppCommands. Mount once inside <AppContextProvider>.
  */
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { X } from 'lucide-react';
+import { Telescope, X } from 'lucide-react';
 import {
   ISS_SOURCE, computeSkyEvents, issPassEvents, type OmmElements, type SkyEvent, type SkyEventKind, type SkyObserver,
 } from '../../science/events';
@@ -122,7 +122,7 @@ export function SkyEventsButton() {
     <Tooltip content="Eclipses, planets and meteor showers you can fly to" side="bottom">
       <button
         type="button"
-        className={cx('cx-bar-btn', 'cx-ev-trigger', open && 'is-on')}
+        className={cx('cx-bar-btn', 'cx-ev-trigger', 'cursor-target', open && 'is-on')}
         aria-expanded={open}
         aria-haspopup="dialog"
         onClick={() => {
@@ -131,7 +131,8 @@ export function SkyEventsButton() {
           patchEventsUi({ open: !s.open, anchorMs: s.anchorMs ?? Math.floor(simTimeMs / DAY_MS) * DAY_MS });
         }}
       >
-        What’s up
+        <Telescope size={18} aria-hidden className="cx-bar-btn__icon" />
+        <span className="cx-bar-btn__label">What’s up</span>
       </button>
     </Tooltip>
   );

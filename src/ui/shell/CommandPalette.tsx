@@ -1,10 +1,10 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { Search } from 'lucide-react';
+import { CornerDownLeft, Search } from 'lucide-react';
 import type { SearchResult } from '../../core/entity';
 import { useCommands, useRegistry, useRegistryVersion, setUi, useStoreApi, useCosmos } from '../hooks';
 import { useUiExtensions } from '../context';
 import { cx, useDebouncedValue, useFocusTrap } from '../lib/dom';
-import { kindLabel } from '../icons';
+import { kindIcon, kindLabel } from '../icons';
 import { formatDistance } from '../format';
 import { Kbd } from '../components/Kbd';
 import { useFocusFramed } from '../navigator/framing';
@@ -142,6 +142,7 @@ export function CommandPalette() {
                 index++;
                 const i = index;
                 const dist = ext.cameraDistanceM?.(r.record.id) ?? null;
+                const Icon = kindIcon(r.record.kind);
                 const ids = [r.matched !== 'name' ? r.matchedText : null, ...r.record.aliases].filter((x, k, arr): x is string => !!x && x !== r.record.name && arr.indexOf(x) === k).slice(0, 3);
                 return (
                   <div
@@ -150,22 +151,25 @@ export function CommandPalette() {
                     data-index={i}
                     role="option"
                     aria-selected={i === active}
-                    className={cx('cx-palette__item', i === active && 'is-active')}
+                    className={cx('cx-palette__item', 'cursor-target', i === active && 'is-active')}
+                    data-cursor-label={`Fly to ${r.record.name}`}
                     onPointerMove={() => setActive(i)}
                     onClick={() => choose(r)}
                   >
+                    <span className="cx-palette__icon" aria-hidden="true"><Icon size={18} /></span>
                     <span className="cx-palette__name">{r.record.name}</span>
-                    <span className="cx-palette__meta">
-                      {r.record.tagline ?? kindLabel(r.record.kind)}
-                      {dist != null && <span className="cx-num">, {formatDistance(dist, { secondary: 'none', sigDigits: 3 })} away</span>}
+                    <span className="cx-palette__meta">{r.record.tagline ?? kindLabel(r.record.kind)}</span>
+                    <span className="cx-palette__side">
+                      {dist != null && <span className="cx-palette__dist cx-num">{formatDistance(dist, { secondary: 'none', sigDigits: 3 })}</span>}
+                      {ids.length > 0 && (
+                        <span className="cx-palette__ids">
+                          {ids.map(a => (
+                            <span key={a} className={IDENTIFIER.test(a) ? 'cx-id' : 'cx-palette__alias'}>{a}</span>
+                          ))}
+                        </span>
+                      )}
                     </span>
-                    {ids.length > 0 && (
-                      <span className="cx-palette__ids">
-                        {ids.map(a => (
-                          <span key={a} className={IDENTIFIER.test(a) ? 'cx-id' : 'cx-palette__alias'}>{a}</span>
-                        ))}
-                      </span>
-                    )}
+                    <CornerDownLeft className="cx-palette__go" size={16} aria-hidden />
                   </div>
                 );
               })}
@@ -173,8 +177,10 @@ export function CommandPalette() {
           ))}
         </div>
         <div className="cx-palette__foot" aria-hidden="true">
-          <span><Kbd keys={['ArrowUp', 'ArrowDown']} size="sm" /> move</span>
+          <span><Kbd keys="ArrowUp" size="sm" /><Kbd keys="ArrowDown" size="sm" /> choose</span>
           <span><Kbd keys="Enter" size="sm" /> fly there</span>
+          <span><Kbd keys="Escape" size="sm" /> close</span>
+          {flat.length > 0 && <span className="cx-palette__count cx-num">{flat.length} {flat.length === 1 ? 'result' : 'results'}</span>}
         </div>
       </div>
     </>

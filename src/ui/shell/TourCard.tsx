@@ -26,14 +26,20 @@ export function TourCard() {
     content = null;
   }
   const last = tour.step >= tour.count - 1;
+  const total = Math.max(tour.count, tour.step + 1);
   return (
     <section className="cx-tour" aria-label="Guided tour" aria-live="polite">
       <p className="cx-tour__meta">
         <Magnitude log10={content?.scaleLog10 ?? scale} />
         <span className="cx-tour__count cx-num">
-          Chapter {tour.step + 1} of {Math.max(tour.count, tour.step + 1)}
+          Chapter {tour.step + 1} of {total}
         </span>
       </p>
+      <ol className="cx-tour__progress" aria-hidden="true" style={{ ['--chapters' as string]: total }}>
+        {Array.from({ length: total }, (_, i) => (
+          <li key={i} className={i < tour.step ? 'is-done' : i === tour.step ? 'is-now' : undefined} />
+        ))}
+      </ol>
       <h1 className="cx-tour__title">{content?.title ?? 'Guided tour'}</h1>
       {content?.narration && <p className="cx-tour__narration">{content.narration}</p>}
       <div className="cx-tour__nav">

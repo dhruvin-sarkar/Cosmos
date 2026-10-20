@@ -10,6 +10,19 @@ import { EmptyState } from '../components/Misc';
 import { ProvenanceBadge, ProvenanceLegend } from '../components/Provenance';
 import { formatIsoAge, formatIsoDate } from '../format';
 
+/** Interface software and type that ship inside the app (all offline). */
+const INTERFACE_CREDITS: ReadonlyArray<{ name: string; by: string; licence: string; url: string }> = [
+  { name: 'Lock-on cursor', by: 'React Bits by David Haz, reactbits.dev (TargetCursor, ported to TypeScript)', licence: 'MIT + Commons Clause', url: 'https://reactbits.dev' },
+  { name: 'Bodoni Moda', by: 'The Bodoni Moda Project Authors', licence: 'SIL Open Font License 1.1', url: 'https://github.com/indestructible-type/Bodoni' },
+  { name: 'Mona Sans', by: 'GitHub', licence: 'SIL Open Font License 1.1', url: 'https://github.com/github/mona-sans' },
+  { name: 'Inter', by: 'Rasmus Andersson', licence: 'SIL Open Font License 1.1', url: 'https://rsms.me/inter/' },
+  { name: 'JetBrains Mono', by: 'JetBrains', licence: 'SIL Open Font License 1.1', url: 'https://www.jetbrains.com/lp/mono/' },
+  { name: 'Lucide icons', by: 'Lucide contributors', licence: 'ISC', url: 'https://lucide.dev' },
+];
+
+/** Long licence statements read as prose under the metadata grid instead of a cramped grid cell. */
+const LONG_LICENCE = 48;
+
 const KEYS: ReadonlyArray<{ group: string; items: ReadonlyArray<[string | string[], string]> }> = [
   { group: 'Travel', items: [['B', 'Solar System navigator'], ['0', 'The Sun'], ['1–8', 'Mercury to Neptune (9: Pluto)'], [['[', ']'], 'Previous or next moon'], [['Shift+[', 'Shift+]'], 'Previous or next planet']] },
   { group: 'Explore', items: [[['Ctrl+K', '/'], 'Search'], ['Escape', 'Close panel or clear selection'], ['H', 'Return home to Earth'], ['Backspace', 'Go back'], ['F', 'Follow the selected object']] },
@@ -33,7 +46,7 @@ export function HelpOverlay() {
   const open = useCosmos(s => s.ui.helpOpen);
   const store = useStoreApi();
   return (
-    <Sheet open={open} onClose={() => setUi(store, { helpOpen: false })} title="Help" side="center" modal>
+    <Sheet open={open} onClose={() => setUi(store, { helpOpen: false })} title="Help" side="center" modal width="min(1080px, calc(100vw - 48px))">
       <div className="cx-help">
         {KEYS.map(g => (
           <section key={g.group} className="cx-help__group">
@@ -91,6 +104,18 @@ export function SourcesPanel() {
         <input className="cx-input" type="search" placeholder="Filter by name, organisation or licence" value={q} onChange={e => setQ(e.target.value)} aria-label="Filter sources" />
         {manifest && list.length === 0 && <EmptyState title={`No source matches “${q}”`}>Try an organisation such as NASA or ESA.</EmptyState>}
         {!manifest && <EmptyState title="Source details unavailable">The manifest file is missing or still loading. Values still show their provenance glyphs.</EmptyState>}
+        <details className="cx-credits">
+          <summary className="cx-credits__summary">Interface credits: type, icons and the lock-on cursor</summary>
+          <ul className="cx-credits__list">
+            {INTERFACE_CREDITS.map(c => (
+              <li key={c.name} className="cx-credits__item">
+                <span className="cx-credits__name">{c.name}</span>
+                <span className="cx-credits__by">{c.by}</span>
+                <span className="cx-credits__lic">{c.licence}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
         <ul className="cx-sources__list">
           {list.map(d => (
             <li key={d.id} className="cx-source">
@@ -102,9 +127,15 @@ export function SourcesPanel() {
               <dl className="cx-source__meta">
                 <div><dt>Version</dt><dd className="cx-id">{d.version}</dd></div>
                 <div><dt>Retrieved</dt><dd className="cx-num">{formatIsoDate(d.retrieved)} ({formatIsoAge(d.retrieved)})</dd></div>
-                <div><dt>Licence</dt><dd>{d.licenseUrl ? <a href={d.licenseUrl} target="_blank" rel="noreferrer">{d.license}</a> : d.license}</dd></div>
+                {d.license.length <= LONG_LICENCE && <div><dt>Licence</dt><dd>{d.licenseUrl ? <a href={d.licenseUrl} target="_blank" rel="noreferrer">{d.license}</a> : d.license}</dd></div>}
                 <div><dt>Dataset id</dt><dd className="cx-id">{d.id}</dd></div>
               </dl>
+              {d.license.length > LONG_LICENCE && (
+                <p className="cx-source__lim">
+                  <span className="cx-source__k">Licence</span> {d.license}
+                  {d.licenseUrl && <> <a href={d.licenseUrl} target="_blank" rel="noreferrer">Licence terms</a></>}
+                </p>
+              )}
               <p className="cx-source__cite"><span className="cx-source__k">Cite as</span> {d.citation}</p>
               {d.limitations && <p className="cx-source__lim"><span className="cx-source__k">Limitations</span> {d.limitations}</p>}
             </li>

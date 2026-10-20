@@ -101,6 +101,10 @@ p {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
+/* Containers that only receive programmatic focus (dialogs, panels with tabindex -1) never show the ring. */
+[tabindex='-1']:focus-visible {
+  outline: none;
+}
 
 ::selection {
   background: oklch(0.85 0.1 88 / 0.34);

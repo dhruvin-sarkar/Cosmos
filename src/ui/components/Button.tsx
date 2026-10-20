@@ -32,7 +32,7 @@ export function Button({
     <button
       ref={ref}
       type={type}
-      className={cx('cx-btn', `cx-btn--${variant}`, `cx-btn--${size}`, block && 'cx-btn--block', className)}
+      className={cx('cx-btn', 'cursor-target', `cx-btn--${variant}`, `cx-btn--${size}`, block && 'cx-btn--block', className)}
       aria-pressed={pressed}
       aria-busy={loading || undefined}
       disabled={disabled}
@@ -74,7 +74,7 @@ export function IconButton({
       <button
         ref={ref}
         type={type}
-        className={cx('cx-icon-btn', `cx-icon-btn--${variant}`, `cx-icon-btn--${size}`, className)}
+        className={cx('cx-icon-btn', 'cursor-target', `cx-icon-btn--${variant}`, `cx-icon-btn--${size}`, className)}
         aria-label={label}
         aria-pressed={pressed}
         aria-keyshortcuts={firstShortcut ? spokenShortcut(firstShortcut) : undefined}

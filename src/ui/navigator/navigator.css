@@ -2,19 +2,20 @@
 
 .cx-nav {
   position: fixed;
-  top: calc(var(--topbar-h) + var(--sp-2));
+  top: calc(var(--hud-top) + var(--sp-2));
   left: var(--hud-gutter);
   z-index: var(--z-popover);
   width: min(400px, calc(100vw - 2 * var(--hud-gutter)));
-  max-height: calc(100vh - var(--topbar-h) - var(--bottom-h) - var(--sp-8));
+  max-height: calc(100vh - var(--hud-top) - var(--bottom-h) - var(--sp-8));
   display: flex;
   flex-direction: column;
-  background: var(--faceplate);
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-plate);
+  background: var(--popover);
+  box-shadow: var(--edge-strong);
+  border-radius: var(--r-panel);
+  overflow: hidden;
   color: var(--text-primary);
   pointer-events: auto;
-  animation: cx-nav-in var(--dur-base) var(--ease-out);
+  animation: cx-nav-in var(--dur-slow) var(--ease-settle);
 }
 @keyframes cx-nav-in {
   from { opacity: 0; transform: translateY(-8px); }
@@ -25,22 +26,29 @@
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+  min-height: 64px;
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-5);
   border-bottom: 1px solid var(--hairline);
 }
 .cx-nav__title {
   margin: 0;
-  font: 450 24px/1.05 var(--font-atlas);
+  font: 450 28px/1.05 var(--font-atlas);
   flex: none;
 }
-.cx-nav__hint {
+.cx-nav__spacer {
   flex: 1;
-  min-width: 0;
+}
+.cx-nav__hint {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4) 0;
+  border-top: 1px solid var(--hairline);
   font: var(--type-label);
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--text-tertiary);
+}
+.cx-nav__hint > span {
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -204,109 +212,18 @@
 .cx-nav__foot {
   margin: 0;
   padding: var(--sp-2) var(--sp-4) var(--sp-3);
-  border-top: 1px solid var(--hairline);
   font: var(--type-label);
   color: var(--text-tertiary);
   text-wrap: pretty;
 }
 
-/* Moon strip (above the bottom band) */
-/* Fixed band clear of the inspector column on both sides, so the strip never runs under the fact sheet. */
-.cx-moonstrip-band {
-  position: fixed;
-  left: calc(var(--inspector-w) + 2 * var(--hud-gutter));
-  right: calc(var(--inspector-w) + 2 * var(--hud-gutter));
-  bottom: calc(var(--bottom-h) + var(--sp-4));
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-}
-.cx-moonstrip {
-  position: relative;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-1);
-  max-width: 100%;
-  padding: 2px 6px;
-  background: oklch(0 0 0 / 0.72);
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-pill);
-  pointer-events: auto;
-}
-.cx-moonstrip ol {
-  min-width: 0;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  scroll-snap-type: x proximity;
-  scroll-padding-inline: 24px;
-}
-.cx-moonstrip li {
-  flex: none;
-  scroll-snap-align: center;
-}
-/* Fade an edge that has more pills behind it, so a clipped pill reads as "scroll for more", not a cut-off name. */
-.cx-moonstrip ol.fade-left {
-  mask-image: linear-gradient(to right, transparent 0, #000 32px);
-}
-.cx-moonstrip ol.fade-right {
-  mask-image: linear-gradient(to left, transparent 0, #000 32px);
-}
-.cx-moonstrip ol.fade-left.fade-right {
-  mask-image: linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%);
-}
-.cx-moonstrip__name {
-  max-width: 18ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.cx-moonstrip li.is-primary {
-  padding-right: 6px;
-  margin-right: 4px;
-  border-right: 1px solid var(--hairline);
-}
-.cx-moonstrip__item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: var(--hit);
-  padding: 0 10px 0 6px;
-  border-radius: var(--r-pill);
-  font: 450 13.5px/1 var(--font-ui);
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-.cx-moonstrip__item:hover,
-.cx-moonstrip__item:focus-visible {
-  color: var(--text-primary);
-  background: oklch(1 0 0 / 0.07);
-}
-.cx-moonstrip__item.is-here {
-  color: var(--text-primary);
-  box-shadow: inset 0 0 0 1px var(--accent);
-}
-.cx-moonstrip__key {
-  flex: none;
-  opacity: 0.7;
-  padding: 0 4px;
-}
+/* Moon strip: see src/styles/shell.css (bottom band). */
 
 [data-exhibition='true'] .cx-nav-row__name {
   font-size: 19px;
 }
-[data-exhibition='true'] .cx-nav-chip,
-[data-exhibition='true'] .cx-moonstrip__item {
+[data-exhibition='true'] .cx-nav-chip {
   font-size: 16.5px;
 }
 
-@media (max-width: 899px) {
-  .cx-moonstrip__key {
-    display: none;
-  }
-}
+

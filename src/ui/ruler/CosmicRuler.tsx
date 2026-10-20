@@ -70,7 +70,7 @@ export function CosmicRuler({ className }: { className?: string }) {
     if (items) {
       for (let i = 0; i < items.length; i++) {
         const dy = (s - LANDMARK_LOGS[i]) * ppdRef.current;
-        (items[i] as HTMLElement).classList.toggle('is-near', dy > -40 && dy < 64);
+        (items[i] as HTMLElement).classList.toggle('is-near', dy > -62 && dy < 70);
       }
     }
     const dot = dotRef.current;
@@ -205,6 +205,46 @@ export function CosmicRuler({ className }: { className?: string }) {
   const labelOffsets = useMemo(() => landmarkOffsets(LANDMARK_LOGS, ppd), [ppd]);
   const tourMarks = useMemo(() => (tourActive && tourCount > 1 ? Array.from({ length: tourCount }, (_, i) => i) : []), [tourActive, tourCount]);
 
+  // The slide (hundreds of ticks + landmarks) depends only on the layout: re-rendering it on every ~10 Hz scale update
+  // cost ~15 ms per update while travelling.
+  const goToLandmarkRef = useRef(goToLandmark);
+  goToLandmarkRef.current = goToLandmark;
+  const slideContent = useMemo(() => (
+    <>
+      <svg className="cx-ruler__ticks" width="64" height={RULER_MAX_LOG10 * ppd + 2} viewBox={`0 ${-RULER_MAX_LOG10 * ppd - 1} 64 ${RULER_MAX_LOG10 * ppd + 2}`} aria-hidden="true" style={{ top: -RULER_MAX_LOG10 * ppd - 1 }}>
+        <line x1="20" x2="20" y1={-RULER_MAX_LOG10 * ppd} y2="0" className="cx-ruler__spine" />
+        {ALL_TICKS.map(t => {
+          const y = -t.log10 * ppd;
+          const m = Math.round(10 ** (t.log10 - t.exponent));
+          const len = t.major ? 16 : m === 5 ? 9 : 5;
+          return <line key={t.log10} x1={20 - len} x2="20" y1={y} y2={y} className={t.major ? 'cx-ruler__major' : 'cx-ruler__minor'} />;
+        })}
+      </svg>
+      {ALL_TICKS.filter(t => t.major).map(t => (
+        <span key={t.exponent} className="cx-ruler__exp" style={{ top: -t.exponent * ppd }} aria-hidden="true">
+          10<sup>{String(t.exponent)}</sup>
+        </span>
+      ))}
+      {UNIT_BANDS.map(u => (
+        Math.abs(u.log10 - Math.round(u.log10)) * ppd < 16 ? null : (
+          <span key={u.id} className="cx-ruler__unit" style={{ top: -u.log10 * ppd }} title={u.name} aria-hidden="true">
+            {u.label}
+          </span>
+        )
+      ))}
+      <ul ref={landmarksRef} className="cx-ruler__landmarks" aria-label="Landmarks">
+        {RULER_LANDMARKS.map((l, i) => (
+          <li key={l.id} style={{ top: -LANDMARK_LOGS[i] * ppd }}>
+            <button type="button" className="cx-ruler__landmark" onClick={() => goToLandmarkRef.current(l)} title={l.note}>
+              <span className="cx-ruler__landmark-label" style={labelOffsets[i] ? { transform: `translateY(${labelOffsets[i]}px)` } : undefined}>{l.label}</span>
+              <span className="cx-ruler__landmark-tick" aria-hidden="true" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </>
+  ), [ppd, labelOffsets]);
+
   return (
     <div
       ref={rootRef}
@@ -219,37 +259,7 @@ export function CosmicRuler({ className }: { className?: string }) {
     >
       <div className="cx-ruler__window">
         <div ref={slideRef} className="cx-ruler__slide" style={{ transform: `translate3d(0, ${display.current * ppd}px, 0)` }}>
-          <svg className="cx-ruler__ticks" width="64" height={RULER_MAX_LOG10 * ppd + 2} viewBox={`0 ${-RULER_MAX_LOG10 * ppd - 1} 64 ${RULER_MAX_LOG10 * ppd + 2}`} aria-hidden="true" style={{ top: -RULER_MAX_LOG10 * ppd - 1 }}>
-            <line x1="20" x2="20" y1={-RULER_MAX_LOG10 * ppd} y2="0" className="cx-ruler__spine" />
-            {ALL_TICKS.map(t => {
-              const y = -t.log10 * ppd;
-              const m = Math.round(10 ** (t.log10 - t.exponent));
-              const len = t.major ? 16 : m === 5 ? 9 : 5;
-              return <line key={t.log10} x1={20 - len} x2="20" y1={y} y2={y} className={t.major ? 'cx-ruler__major' : 'cx-ruler__minor'} />;
-            })}
-          </svg>
-          {ALL_TICKS.filter(t => t.major).map(t => (
-            <span key={t.exponent} className="cx-ruler__exp" style={{ top: -t.exponent * ppd }} aria-hidden="true">
-              10<sup>{String(t.exponent)}</sup>
-            </span>
-          ))}
-          {UNIT_BANDS.map(u => (
-            Math.abs(u.log10 - Math.round(u.log10)) * ppd < 16 ? null : (
-              <span key={u.id} className="cx-ruler__unit" style={{ top: -u.log10 * ppd }} title={u.name} aria-hidden="true">
-                {u.label}
-              </span>
-            )
-          ))}
-          <ul ref={landmarksRef} className="cx-ruler__landmarks" aria-label="Landmarks">
-            {RULER_LANDMARKS.map((l, i) => (
-              <li key={l.id} style={{ top: -LANDMARK_LOGS[i] * ppd }}>
-                <button type="button" className="cx-ruler__landmark" onClick={() => goToLandmark(l)} title={l.note}>
-                  <span className="cx-ruler__landmark-label" style={labelOffsets[i] ? { transform: `translateY(${labelOffsets[i]}px)` } : undefined}>{l.label}</span>
-                  <span className="cx-ruler__landmark-tick" aria-hidden="true" />
-                </button>
-              </li>
-            ))}
-          </ul>
+          {slideContent}
         </div>
       </div>
 

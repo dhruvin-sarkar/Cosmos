@@ -4,7 +4,7 @@
  * with the cinematic camera. Opened from the top bar ("Planets", B).
  */
 import { useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { X } from 'lucide-react';
+import { Orbit, X } from 'lucide-react';
 import type { Entity } from '../../core/entity';
 import { useAppContext, useUiExtensions } from '../context';
 import { useInterval } from '../hooks';
@@ -119,7 +119,12 @@ function moveFocus(root: HTMLElement, dir: 1 | -1): void {
 }
 
 export function NavigatorPanel() {
-  const open = useNavigatorOpen();
+  // The tree and distances are only computed while the panel is open (closed, it re-rendered on every registry/travel change).
+  return useNavigatorOpen() ? <OpenNavigatorPanel /> : null;
+}
+
+function OpenNavigatorPanel() {
+  const open = true;
   const focus = useFocusFramed();
   const tree = useSystemTree();
   const focusId = useNavFocusId();
@@ -142,8 +147,6 @@ export function NavigatorPanel() {
     return () => window.removeEventListener('pointerdown', onDown, true);
   }, [open]);
 
-  if (!open) return null;
-
   const go = (id: string): void => {
     setNavigatorOpen(false);
     void focus(id);
@@ -165,9 +168,7 @@ export function NavigatorPanel() {
     <div ref={rootRef} className="cx-nav" role="dialog" aria-label="Solar System navigator" onKeyDown={onKeyDown}>
       <header className="cx-nav__head">
         <h2 className="cx-nav__title">Solar System</h2>
-        <span className="cx-nav__hint">
-          <Kbd keys="0" size="sm" />–<Kbd keys="9" size="sm" /> planets · <Kbd keys="[" size="sm" /><Kbd keys="]" size="sm" /> moons
-        </span>
+        <span className="cx-nav__spacer" />
         <button type="button" className="cx-nav__close" aria-label="Close navigator" onClick={() => setNavigatorOpen(false)}>
           <X size={18} aria-hidden />
         </button>
@@ -204,6 +205,11 @@ export function NavigatorPanel() {
           </section>
         )}
       </div>
+      <p className="cx-nav__hint" aria-hidden="true">
+        <span><Kbd keys="0" size="sm" />–<Kbd keys="9" size="sm" /> planets</span>
+        <span><Kbd keys="[" size="sm" /><Kbd keys="]" size="sm" /> moons</span>
+        <span><Kbd keys="Escape" size="sm" /> close</span>
+      </p>
       <p className="cx-nav__foot">
         {current ? `In the ${current.entity.name} system.` : 'Pick a world to fly there.'} Distances are from the camera; light-time is how long its light takes to reach you.
       </p>
@@ -218,12 +224,13 @@ export function NavigatorButton() {
     <Tooltip content="Travel to a planet or moon" shortcut="B" side="bottom">
       <button
         type="button"
-        className={cx('cx-bar-btn', 'cx-nav-trigger', open && 'is-on')}
+        className={cx('cx-bar-btn', 'cx-nav-trigger', 'cursor-target', open && 'is-on')}
         aria-expanded={open}
         aria-haspopup="dialog"
         onClick={() => setNavigatorOpen(!open)}
       >
-        Planets
+        <Orbit size={18} aria-hidden className="cx-bar-btn__icon" />
+        <span className="cx-bar-btn__label">Planets</span>
       </button>
     </Tooltip>
   );

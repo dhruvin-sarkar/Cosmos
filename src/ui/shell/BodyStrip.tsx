@@ -6,10 +6,12 @@ import { useFocusFramed } from '../navigator/framing';
 import { useUiExtensions } from '../context';
 import { cx, useElementWidth } from '../lib/dom';
 import { MoonStrip } from '../navigator/MoonStrip';
+import { Thumb } from '../navigator/Navigator';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const SOLAR_BODIES = ['sol:mercury', 'sol:venus', 'sol:earth', 'sol:mars', 'sol:jupiter', 'sol:saturn', 'sol:uranus', 'sol:neptune'];
 const PRIMARY_KINDS = new Set(['star', 'stellar-system', 'black-hole']);
-const MIN_GAP_PX = 84;
+const MIN_GAP_PX = 92;
 const DAY_MS = 86_400_000;
 
 /** The system whose bodies the strip shows: the focus itself when it is a star, else the nearest star ancestor. */
@@ -94,27 +96,52 @@ export function BodyStrip() {
   return (
     <nav className="cx-strip" aria-label="Bodies in this system">
       <MoonStrip />
-      <button type="button" className="cx-strip__step" disabled={!prev} onClick={() => prev && void focus(prev.entity.id)} aria-label={prev ? `Previous: ${prev.entity.name}` : 'No previous body'}>
-        {prev ? `‹ ${prev.entity.name}` : ''}
-      </button>
-      <ol ref={trackRef} className="cx-strip__track">
-        <span className="cx-strip__axis" aria-hidden="true" />
-        {bodies.map((b, i) => (
-          <li key={b.entity.id} style={{ left: `${(positions[i] ?? 0) * 100}%` }}>
-            <button
-              type="button"
-              className={cx('cx-strip__body', i === focusIndex && 'is-focus')}
-              aria-current={i === focusIndex ? 'true' : undefined}
-              onClick={() => void focus(b.entity.id)}
-            >
-              {b.entity.name}
-            </button>
-          </li>
-        ))}
-      </ol>
-      <button type="button" className="cx-strip__step cx-strip__step--next" disabled={!next} onClick={() => next && void focus(next.entity.id)} aria-label={next ? `Next: ${next.entity.name}` : 'No next body'}>
-        {next ? `${next.entity.name} ›` : ''}
-      </button>
+      <div className="cx-rail">
+        <button
+          type="button"
+          className="cx-rail__step cursor-target"
+          disabled={!prev}
+          data-cursor-label={prev ? `Fly to ${prev.entity.name}` : undefined}
+          onClick={() => prev && void focus(prev.entity.id)}
+          aria-label={prev ? `Previous: ${prev.entity.name}` : 'No previous body'}
+        >
+          <ChevronLeft size={18} aria-hidden />
+          <span className="cx-rail__step-name">{prev?.entity.name ?? ''}</span>
+        </button>
+        <ol ref={trackRef} className="cx-rail__track">
+          <span className="cx-rail__axis" aria-hidden="true" />
+          {bodies.map((b, i) => {
+            const here = i === focusIndex;
+            return (
+              <li key={b.entity.id} style={{ left: `${(positions[i] ?? 0) * 100}%` }}>
+                <button
+                  type="button"
+                  className={cx('cx-rail__body', 'cursor-target', here && 'is-focus')}
+                  aria-current={here ? 'true' : undefined}
+                  data-cursor-label={here ? undefined : `Fly to ${b.entity.name}`}
+                  onClick={() => void focus(b.entity.id)}
+                >
+                  <span className="cx-rail__mark" aria-hidden="true">
+                    <Thumb entity={b.entity} size={here ? 26 : 18} />
+                  </span>
+                  <span className="cx-rail__name">{b.entity.name}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+        <button
+          type="button"
+          className="cx-rail__step cx-rail__step--next cursor-target"
+          disabled={!next}
+          data-cursor-label={next ? `Fly to ${next.entity.name}` : undefined}
+          onClick={() => next && void focus(next.entity.id)}
+          aria-label={next ? `Next: ${next.entity.name}` : 'No next body'}
+        >
+          <span className="cx-rail__step-name">{next?.entity.name ?? ''}</span>
+          <ChevronRight size={18} aria-hidden />
+        </button>
+      </div>
     </nav>
   );
 }

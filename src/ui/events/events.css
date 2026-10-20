@@ -2,11 +2,11 @@
 
 .cx-ev {
   position: fixed;
-  top: calc(var(--topbar-h) + var(--sp-2));
+  top: calc(var(--hud-top) + var(--sp-2));
   left: var(--hud-gutter);
   z-index: var(--z-popover);
   width: min(460px, calc(100vw - 2 * var(--hud-gutter)));
-  max-height: calc(100vh - var(--topbar-h) - var(--bottom-h) - var(--sp-8));
+  max-height: calc(100vh - var(--hud-top) - var(--bottom-h) - var(--sp-8));
   display: flex;
   flex-direction: column;
   background: var(--faceplate);
@@ -234,7 +234,7 @@
 /* Caption after "Show me": type on a faceplate, top-left, out of the subject's way. */
 .cx-ev-caption {
   position: fixed;
-  top: calc(var(--topbar-h) + var(--sp-2));
+  top: calc(var(--hud-top) + var(--sp-2));
   left: var(--hud-gutter);
   z-index: var(--z-hud-raised);
   width: min(380px, calc(100vw - 2 * var(--hud-gutter)));

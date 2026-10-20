@@ -17,8 +17,9 @@ export function BootScreen() {
   return (
     <div className={cx('cx-boot', visible && 'is-visible')} role={failed || unsupported ? 'alert' : 'status'} aria-live="polite" aria-busy={!failed && !unsupported}>
       <div className="cx-boot__mark">
+        <span className="cx-boot__orbit" aria-hidden="true" />
         <h1 className="cx-boot__word">Cosmos</h1>
-        <p className="cx-boot__sub">AstroNexus</p>
+        <p className="cx-boot__sub">AstroNexus · SCI-FORGE 2026</p>
       </div>
       {unsupported ? (
         <div className="cx-boot__msg">

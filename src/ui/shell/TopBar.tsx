@@ -1,7 +1,8 @@
 import { useRef, useState, type ReactNode } from 'react';
-import { Search } from 'lucide-react';
+import { BookOpen, CircleHelp, Layers, Route, Search, SlidersHorizontal, Waves } from 'lucide-react';
 import { useCommands, useCosmos, useCosmosShallow, setUi, useStoreApi } from '../hooks';
 import { cx } from '../lib/dom';
+import type { IconComponent } from '../icons';
 import { Kbd } from '../components/Kbd';
 import { Popover } from '../components/Popover';
 import { Tooltip } from '../components/Tooltip';
@@ -11,10 +12,15 @@ import { NavigatorButton, NavigatorHost } from '../navigator/Navigator';
 import { useFocusFramed } from '../navigator/framing';
 import { ScaleToggle } from './ScaleToggle';
 import { SkyEvents } from '../events/SkyEvents';
+import { TimeControls } from './TimeControls';
 
 /** Default guided tour started by the Tour button (the tours module registers it under this id). */
 export const DEFAULT_TOUR_ID = 'golden-journey';
 
+/**
+ * The focus chain, zooming out to the left. Long chains collapse their middle segments (CSS container query on
+ * .cx-topbar__lead) behind an ellipsis; the Planets navigator and the ruler still reach every level.
+ */
 function Breadcrumb() {
   const crumbs = useCosmos(s => s.view.breadcrumb);
   const focus = useFocusFramed();
@@ -24,15 +30,26 @@ function Breadcrumb() {
       <ol>
         {crumbs.map((c, i) => {
           const last = i === crumbs.length - 1;
+          const middle = i > 0 && i < crumbs.length - 2;
           return (
-            <li key={c.id}>
+            <li key={c.id} className={cx(i === 0 && 'is-root', middle && 'is-middle', last && 'is-here')}>
               {i > 0 && <span className="cx-crumbs__sep" aria-hidden="true">/</span>}
               {last ? (
                 <span className="cx-crumbs__here" aria-current="location">{c.name}</span>
               ) : (
-                <button type="button" className="cx-crumbs__link" onClick={() => void focus(c.id)}>
+                <button
+                  type="button"
+                  className="cx-crumbs__link cursor-target"
+                  data-cursor-label={`Zoom out to ${c.name}`}
+                  onClick={() => void focus(c.id)}
+                >
                   {c.name}
                 </button>
+              )}
+              {i === 0 && crumbs.length > 3 && (
+                <span className="cx-crumbs__more" aria-hidden="true">
+                  <span className="cx-crumbs__sep">/</span>…
+                </span>
               )}
             </li>
           );
@@ -42,35 +59,47 @@ function Breadcrumb() {
   );
 }
 
-function BarButton({
-  label, shortcut, pressed, expanded, onClick, buttonRef, children,
+export function BarButton({
+  label, tooltip, shortcut, icon: Icon, iconOnly, pressed, expanded, onClick, buttonRef, children, className,
 }: {
   label: string;
+  /** Longer tooltip text (defaults to the label). */
+  tooltip?: ReactNode;
   shortcut?: string;
+  icon?: IconComponent;
+  /** Utility buttons show only their icon; the label stays the accessible name and the tooltip. */
+  iconOnly?: boolean;
   pressed?: boolean;
   expanded?: boolean;
   onClick(): void;
   buttonRef?: React.Ref<HTMLButtonElement>;
   children?: ReactNode;
+  className?: string;
 }) {
   return (
-    <Tooltip content={label} shortcut={shortcut} side="bottom">
+    <Tooltip content={tooltip ?? label} shortcut={shortcut} side="bottom">
       <button
         ref={buttonRef}
         type="button"
-        className={cx('cx-bar-btn', (pressed || expanded) && 'is-on')}
+        className={cx('cx-bar-btn', 'cursor-target', iconOnly && 'cx-bar-btn--icon', (pressed || expanded) && 'is-on', className)}
         aria-pressed={pressed}
         aria-expanded={expanded}
         aria-haspopup={expanded != null ? 'dialog' : undefined}
+        aria-label={iconOnly ? label : undefined}
         onClick={onClick}
       >
-        {children ?? label}
+        {Icon && <Icon size={18} aria-hidden className="cx-bar-btn__icon" />}
+        {!iconOnly && <span className="cx-bar-btn__label">{children ?? label}</span>}
       </button>
     </Tooltip>
   );
 }
 
-/** Top band: focus-chain breadcrumb (left), search (centre), view menus (right). */
+/**
+ * Top band. Left: where you are (breadcrumb) and when (the time capsule beneath it). Centre: search. Right: the
+ * always-visible scale disclosure and one toolbar grouped as travel (Planets, What's up), view (Layers, Light, Tour)
+ * and utilities (Sources, Settings, Help as icons with tooltips).
+ */
 export function TopBar({ tourId = DEFAULT_TOUR_ID }: { tourId?: string }) {
   const store = useStoreApi();
   const commands = useCommands();
@@ -83,24 +112,80 @@ export function TopBar({ tourId = DEFAULT_TOUR_ID }: { tourId?: string }) {
 
   return (
     <header className="cx-topbar">
-      <Breadcrumb />
-      <button type="button" className="cx-search-trigger" onClick={() => setUi(store, { searchOpen: true })} aria-keyshortcuts="Control+K /">
-        <Search size={16} aria-hidden />
-        <span className="cx-search-trigger__text">Search</span>
+      <div className="cx-topbar__lead">
+        <Breadcrumb />
+        <TimeControls />
+      </div>
+      <button
+        type="button"
+        className="cx-search-trigger cursor-target"
+        data-cursor-label="Search"
+        onClick={() => setUi(store, { searchOpen: true })}
+        aria-keyshortcuts="Control+K /"
+      >
+        <Search size={18} aria-hidden />
+        <span className="cx-search-trigger__text">Search planets, moons and stars</span>
         <Kbd keys="Ctrl+K" size="sm" />
       </button>
       <div className="cx-topbar__right">
         <ScaleToggle />
-        <NavigatorButton />
-        <SkyEvents />
-        <BarButton label="Layers" shortcut="Shift+L" expanded={menu === 'layers'} buttonRef={layersRef} onClick={() => setMenu(m => (m === 'layers' ? null : 'layers'))} />
-        <BarButton label="Light" expanded={menu === 'light'} buttonRef={lightRef} onClick={() => setMenu(m => (m === 'light' ? null : 'light'))}>
-          Light{band !== 'visible' && <span className="cx-bar-btn__value">{bandInfo(band).short}</span>}
-        </BarButton>
-        <BarButton label={tourActive ? 'Exit tour' : 'Tour'} shortcut="T" pressed={tourActive} onClick={() => (tourActive ? commands.exitTour() : commands.startTour(tourId))} />
-        <BarButton label="Sources" pressed={ui.sources} onClick={() => setUi(store, { sourcesOpen: !ui.sources, settingsOpen: false, helpOpen: false })} />
-        <BarButton label="Settings" pressed={ui.settings} onClick={() => setUi(store, { settingsOpen: !ui.settings, sourcesOpen: false, helpOpen: false })} />
-        <BarButton label="Help" shortcut="?" pressed={ui.help} onClick={() => setUi(store, { helpOpen: !ui.help, sourcesOpen: false, settingsOpen: false })} />
+        <div className="cx-toolbar" role="group" aria-label="Explore and view">
+          <NavigatorButton />
+          <SkyEvents />
+          <span className="cx-toolbar__sep" aria-hidden="true" />
+          <BarButton
+            label="Layers"
+            tooltip="Layers: orbits, labels and overlays"
+            icon={Layers}
+            shortcut="Shift+L"
+            expanded={menu === 'layers'}
+            buttonRef={layersRef}
+            onClick={() => setMenu(m => (m === 'layers' ? null : 'layers'))}
+          />
+          <BarButton
+            label="Light"
+            tooltip="Light: see the sky in other wavelengths"
+            icon={Waves}
+            expanded={menu === 'light'}
+            buttonRef={lightRef}
+            onClick={() => setMenu(m => (m === 'light' ? null : 'light'))}
+          >
+            Light{band !== 'visible' && <span className="cx-bar-btn__value">{bandInfo(band).short}</span>}
+          </BarButton>
+          <BarButton
+            label={tourActive ? 'Exit tour' : 'Tour'}
+            tooltip={tourActive ? 'Exit the guided tour' : 'Start the guided tour'}
+            icon={Route}
+            shortcut="T"
+            pressed={tourActive}
+            onClick={() => (tourActive ? commands.exitTour() : commands.startTour(tourId))}
+          />
+          <span className="cx-toolbar__sep" aria-hidden="true" />
+          <BarButton
+            label="Sources"
+            tooltip="Sources and credits"
+            icon={BookOpen}
+            iconOnly
+            pressed={ui.sources}
+            onClick={() => setUi(store, { sourcesOpen: !ui.sources, settingsOpen: false, helpOpen: false })}
+          />
+          <BarButton
+            label="Settings"
+            icon={SlidersHorizontal}
+            iconOnly
+            pressed={ui.settings}
+            onClick={() => setUi(store, { settingsOpen: !ui.settings, sourcesOpen: false, helpOpen: false })}
+          />
+          <BarButton
+            label="Help"
+            tooltip="Help and keyboard shortcuts"
+            icon={CircleHelp}
+            iconOnly
+            shortcut="?"
+            pressed={ui.help}
+            onClick={() => setUi(store, { helpOpen: !ui.help, sourcesOpen: false, settingsOpen: false })}
+          />
+        </div>
       </div>
       <Popover open={menu === 'layers'} onClose={() => setMenu(null)} anchorRef={layersRef} label="Layers" className="cx-popover--layers">
         <LayersPanel />

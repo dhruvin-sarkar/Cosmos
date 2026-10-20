@@ -5,7 +5,6 @@ import { useCommands, useCosmos, useStoreApi } from './hooks';
 import { cx } from './lib/dom';
 import { TopBar, DEFAULT_TOUR_ID } from './shell/TopBar';
 import { CommandPalette } from './shell/CommandPalette';
-import { TimeControls } from './shell/TimeControls';
 import { BodyStrip } from './shell/BodyStrip';
 import { TourCard } from './shell/TourCard';
 import { SelectionReticle } from './shell/SelectionReticle';
@@ -18,6 +17,7 @@ import { Inspector } from './inspector/Inspector';
 import { LabDrawer } from './labs/LabDrawer';
 import { NoticeToasts } from './components/Misc';
 import { Button } from './components/Button';
+import { CosmosCursor } from './cursor/CosmosCursor';
 
 export interface CosmosAppProps {
   ctx: AppContextValue;
@@ -59,7 +59,12 @@ function Hud({ tourId }: { tourId: string }) {
   const selected = useCosmos(s => s.selection.id != null);
   const touring = useCosmos(s => s.tour.activeId != null);
   const reduced = useCosmos(s => s.ui.reducedMotion);
-  const [exhibition, setExhibition] = useState(() => readPref('cosmos.exhibition', 'false', ['true', 'false']) === 'true');
+  // A kiosk can force exhibition sizing from its start URL (?exhibition=1); otherwise the saved preference wins.
+  const [exhibition, setExhibition] = useState(() => {
+    const flag = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('exhibition') : null;
+    if (flag != null) return flag === '' || flag === '1' || flag === 'true';
+    return readPref('cosmos.exhibition', 'false', ['true', 'false']) === 'true';
+  });
   const [density, setDensity] = useState<Density>(() => readPref<Density>('cosmos.labelDensity', 'normal', ['low', 'normal', 'high']));
 
   useEffect(() => {
@@ -86,7 +91,6 @@ function Hud({ tourId }: { tourId: string }) {
       </div>
       <CosmicRuler className="cx-hud__ruler" />
       <footer className="cx-bottom">
-        <TimeControls />
         <BodyStrip />
         {touring && column !== 'tour' && (
           <Button variant="secondary" className="cx-return-demo" onClick={() => { commands.select(null); commands.tourRestartStep(); }}>
@@ -124,6 +128,7 @@ export function CosmosApp({ ctx, extensions, viewportRef, tourId = DEFAULT_TOUR_
         {backdrop}
         <Hud tourId={tourId} />
         <BootScreen />
+        <CosmosCursor />
       </div>
     </AppContextProvider>
   );

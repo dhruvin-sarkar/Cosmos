@@ -90,7 +90,14 @@
   --scrim-bottom: linear-gradient(0deg, oklch(0 0 0 / 0.7) 0, oklch(0 0 0 / 0.56) 40px, oklch(0 0 0 / 0.34) 84px, oklch(0 0 0 / 0.15) 124px, oklch(0 0 0 / 0.04) 156px, oklch(0 0 0 / 0) 180px);
   --scrim-top: linear-gradient(180deg, oklch(0 0 0 / 0.66) 0, oklch(0 0 0 / 0.5) 30px, oklch(0 0 0 / 0.28) 62px, oklch(0 0 0 / 0.11) 94px, oklch(0 0 0 / 0.03) 118px, oklch(0 0 0 / 0) 136px);
   --faceplate: oklch(0.13 0 0 / 0.94);
-  --popover: oklch(0.17 0 0 / 0.98);
+  --popover: oklch(0.155 0 0 / 0.97);
+  /* Instrument capsules floating on the sky: dark enough for AA text over a sunlit limb, never frosted. */
+  --capsule: oklch(0.11 0 0 / 0.84);
+  --capsule-hover: oklch(0.16 0 0 / 0.9);
+  /* Machined edge: a hairline ring plus a faint top highlight (no drop shadows, they do not read on black). */
+  --edge: inset 0 0 0 1px oklch(1 0 0 / 0.1), inset 0 1px 0 oklch(1 0 0 / 0.05);
+  --edge-strong: inset 0 0 0 1px oklch(1 0 0 / 0.16), inset 0 1px 0 oklch(1 0 0 / 0.07);
+  --edge-accent: inset 0 0 0 1px oklch(0.85 0.1 88 / 0.75);
   --surface-panel: var(--faceplate);
   --surface-sheet: var(--faceplate);
   --surface-raised: var(--popover);
@@ -104,13 +111,16 @@
   --panel-blur: none;
 
   /* ── Radius hierarchy ──────────────────────────────────────────────────────────────────── */
+  /* Concentric hierarchy (docs/design/UI_SYSTEM.md): capsules for floating controls, 14 px panels, 8 px rows and
+     inputs inside them (panel radius minus its 6 px inset), 4 px for small marks. Scrims and rules stay square. */
   --r-0: 0;
-  --r-plate: 2px; /* faceplates, cards, inputs */
-  --r-xs: 2px;
-  --r-sm: 2px;
-  --r-md: 2px;
-  --r-lg: 2px;
-  --r-pill: 999px; /* chips, segmented selectors, body-strip pill */
+  --r-panel: 14px; /* popovers, palette, navigator, dialogs, lab plates */
+  --r-plate: 8px; /* cards, inputs, rows inside a panel */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 14px;
+  --r-pill: 999px; /* capsules: toolbar, time, strips, chips, segmented selectors */
   --r-round: 50%; /* circular transport buttons */
 
   /* ── Engine DOM labels (read by the core LabelManager) ────────────────────────────────── */
@@ -127,11 +137,12 @@
 
   /* ── Four voices ───────────────────────────────────────────────────────────────────────── */
   --font-atlas: 'Bodoni Moda Variable', 'Bodoni Moda', Didot, 'Bodoni 72', serif;
-  --font-ui: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-experiment: 'Mona Sans Variable', 'Mona Sans', var(--font-ui);
+  /* Instrument: Mona Sans (self-hosted, public/fonts). Inter Variable fills Greek and Cyrillic (Bayer letters). */
+  --font-ui: 'Mona Sans Variable', 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-experiment: 'Mona Sans Variable', 'Inter Variable', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
   /* cv05 / cv08 separate l, I and 1 in catalogue names ("TRAPPIST-1 l"). */
-  --font-features-ui: 'cv05' 1, 'cv08' 1, 'calt' 1;
+  --font-features-ui: 'calt' 1, 'kern' 1;
 
   /* Type scale (reference 1920 × 1080; fluid between 1280 and 3840 px). font shorthand: weight size/line family */
   --type-atlas-xl: 400 clamp(72px, 6.2vw, 128px) / 0.95 var(--font-atlas);
@@ -213,6 +224,8 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+  /* Weighted settle for panels and the rail (no overshoot). */
+  --ease-settle: cubic-bezier(0.32, 0.72, 0, 1);
   --enter-shift: 24px;
 
   /* ── Layers ────────────────────────────────────────────────────────────────────────────── */
@@ -227,10 +240,14 @@
   --z-tooltip: 60;
   --z-debug: 70;
   --z-boot: 80;
+  --z-cursor: 90;
 
   /* ── Layout ────────────────────────────────────────────────────────────────────────────── */
-  --topbar-h: 48px;
-  --bottom-h: 72px;
+  --topbar-h: 64px;
+  --timebar-h: 44px; /* the time capsule under the breadcrumb */
+  /* Where left-column content (inspector, labs, tour, navigator) starts: under the time capsule. */
+  --hud-top: calc(var(--topbar-h) + var(--timebar-h) + 8px);
+  --bottom-h: 84px;
   --inspector-w: var(--column-w);
   --lab-w: 520px;
 
@@ -251,6 +268,9 @@
   --type-mono: 400 15.5px / 1.3 var(--font-mono);
   --hit: 56px;
   --control-md: 56px;
+  --topbar-h: 76px;
+  --timebar-h: 56px;
+  --bottom-h: 100px;
   --cosmos-label-size: 16px;
 }
 
