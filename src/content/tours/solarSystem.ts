@@ -19,13 +19,3 @@ export const SOLAR_SYSTEM_TOUR: Tour = {
   ],
 };
 
-/**
- * The exhibition's golden journey (TopBar's Tour button, id 'golden-journey'). Its first part is the Solar System
- * tour; chapters beyond (nearby stars, exoplanets, the Milky Way, galaxies, the CMB) append here as they land.
- */
-export const GOLDEN_JOURNEY: Tour = {
-  ...SOLAR_SYSTEM_TOUR,
-  id: 'golden-journey',
-  title: 'The golden journey',
-  description: 'Part one: the Solar System, from Earth to Voyager 1 at the edge of interstellar space.',
-};

@@ -13,7 +13,7 @@ export const TIME_RATE_STEPS: readonly number[] = (() => {
   return [...up.slice().reverse().map(r => -r), ...up];
 })();
 
-export const DEFAULT_TOUR_ID = 'solar-system';
+export const DEFAULT_TOUR_ID = 'golden-journey';
 
 const SPECTRAL_KEYS: Record<string, SpectralBandId> = { '1': 'visible', '2': 'near-infrared', '3': 'x-ray', '4': 'cmb' };
 

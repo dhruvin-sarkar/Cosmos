@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { findAlignmentTime, tourViewDirection, type TourPositionSource } from '../../app/tours';
+import { GOLDEN_JOURNEY } from './goldenJourney';
 import { QUICK_TOUR } from './quick';
 import { SOLAR_SYSTEM_TOUR } from './solarSystem';
 
@@ -53,10 +54,29 @@ describe('tour content', () => {
     expect(QUICK_TOUR.steps).toHaveLength(6);
   });
 
-  it('every chapter has a unique id and 2-5 sentences of narration', () => {
-    const ids = new Set(SOLAR_SYSTEM_TOUR.steps.map(s => s.id));
-    expect(ids.size).toBe(SOLAR_SYSTEM_TOUR.steps.length);
-    for (const s of SOLAR_SYSTEM_TOUR.steps) {
+  it('has the golden journey (16-24 chapters) from Earth to the CMB and back home', () => {
+    expect(GOLDEN_JOURNEY.id).toBe('golden-journey');
+    expect(SOLAR_SYSTEM_TOUR.id).toBe('solar-system');
+    expect(GOLDEN_JOURNEY.steps.length).toBeGreaterThanOrEqual(16);
+    expect(GOLDEN_JOURNEY.steps.length).toBeLessThanOrEqual(24);
+    const ids = GOLDEN_JOURNEY.steps.map(s => s.id);
+    expect(ids[0]).toBe('earth');
+    expect(ids.at(-1)).toBe('home');
+    expect(ids.indexOf('cmb')).toBe(ids.length - 2);
+    // The four lab moments.
+    const labs = GOLDEN_JOURNEY.steps.flatMap(s => s.actions).flatMap(a => (a.type === 'lab' && a.lab ? [a.lab] : []));
+    expect(new Set(labs)).toEqual(new Set(['debris', 'defense', 'habitability', 'relativity']));
+    // Every chapter closes the previous chapter's lab.
+    expect(GOLDEN_JOURNEY.baseline).toContainEqual({ type: 'lab', lab: null });
+  });
+
+  it.each([
+    ['solar-system', SOLAR_SYSTEM_TOUR],
+    ['golden-journey', GOLDEN_JOURNEY],
+  ] as const)('%s: every chapter has a unique id and 2-5 sentences of narration', (_, tour) => {
+    const ids = new Set(tour.steps.map(s => s.id));
+    expect(ids.size).toBe(tour.steps.length);
+    for (const s of tour.steps) {
       const sentences = s.narration.split(/[.!?](?:\s|$)/).filter(x => x.trim().length > 0).length;
       expect(sentences, s.id).toBeGreaterThanOrEqual(2);
       expect(sentences, s.id).toBeLessThanOrEqual(5);

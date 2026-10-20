@@ -59,7 +59,12 @@ export type TourAction =
    * Orbit-frame the anchor looking down the orbit normal of `satelliteId` around it (both bodies and the
    * satellite's orbit in view), tipped `tiltDeg` toward the Sun so the sunlit hemisphere faces the camera.
    */
-  | { type: 'view-orbit-normal'; anchorId: string; satelliteId: string; distanceM: number; tiltDeg?: number; durationSec?: number };
+  | { type: 'view-orbit-normal'; anchorId: string; satelliteId: string; distanceM: number; tiltDeg?: number; durationSec?: number }
+  /**
+   * A camera view computed when the action runs (e.g. a domain's named view built from its own frame, such as the
+   * galaxy's face-on view). Null (frame not ready) falls back to focusing `fallbackId` when given.
+   */
+  | { type: 'view'; view: () => CameraViewState | null; fallbackId?: string; durationSec?: number };
 
 export interface TourStep {
   id: string;
@@ -325,6 +330,15 @@ export function createTourRunner(opts: {
       case 'view-from':
         if (!opts.setView) return;
         return settle(opts.setView(eclipticViewFrom(action.anchorId, action.distanceM, action.elevationDeg, action.azimuthDeg), { durationSec: action.durationSec }), wait);
+      case 'view': {
+        let v: CameraViewState | null = null;
+        try { v = action.view(); } catch (err) { console.warn('[cosmos] tour view failed', err); }
+        if (!v || !opts.setView) {
+          if (action.fallbackId) return settle(c.focus(action.fallbackId, { durationSec: action.durationSec }), wait);
+          return;
+        }
+        return settle(opts.setView(v, { durationSec: action.durationSec }), wait);
+      }
       case 'view-phase':
       case 'view-toward':
       case 'view-orbit-normal': {
@@ -409,5 +423,6 @@ export function createTourRunner(opts: {
   };
 }
 
-export { SOLAR_SYSTEM_TOUR, GOLDEN_JOURNEY } from '../content/tours/solarSystem';
+export { SOLAR_SYSTEM_TOUR } from '../content/tours/solarSystem';
+export { GOLDEN_JOURNEY } from '../content/tours/goldenJourney';
 export { QUICK_TOUR } from '../content/tours/quick';
