@@ -1,0 +1,351 @@
+/* Habitability lab + exoplanet explorer (src/labs/habitability). Scoped under .hab-* ; chart primitives from ../debris/debris.css (.dl-*). */
+/* The visualization renders in the shell's viewport, outside .hab-lab: keep its tokens global. */
+:root {
+  --hab-hz-con: oklch(0.62 0.12 150 / 0.55);
+  --hab-hz-opt: oklch(0.62 0.12 150 / 0.22);
+}
+.hab-mode {
+  margin-bottom: var(--sp-3);
+}
+.hab-lede {
+  margin: 0 0 var(--sp-3);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+.hab-src {
+  margin: var(--sp-2) 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-tertiary);
+}
+.hab-subhead {
+  margin: var(--sp-3) 0 var(--sp-1);
+  font: 600 12px/1.2 var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.hab-unknown,
+.hab-est {
+  color: var(--text-tertiary);
+}
+.hab-est {
+  font-size: 11px;
+}
+
+/* Fields */
+.hab-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hab-field__label {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+.hab-select {
+  appearance: none;
+  width: 100%;
+  padding: 7px 28px 7px 10px;
+  border: 1px solid oklch(1 0 0 / 0.16);
+  border-radius: var(--r-plate);
+  background: var(--surface-inset) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23bebebe'/%3E%3C/svg%3E") no-repeat right 10px center;
+  color: var(--text-primary);
+  font: 450 13px/1.3 var(--font-ui);
+}
+.hab-select:focus-visible {
+  outline: 2px solid var(--brass, oklch(0.85 0.1 88));
+  outline-offset: 1px;
+}
+.hab-select option {
+  background: var(--surface-solid);
+}
+
+/* Search + hits */
+.hab-search {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px 10px;
+  border: 1px solid oklch(1 0 0 / 0.16);
+  border-radius: var(--r-plate);
+  background: var(--surface-inset);
+  color: var(--text-tertiary);
+}
+.hab-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: 450 13px/1.3 var(--font-ui);
+  outline: none;
+}
+.hab-hits,
+.hab-showcase {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hab-showcase {
+  max-height: 260px;
+  overflow-y: auto;
+}
+.hab-hit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--r-plate);
+  background: transparent;
+  color: var(--text-primary);
+  font: 450 13px/1.3 var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+}
+.hab-hit:hover,
+.hab-hit:focus-visible {
+  background: var(--surface-hover);
+  outline: none;
+}
+.hab-hit__detail {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.hab-card {
+  padding: var(--sp-3);
+  border: 1px solid oklch(1 0 0 / 0.12);
+  border-radius: var(--r-plate);
+  background: oklch(1 0 0 / 0.03);
+}
+.hab-card__title {
+  margin: 0 0 var(--sp-2);
+  font: 600 14px/1.2 var(--font-ui);
+  color: var(--text-primary);
+}
+.hab-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+/* Method legend */
+.hab-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px var(--sp-2);
+}
+.hab-legend__item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: var(--r-plate);
+  background: transparent;
+  color: var(--text-secondary);
+  font: 450 12.5px/1.2 var(--font-ui);
+  cursor: pointer;
+  text-align: left;
+}
+.hab-legend__item:hover {
+  background: var(--surface-hover);
+}
+.hab-legend__item[aria-pressed='false'] {
+  opacity: 0.4;
+}
+.hab-legend__sw {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.hab-legend__n {
+  margin-left: auto;
+  color: var(--text-tertiary);
+}
+
+/* Visualization viewport */
+.hab-viz {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-3) var(--sp-4);
+  /* Opaque plate: the viewport sits over the live 3-D scene. */
+  background: oklch(0.07 0 0 / 0.94);
+  border-radius: var(--r-plate);
+}
+.hab-viz__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.hab-viz__title {
+  margin: 0;
+  font: 600 15px/1.3 var(--font-ui);
+  color: var(--text-primary);
+}
+.hab-viz__sub {
+  font-weight: 450;
+  color: var(--modified);
+}
+.hab-viz__cap {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-tertiary);
+}
+.hab-chart {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 260px;
+}
+.hab-chart--short {
+  flex: none;
+  height: 150px;
+  min-height: 150px;
+}
+.hab-chart--hz {
+  flex: none;
+  height: 172px;
+  min-height: 172px;
+}
+.hab-chart > svg,
+.hab-chart__canvas {
+  position: absolute;
+  display: block;
+}
+.hab-chart > svg {
+  inset: 0;
+}
+.hab-chart__over {
+  pointer-events: none;
+}
+.hab-chart:not(.hab-chart--hz):not(.hab-chart--short) {
+  cursor: crosshair;
+}
+.hab-ref {
+  fill: none;
+  stroke: oklch(1 0 0 / 0.85);
+  stroke-width: 1.5;
+}
+.hab-ref__label,
+.hab-planet__label,
+.hab-hz__label {
+  font: 500 12px/1 var(--font-ui);
+  fill: oklch(0.85 0 0);
+  paint-order: stroke;
+  stroke: oklch(0.08 0 0 / 0.85);
+  stroke-width: 3px;
+}
+.hab-hz__label {
+  fill: oklch(0.82 0.1 150);
+}
+.hab-hover {
+  fill: none;
+  stroke: var(--brass, oklch(0.85 0.1 88));
+  stroke-width: 2;
+}
+.hab-tip {
+  font: 600 12.5px/1 var(--font-ui);
+  fill: var(--text-primary);
+  paint-order: stroke;
+  stroke: oklch(0.08 0 0 / 0.9);
+  stroke-width: 4px;
+}
+.hab-hz--con {
+  fill: var(--hab-hz-con);
+}
+.hab-hz--opt {
+  fill: var(--hab-hz-opt);
+}
+.hab-planet {
+  fill: var(--real);
+  stroke: oklch(0.08 0 0);
+  stroke-width: 2;
+}
+.hab-planet.is-modified {
+  fill: var(--modified);
+}
+
+/* Lab gauges */
+.hab-gauges {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+.hab-gauge {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid oklch(1 0 0 / 0.1);
+  border-radius: var(--r-plate);
+  background: oklch(1 0 0 / 0.03);
+}
+.hab-gauge__label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.hab-gauge__value {
+  font: 600 18px/1.2 var(--font-ui);
+  color: var(--text-primary);
+}
+.hab-gauge__bar {
+  height: 4px;
+  border-radius: 2px;
+  background: oklch(1 0 0 / 0.1);
+  overflow: hidden;
+}
+.hab-gauge__bar > span {
+  display: block;
+  height: 100%;
+  background: oklch(0.72 0.12 150);
+}
+.hab-water {
+  text-transform: capitalize;
+}
+.hab-water--liquid {
+  color: oklch(0.78 0.11 235);
+}
+.hab-water--boiling {
+  color: oklch(0.75 0.14 45);
+}
+.hab-water--frozen {
+  color: oklch(0.9 0.03 230);
+}
+.hab-water--none {
+  color: var(--text-tertiary);
+}
+.hab-facts {
+  margin-top: var(--sp-3);
+}
+.hab-verdict {
+  margin: 0 0 var(--sp-2);
+  font: 550 14px/1.45 var(--font-ui);
+  color: var(--text-primary);
+}
+.hab-notes {
+  margin: 0 0 var(--sp-3);
+  padding-left: 1.1em;
+  line-height: 1.45;
+}
+.hab-notes li + li {
+  margin-top: 4px;
+}
