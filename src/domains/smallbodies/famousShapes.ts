@@ -144,3 +144,32 @@ export const REAL_SHAPES: Record<string, { model: string; citation: string; lice
   arrokoth: { model: 'New Horizons merged shape model (mu69_merged), decimated to 40k facets', citation: 'Spencer et al. 2020, Science 367, eaay3999', license: 'NASA PDS (public domain)' },
   '67p': { model: 'Rosetta NAVCAM SPC shape model MTP019 (low resolution), decimated to 40k facets', citation: 'ESA/Rosetta/NAVCAM; RO-C-MULTI-5-67P-SHAPE-V2.0', license: 'CC BY-SA 3.0 IGO' },
 };
+
+/**
+ * Global surface maps of named small bodies (key = model id). `texture` is the body key in public/textures/index.json +
+ * hd.json (equirectangular 2:1, x = 0 at 180° W, east-positive, y = 0 at 90° N, planetocentric; sRGB), sampled with the
+ * body-fixed direction (+Z positive pole, +X prime meridian — the same frame `spinQuaternion` rotates). The map is read
+ * as relative brightness (luminance / `meanLinear`) times the surface-class albedo, so greyscale mosaics keep the class
+ * tint and the geometric albedo. An optional 'coverage' role (1 = imaged) restores the procedural look in the gaps, and an
+ * optional 'normal' role (hd.json; linear OpenGL tangent space, R = east, G = north, from the mission DTM) carries the relief.
+ * Missing files fall back to the procedural surface. Adding a body = one entry here (+ the files in public/textures/).
+ */
+export interface SurfaceMap {
+  texture: string;
+  /** Cos-latitude-weighted mean linear luminance of the map (docs/data/textures-hd.md); normalises it to the albedo. */
+  meanLinear: number;
+  /** Tangent-space slope scale for the 'normal' map: 1 / the exaggeration baked into it (hd.json normalExaggeration). */
+  normalStrength?: number;
+  /** FactSheet credit line (source, licence). */
+  credit: string;
+}
+
+export const SURFACE_MAPS: Record<string, SurfaceMap> = {
+  vesta: {
+    texture: 'vesta',
+    meanLinear: 0.1537,
+    // Dawn HAMO DTM (48 px/deg, Preusker et al. 2016) baked ×2: 0.5 shows the true slopes.
+    normalStrength: 0.5,
+    credit: 'Dawn Framing Camera HAMO clear-filter global mosaic (DLR, 74 px/deg; NASA/JPL-Caltech/UCLA/MPS/DLR/IDA, via USGS Astrogeology and NASA Solar System Treks), public domain; IAU (Claudia) longitudes. The north polar region, in winter night during Dawn\'s stay, was never imaged and is an albedo-matched neutral fill',
+  },
+};

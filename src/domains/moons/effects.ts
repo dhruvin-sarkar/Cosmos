@@ -330,11 +330,14 @@ void main() {
     float s = dot(p, uSunDir);
     float rc = length(p - uSunDir * s);
     float lit = s > 0.0 ? 1.0 : smoothstep(0.97, 1.04, rc);
+    // night-side limb stays dark unless the Sun is nearly behind the body (backlit forward-scatter crescent)
+    float dayN = smoothstep(-0.1, 0.15, dot(normalize(p), uSunDir));
+    float nightK = mix(dayN, 1.0, smoothstep(0.55, 0.9, cosT));
     float a = 1.0 - exp(-dtau);
-    acc += T * a * lit;
+    acc += T * a * lit * nightK;
     T *= 1.0 - a;
   }
-  vec3 albedo = vec3(0.52, 0.60, 1.0);
+  vec3 albedo = vec3(0.85, 0.55, 0.25);
   vec3 col = albedo * (uSunIntensity * phase * 1.6) * acc;
   float hit = (tb.x <= tb.y && tb.y > 0.0) ? 1.0 : 0.0;                         // over the disc the haze only tints it (surface is already hazy)
   gl_FragColor = vec4(col * mix(1.0, 0.6, hit), (1.0 - T) * mix(1.0, 0.35, hit));

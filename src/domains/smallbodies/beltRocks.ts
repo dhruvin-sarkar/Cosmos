@@ -19,7 +19,8 @@ import { getScaleView } from '../../core/visualScale';
 import { FRAGMENT_PRELUDE, LOGDEPTH_FRAGMENT, LOGDEPTH_VERTEX, VERTEX_PRELUDE } from '../../render/glsl/logdepth';
 import { solarSceneIrradianceAt } from '../solar/ephemeris';
 import { jdTdbFromMs } from './orbits';
-import { buildSmallBodyGeometry, type ShapeSpec } from './shape';
+import type { ShapeSpec } from './shape';
+import { buildSmallBodyGeometryAsync } from './shapeAsync';
 import { sunSource } from './sources';
 
 /** Max rocks drawn. */
@@ -158,6 +159,8 @@ interface Orbits {
   ep: Float64Array; // epoch offset, days
   pq: Float64Array; // P (3) and Q·b/a (3), ICRS
   qA: Float32Array; // perihelion AU
+  varpi: Float32Array; // ecliptic longitude of perihelion Ω+ω, rad (mean longitude = varpi + M)
+  lonTol: Float32Array; // bound on |true ecliptic longitude − mean longitude|, rad (> π: no longitude prefilter)
   QA: Float32Array; // aphelion AU
   zA: Float32Array; // max |ecliptic z|, AU
   rM: Float32Array; // radius from H, m
@@ -167,7 +170,8 @@ interface Orbits {
 function buildOrbits(f: Float32Array, count: number, stride: number): Orbits {
   const o: Orbits = {
     n: count, a: new Float64Array(count), e: new Float64Array(count), mm: new Float64Array(count), m0: new Float64Array(count),
-    ep: new Float64Array(count), pq: new Float64Array(count * 6), qA: new Float32Array(count), QA: new Float32Array(count), zA: new Float32Array(count),
+    ep: new Float64Array(count), pq: new Float64Array(count * 6), qA: new Float32Array(count),
+    varpi: new Float32Array(count), lonTol: new Float32Array(count), QA: new Float32Array(count), zA: new Float32Array(count),
     rM: new Float32Array(count), cls: new Uint8Array(count),
   };
   const eps = 23.4392911 * DEG, ce = Math.cos(eps), se = Math.sin(eps);
@@ -188,6 +192,10 @@ function buildOrbits(f: Float32Array, count: number, stride: number): Orbits {
     o.pq[k] = px; o.pq[k + 1] = ce * py - se * pz; o.pq[k + 2] = se * py + ce * pz;
     o.pq[k + 3] = qx * b; o.pq[k + 4] = (ce * qy - se * qz) * b; o.pq[k + 5] = (se * qy + ce * qz) * b;
     o.qA[i] = a * (1 - e);
+    o.varpi[i] = node + w;
+    // Equation of centre (≤ 2e + 1.5e², a safe over-bound for e < 0.4) + inclination reduction (≤ tan²(i/2)) + margin.
+    const ti = Math.tan(inc / 2);
+    o.lonTol[i] = e < 0.4 && inc < 1.2 ? 2 * e + 1.5 * e * e + ti * ti * 1.05 + 0.01 : 10;
     o.QA[i] = a * (1 + e);
     o.zA[i] = a * (1 + e) * si;
     const c = classFor(a, hashU(i, 7));
@@ -282,9 +290,21 @@ export function createBeltRocksLayer(registry: Pick<EntityRegistry, 'get'>): Bel
     const rs = selR / AU_M;
     const eps = 23.4392911 * DEG;
     const zc = Math.abs(-Math.sin(eps) * camHelio.y + Math.cos(eps) * camHelio.z) / AU_M;
-    const end = Math.min(o.n, cursor + SLICE);
+    // Longitude prefilter: the selection sphere spans ±asin(rs / ρ) in ecliptic longitude (ρ: in-plane distance).
+    const xe = camHelio.x / AU_M, ye = (Math.cos(eps) * camHelio.y + Math.sin(eps) * camHelio.z) / AU_M;
+    const rho = Math.hypot(xe, ye);
+    const lonC = Math.atan2(ye, xe);
+    const halfW = rs < 0.9 * rho ? Math.asin(rs / rho) : 10;
+    const end = Math.min(o.n, cursor + SLICE * 4);
     for (let i = cursor; i < end; i++) {
       if (rc + rs < o.qA[i] || rc - rs > o.QA[i] || zc - rs > o.zA[i]) continue;
+      const tol = halfW + o.lonTol[i];
+      if (tol < Math.PI) {
+        let dl = (o.varpi[i] + o.m0[i] + o.mm[i] * (days - o.ep[i]) - lonC) % (2 * Math.PI);
+        if (dl > Math.PI) dl -= 2 * Math.PI;
+        else if (dl < -Math.PI) dl += 2 * Math.PI;
+        if (Math.abs(dl) > tol) continue;
+      }
       rowPosition(o, i, days, tmp);
       const d = tmp.distanceTo(camHelio);
       if (d > selR) continue;
@@ -323,7 +343,12 @@ export function createBeltRocksLayer(registry: Pick<EntityRegistry, 'get'>): Bel
       // Low-detail (≈ 500 triangles) and high-detail (≈ 6.5k triangles) geometry for each of the 8 shape variants.
       for (let lv = 0; lv < 2 * VARIANTS; lv++) {
         const v = lv % VARIANTS;
-        const geo = buildSmallBodyGeometry({ id: `belt-rock-${v}`, recipe: RECIPES[v], axes: AXES[v], detail: lv < VARIANTS ? 4 : 17, craters: 30 + v * 4, lumpiness: 0.06 });
+        // Each shape costs ~5-15 ms (displacement + mergeVertices): built in the shape worker (perf).
+        const geo = await buildSmallBodyGeometryAsync({ id: `belt-rock-${v}`, recipe: RECIPES[v], axes: AXES[v], detail: lv < VARIANTS ? 4 : 17, craters: 30 + v * 4, lumpiness: 0.06 });
+        if (disposed || !material) {
+          geo.dispose();
+          return;
+        }
         const mesh = new THREE.InstancedMesh(geo, material, K);
         mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
         mesh.setColorAt(0, color.setRGB(0, 0, 0));
@@ -331,6 +356,7 @@ export function createBeltRocksLayer(registry: Pick<EntityRegistry, 'get'>): Bel
         const ra = new THREE.InstancedBufferAttribute(new Float32Array(K * 2), 2).setUsage(THREE.DynamicDrawUsage);
         geo.setAttribute('aRock', ra);
         mesh.count = 0;
+        mesh.visible = false;
         mesh.frustumCulled = false;
         mesh.name = `belt-rocks-${lv}`;
         svc.groups.main.add(mesh);
@@ -342,7 +368,7 @@ export function createBeltRocksLayer(registry: Pick<EntityRegistry, 'get'>): Bel
     update(ctx: FrameContext): void {
       drawn = 0;
       labelRock = -1;
-      if (!orbits || !material || !svcRef) return;
+      if (!orbits || !material || !svcRef || meshes.length < 2 * VARIANTS) return;
       sun(ctx.timeMs, sunWorld);
       camHelio.subVectors(ctx.cameraPosition, sunWorld);
       const rc = camHelio.length() / AU_M;
@@ -350,7 +376,7 @@ export function createBeltRocksLayer(registry: Pick<EntityRegistry, 'get'>): Bel
       const want = (ctx.overlays.asteroids || smallFocus) && rc > 1.15 && rc < 6.4;
       if (!want) {
         if (active) {
-          for (const m of meshes) m.count = 0;
+          for (const m of meshes) { m.count = 0; m.visible = false; }
           selN = 0;
           candN = 0;
           cursor = 0;
@@ -417,6 +443,8 @@ export function createBeltRocksLayer(registry: Pick<EntityRegistry, 'get'>): Bel
       }
       for (let v = 0; v < meshes.length; v++) {
         const mesh = meshes[v];
+        // An InstancedMesh with count 0 still costs a draw call's state setup: hide it (perf).
+        mesh.visible = mesh.count > 0;
         if (mesh.count === 0) continue;
         mesh.instanceMatrix.needsUpdate = true;
         mesh.instanceColor!.needsUpdate = true;

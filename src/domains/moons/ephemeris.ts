@@ -13,7 +13,7 @@ import * as Astronomy from 'astronomy-engine';
 import { Vector3 } from 'three';
 import { bodyFixedToIcrsMatrix, OBLIQUITY_J2000_DEG } from '../../core/frames';
 import { AU_M } from '../../core/units';
-import { APSIS_RETROGRADE, MOON_LOOKS, MOON_RECORDS, SIDEREAL_DAYS, type MoonRecord, type ParentKey } from './data';
+import { APSIS_RETROGRADE, MOON_LOOKS, MOON_RECORDS, SATURN_MEAN_ELEMENTS, SIDEREAL_DAYS, type MeanElementFit, type MoonRecord, type ParentKey } from './data';
 
 const DEG = Math.PI / 180;
 const TWO_PI = 2 * Math.PI;
@@ -78,6 +78,10 @@ interface MoonModel {
   /** Apsidal / nodal rates, rad/day (signed). */
   omegaDot: number;
   nodeDot: number;
+  /** Epoch of the angles (JD TDB). */
+  epochJD: number;
+  /** Resonant libration of the mean longitude (fitted Saturnian elements only). */
+  libration: MeanElementFit['libration'] | null;
 }
 
 const models = new Map<string, MoonModel>();
@@ -101,6 +105,28 @@ export function modelFor(rec: MoonRecord): MoonModel {
   const omega0 = o.periDeg * DEG;
   const retrograde = o.iDeg > 90;
   const perDay = (yr: number | null): number => (yr && yr > 0 ? TWO_PI / (yr * YEAR_DAYS) : 0);
+  const fit = SATURN_MEAN_ELEMENTS[rec.id];
+  if (fit) {
+    // Elements fitted to JPL Horizons SAT441 (see data.ts), J2000 epoch, all prograde: ω = ϖ − Ω.
+    m = {
+      rec,
+      plane: planeMatrix(rec),
+      a: o.aKm * 1000,
+      e: o.e,
+      i: o.iDeg * DEG,
+      lambda0: fit.lambdaDeg * DEG,
+      nodeSign: 1,
+      n: fit.nDegPerDay * DEG,
+      omega0: (fit.periLonDeg - fit.nodeDeg) * DEG,
+      node0: fit.nodeDeg * DEG,
+      omegaDot: (fit.periRateDegPerDay - fit.nodeRateDegPerDay) * DEG,
+      nodeDot: fit.nodeRateDegPerDay * DEG,
+      epochJD: 2451545.0,
+      libration: fit.libration ?? null,
+    };
+    models.set(rec.id, m);
+    return m;
+  }
   m = {
     rec,
     plane: planeMatrix(rec),
@@ -114,6 +140,8 @@ export function modelFor(rec: MoonRecord): MoonModel {
     node0,
     omegaDot: (retrograde !== APSIS_RETROGRADE.has(rec.id) ? -1 : 1) * perDay(o.precApsisYr),
     nodeDot: (retrograde ? 1 : -1) * perDay(o.precNodeYr),
+    epochJD: o.epochJD,
+    libration: null,
   };
   models.set(rec.id, m);
   return m;
@@ -127,11 +155,16 @@ export interface OrbitState {
 }
 
 export function orbitState(m: MoonModel, tMs: number, out: OrbitState = { omega: 0, node: 0, meanAnomaly: 0 }): OrbitState {
-  const d = julianDate(tMs) - m.rec.orbit.epochJD;
+  const d = julianDate(tMs) - m.epochJD;
   out.omega = m.omega0 + m.omegaDot * d;
   out.node = m.node0 + m.nodeDot * d;
+  let lib = 0;
+  if (m.libration) {
+    const th = (m.libration.argDeg + (m.libration.rateDegPerYr * d) / YEAR_DAYS) * DEG;
+    for (const [k, amp] of m.libration.terms) lib += amp * DEG * Math.sin(k * th);
+  }
   // Prograde: M = λ − ω − Ω. A retrograde orbit (i > 90°) measures its in-plane angle against the node motion: M = λ − ω + Ω.
-  out.meanAnomaly = m.lambda0 + m.n * d - out.omega - m.nodeSign * out.node;
+  out.meanAnomaly = m.lambda0 + lib + m.n * d - out.omega - m.nodeSign * out.node;
   return out;
 }
 

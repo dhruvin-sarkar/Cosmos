@@ -172,6 +172,7 @@ export function createMoonsLayer(entities: Entity[]): Layer {
   const idToParent = new Map<string, string>();
   let svcRef: EngineServices | null = null;
   let rebuilds = 0;
+  let geometryBuilds = 0;
   const sys = createSatelliteSystemTransform();
   const unregisters: (() => void)[] = [];
   let orbitPts: Float64Array = new Float64Array(3 * 160);
@@ -347,6 +348,7 @@ export function createMoonsLayer(entities: Entity[]): Layer {
       const inv = 1 / ctx.metersPerUnit;
       pointMat.uniforms.uPixelRatio.value = ctx.viewport.pixelRatio;
       rebuilds = 0;
+      geometryBuilds = 0;
 
       for (const v of visuals) {
         const rec = v.rec;
@@ -432,7 +434,9 @@ export function createMoonsLayer(entities: Entity[]): Layer {
         v.overlayGroup.visible = show;
         if (!show) continue;
 
-        if (!v.geometryBuilt) {
+        // One geometry build per frame (the shared placeholder sphere shows meanwhile): a whole system coming into view
+        // built 8+ ellipsoids in one frame (73 ms at Saturn, perf).
+        if (!v.geometryBuilt && geometryBuilds++ < 1) {
           v.geometryBuilt = true;
           const g = buildGeometry(rec, v.radiusM);
           if (g instanceof Promise) {

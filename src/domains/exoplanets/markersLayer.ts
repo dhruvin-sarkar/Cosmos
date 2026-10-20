@@ -18,6 +18,9 @@ import { exoView } from './state';
 
 /** Marker field fades in between these view scales (log10 m of visible width): ~0.003 pc → ~0.03 pc. */
 export const MARKER_SCALE_IN: readonly [number, number] = [14.0, 15.0];
+/** ...and fades out again at galactic scale (~1 kpc → ~3 kpc of visible width), where the Kepler field and the
+ * microlensing hosts would otherwise read as a streak at the Sun over the Milky Way. */
+export const MARKER_SCALE_OUT: readonly [number, number] = [19.4, 19.9];
 
 const VERT = /* glsl */ `
 ${VERTEX_PRELUDE}
@@ -180,7 +183,9 @@ export function createExoMarkersLayer(): ExoMarkersLayer {
     update(ctx: FrameContext) {
       if (!points || !cat) return;
       const s = ctx.scaleLog10;
-      fade = exoView.markers ? THREE.MathUtils.smoothstep(s, MARKER_SCALE_IN[0], MARKER_SCALE_IN[1]) : 0;
+      fade = exoView.markers
+        ? THREE.MathUtils.smoothstep(s, MARKER_SCALE_IN[0], MARKER_SCALE_IN[1]) * (1 - THREE.MathUtils.smoothstep(s, MARKER_SCALE_OUT[0], MARKER_SCALE_OUT[1]))
+        : 0;
       points.visible = fade > 0.002;
       if (!points.visible) return;
       if (posDirty) refreshPositions();

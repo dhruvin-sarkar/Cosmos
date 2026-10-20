@@ -266,8 +266,18 @@ function mat(frag: string, uniforms: Record<string, THREE.IUniform>): THREE.Shad
 
 /**
  * Downsamples the HDR frame to a 64×64 lit-pixel log-luminance grid, reduces it to one RGBA8 texel on the GPU
- * and reads that back asynchronously (PBO + fence via readRenderTargetPixelsAsync), so the CPU never stalls.
+ * and reads that back asynchronously (PBO + fence), so the CPU never stalls.
+ *
+ * The readback is polled with poll() at the start of a frame (before its draw calls are queued): Chrome's
+ * getBufferSubData is a synchronous round trip that waits for every command queued ahead of it, so reading before the
+ * frame's work keeps it short. When it is slow anyway (the GPU process is busy with uploads or shader links during a
+ * travel) the meter rests for READ_COOLDOWN_MS so it cannot add a hitch every reading (perf).
  */
+const SLOW_READ_MS = 4;
+const READ_COOLDOWN_MS = 2000;
+/** Give up on a readback whose fence never signals (context trouble) after this many polls. */
+const MAX_POLLS = 240;
+
 export class ExposureMeter {
   private readonly grid: THREE.WebGLRenderTarget;
   private readonly tiles: THREE.WebGLRenderTarget;
@@ -279,6 +289,12 @@ export class ExposureMeter {
   private pending = false;
   private disposed = false;
   private failed = false;
+  private gl: WebGL2RenderingContext | null = null;
+  private pbo: WebGLBuffer | null = null;
+  private sync: WebGLSync | null = null;
+  private polls = 0;
+  private restUntil = 0;
+  private onResult: ((reading: MeterReading) => void) | null = null;
 
   constructor(halfFloat: boolean) {
     const opts = {
@@ -295,7 +311,52 @@ export class ExposureMeter {
   }
 
   get busy(): boolean {
-    return this.pending;
+    return this.pending || performance.now() < this.restUntil;
+  }
+
+  /** Collect a finished readback (call once per frame, before rendering). */
+  poll(): void {
+    const gl = this.gl;
+    if (!this.pending || gl === null || this.sync === null) return;
+    // A zero-timeout wait only queries the client-side fence state: it never blocks.
+    const st = gl.clientWaitSync(this.sync, 0, 0);
+    if (st === gl.WAIT_FAILED) {
+      gl.deleteSync(this.sync);
+      this.sync = null;
+      this.pending = false;
+      this.failed = true;
+      return;
+    }
+    if (st === gl.TIMEOUT_EXPIRED) {
+      if (++this.polls > MAX_POLLS) {
+        gl.deleteSync(this.sync);
+        gl.deleteBuffer(this.pbo);
+        this.sync = null;
+        this.pbo = null;
+        this.pending = false;
+      }
+      return;
+    }
+    const t0 = performance.now();
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this.pbo);
+    gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, this.pixel);
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+    const t1 = performance.now();
+    gl.deleteSync(this.sync);
+    gl.deleteBuffer(this.pbo);
+    this.sync = null;
+    this.pbo = null;
+    this.pending = false;
+    if (t1 - t0 > SLOW_READ_MS) this.restUntil = t1 + READ_COOLDOWN_MS;
+    if (this.disposed || this.onResult === null) return;
+    const p = this.pixel;
+    const span = LOG_MAX - LOG_MIN;
+    this.onResult({
+      meanLog2: LOG_MIN + (p[0] / 255) * span,
+      coverage: p[1] / 255,
+      highLog2: LOG_MIN + (p[2] / 255) * span,
+      highCoverage: p[3] / 255,
+    });
   }
 
   /** Measure `src` (scene-linear). `onResult` fires a frame or two later. */
@@ -317,29 +378,38 @@ export class ExposureMeter {
     renderer.setRenderTarget(this.result);
     this.quad.render(renderer);
 
+    // The result target is bound (read framebuffer too): queue the 1x1 read into a PBO behind a fence.
+    const gl = renderer.getContext() as WebGL2RenderingContext;
+    if (typeof gl.fenceSync !== 'function') {
+      this.failed = true;
+      return;
+    }
+    this.gl = gl;
+    // A fresh 4-byte buffer per reading: Chrome serves the read from a shadow copy taken at the fence (no round trip),
+    // and rewriting a buffer whose shadow was taken discards it.
+    this.pbo = gl.createBuffer();
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this.pbo);
+    gl.bufferData(gl.PIXEL_PACK_BUFFER, 4, gl.STREAM_READ);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, 0);
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+    this.sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+    if (this.sync === null) {
+      this.failed = true;
+      return;
+    }
+    this.onResult = onResult;
+    this.polls = 0;
     this.pending = true;
-    renderer
-      .readRenderTargetPixelsAsync(this.result, 0, 0, 1, 1, this.pixel)
-      .then(() => {
-        this.pending = false;
-        if (this.disposed) return;
-        const p = this.pixel;
-        const span = LOG_MAX - LOG_MIN;
-        onResult({
-          meanLog2: LOG_MIN + (p[0] / 255) * span,
-          coverage: p[1] / 255,
-          highLog2: LOG_MIN + (p[2] / 255) * span,
-          highCoverage: p[3] / 255,
-        });
-      })
-      .catch(() => {
-        this.pending = false;
-        this.failed = true;
-      });
   }
 
   dispose(): void {
     this.disposed = true;
+    if (this.gl) {
+      if (this.sync) this.gl.deleteSync(this.sync);
+      if (this.pbo) this.gl.deleteBuffer(this.pbo);
+    }
+    this.sync = null;
+    this.pbo = null;
     this.grid.dispose();
     this.tiles.dispose();
     this.result.dispose();

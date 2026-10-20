@@ -3,7 +3,10 @@
  * visitor defend Earth from a hypothetical impactor. Registered at import time (auto-discovered by src/labs/index.ts).
  */
 import { registerLabPanel } from '../../ui/labs/registry';
-import { DefensePanel } from './DefensePanel';
+import { lazy } from 'react';
+
+// Code-split: the panel (charts, KaTeX, simulations) loads the first time the lab opens.
+const DefensePanel = lazy(() => import('./DefensePanel').then(m => ({ default: m.DefensePanel })));
 
 registerLabPanel('defense', DefensePanel, {
   title: 'Asteroid deflection lab',

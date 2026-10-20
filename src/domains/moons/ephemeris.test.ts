@@ -97,10 +97,9 @@ describe('moons ephemeris', () => {
     }
   });
 
-  // JPL Horizons (SSD API, VECTORS, CENTER=500@699, ICRF, km) at 2026-10-18 12:00 TDB. SKIPPED: the JPL mean-element
-  // orbits (SAT441 table, epoch J2000) propagated to 2026 put Tethys/Dione/Rhea/Iapetus 58-158 deg away from these
-  // positions (Mimas 25 deg incl. its 43 deg resonance libration). Enable once the Saturnian orbits are fixed.
-  it.skip('Saturnian moons sit near their JPL Horizons positions (2026-10-18)', () => {
+  // JPL Horizons (SSD API, VECTORS, CENTER=500@699, ICRF, km) at 2026-10-18 12:00 TDB. The JPL SSD mean-element table put
+  // Tethys/Dione/Rhea/Iapetus 58-158 deg away from these; the SAT441-fitted elements (data.ts SATURN_MEAN_ELEMENTS) fix it.
+  it('Saturnian moons sit near their JPL Horizons positions (2026-10-18)', () => {
     const H: Record<string, [number, number, number]> = {
       enceladus: [-2.348360292876383e5, -3.887079320534974e4, 2.304768678392082e4],
       tethys: [4.261175748916178e4, 2.904538555843362e5, -2.579166352320153e4],
@@ -111,7 +110,7 @@ describe('moons ephemeris', () => {
     const v = new Vector3();
     for (const [id, h] of Object.entries(H)) {
       moonOffset(recordOf(id), Date.UTC(2026, 9, 18, 12), v);
-      expect((new Vector3(...h).multiplyScalar(1000).angleTo(v) * 180) / Math.PI, id).toBeLessThan(5);
+      expect((new Vector3(...h).multiplyScalar(1000).angleTo(v) * 180) / Math.PI, id).toBeLessThan(1);
     }
   });
 });

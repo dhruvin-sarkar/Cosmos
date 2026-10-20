@@ -14,18 +14,25 @@ import type { SmallBodyModel } from './bodies';
 import { MODEL_BY_ENTITY_ID, diameterFromHKm } from './bodies';
 import { cometActivity, CometSystem, type CometState } from './cometTail';
 import { heliocentricVelocityIcrs, jdTdbFromMs, meanMotionRadPerDay, sampleOrbitIcrsM, type HelioElements } from './orbits';
-import { buildSmallBodyGeometry, hashString } from './shape';
+import { hashString } from './shape';
+import { buildSmallBodyGeometryAsync } from './shapeAsync';
 import { SmallBodyMaterial } from './smallBodyMaterial';
 import { lookupNeoRow } from './neoProvider';
 import { neoElements } from './neoApi';
 import { sunSource } from './sources';
 import { registerScaledBody, renderTransform } from '../../core/visualScale';
-import { SPIN_STATES, decodeShape, illustrativeSpin, loadShapeIndex, spinPole, spinQuaternion, type ShapeIndex, type SpinState } from './famousShapes';
+import { SPIN_STATES, SURFACE_MAPS, decodeShape, illustrativeSpin, loadShapeIndex, spinPole, spinQuaternion, type ShapeIndex, type SpinState } from './famousShapes';
+import { resolveBodyTexture } from '../solar/textures';
 
 const MIN_MESH_PX = 0.8;
 const MARKER_HIDE_PX = 14;
+/** On-screen diameter above which a mapped body asks for its best texture tier (the 1k preview comes with the mesh). */
+const MAP_HIGH_PX = 180;
 
 interface Visual {
+  /** Geometry being built in the shape worker / visual disposed (perf: async mesh build). */
+  building?: boolean;
+  dead?: boolean;
   entity: Entity;
   model: SmallBodyModel;
   world: THREE.Vector3;
@@ -41,6 +48,8 @@ interface Visual {
   /** Mean radius the mesh is scaled to (the real shape model's when loaded, else the catalogue's). */
   meshRadiusM: number;
   shape: 'procedural' | 'loading' | 'real' | 'failed';
+  /** Global surface map requests made (SURFACE_MAPS bodies only). */
+  mapTier?: 'low' | 'high' | 'ultra';
   unregister: (() => void) | null;
 }
 
@@ -137,20 +146,54 @@ export function createSmallBodiesLayer(
   const didymos = byEntity.get('sb:didymos') ?? null;
 
   const ensureMesh = (v: Visual): void => {
-    if (v.mesh || !svcRef) return;
+    if (v.mesh || v.building || !svcRef) return;
     const m = v.model;
-    const geo = buildSmallBodyGeometry({
+    // The 10k-face shape takes 10-50 ms to displace: build it in the shape worker (perf); the marker shows meanwhile.
+    v.building = true;
+    void buildSmallBodyGeometryAsync({
       id: m.id,
       recipe: m.recipe,
       axes: m.axesM,
-      craters: m.isComet ? 8 : undefined,
-      lumpiness: m.isComet ? 0.04 : undefined,
+      // Mapped bodies: the mosaic shows the real craters, so no invented large geometric ones.
+      craters: SURFACE_MAPS[m.id] ? 0 : m.isComet ? 8 : undefined,
+      lumpiness: SURFACE_MAPS[m.id] ? 0.015 : m.isComet ? 0.04 : undefined,
+    }).then((geo) => {
+      v.building = false;
+      if (v.dead || v.mesh || !svcRef) {
+        geo.dispose();
+        return;
+      }
+      v.material = new SmallBodyMaterial(m.surface, hashString(m.id));
+      v.mesh = new THREE.Mesh(geo, v.material);
+      v.mesh.name = v.entity.id;
+      v.mesh.frustumCulled = false;
+      v.mesh.visible = false; // placed by the next update
+      svcRef.groups.main.add(v.mesh);
+      if (SURFACE_MAPS[m.id]) {
+        v.material.uniforms.uBump.value = 0.07;
+        loadMaps(v, 'low');
+      }
     });
-    v.material = new SmallBodyMaterial(m.surface, hashString(m.id));
-    v.mesh = new THREE.Mesh(geo, v.material);
-    v.mesh.name = v.entity.id;
-    v.mesh.frustumCulled = false;
-    svcRef.groups.main.add(v.mesh);
+  };
+
+  /** Global surface map (+ optional coverage mask) through the shared texture manager. Missing files: procedural look. */
+  const loadMaps = (v: Visual, quality: 'low' | 'high' | 'ultra'): void => {
+    const map = SURFACE_MAPS[v.model.id];
+    const svc = svcRef;
+    if (!map || !svc) return;
+    v.mapTier = quality;
+    const alive = (): boolean => !v.dead && v.material !== null;
+    const opts = { isCancelled: () => !alive(), screenPx: () => v.px * v.enlarge, slot: v.entity.id };
+    void resolveBodyTexture(svc.assets, svc.renderer, map.texture, 'color', quality, 'srgb', (t) => {
+      if (alive()) v.material!.setMap(t, map.meanLinear, (t.image as { width?: number } | null)?.width ?? 1024);
+    }, opts).catch(() => undefined);
+    void resolveBodyTexture(svc.assets, svc.renderer, map.texture, 'coverage', quality, 'linear', (t) => {
+      if (alive()) v.material!.setCoverage(t);
+    }, opts).catch(() => undefined);
+    // DTM normal map (hd.json 4k tier: requested with the high/ultra tier only, i.e. once the body is large on screen).
+    void resolveBodyTexture(svc.assets, svc.renderer, map.texture, 'normal', quality, 'linear', (t) => {
+      if (alive()) v.material!.setNormalMap(t, map.normalStrength ?? 1);
+    }, opts).catch(() => undefined);
   };
 
   /** Real shape model (mission data) when one is published for this body: swap it in once loaded. */
@@ -227,6 +270,7 @@ export function createSmallBodiesLayer(
         sunDirectionAt(v.world, ctx.timeMs, sunDir);
         v.material.uniforms.uSunDir.value.copy(sunDir);
         v.material.uniforms.uIrradiance.value = solarSceneIrradianceAt(v.world, ctx.timeMs);
+        if (v.mapTier === 'low' && shownPx > MAP_HIGH_PX && ctx.quality.textureQuality !== 'low') loadMaps(v, ctx.quality.textureQuality);
       }
     }
     // Comet coma and tails.
@@ -323,6 +367,7 @@ export function createSmallBodiesLayer(
   };
 
   const disposeVisual = (v: Visual): void => {
+    v.dead = true;
     if (v.mesh) {
       v.mesh.removeFromParent();
       v.mesh.geometry.dispose();
@@ -397,6 +442,8 @@ export function createSmallBodiesLayer(
           if (markerFieldM < 3e9 && !focusedLike) fade *= 1 - THREE.MathUtils.smoothstep(v.distM, 100 * markerFieldM, 200 * markerFieldM);
           // System-scale views: hide unlabelled (minor) markers; only focused/selected or prominent bodies keep one.
           if (markerFieldM >= 3e9 && !focusedLike && v.entity.importance < LABEL_TIER_IMPORTANCE) fade = 0;
+          // Interstellar and wider views: every marker would pile up on the Sun.
+          if (!focusedLike) fade *= 1 - THREE.MathUtils.smoothstep(markerFieldM, 1e14, 1e15);
           const c = MARKER_COLOR[colorKey(v.model)];
           markerColor[4 * nm] = c[0];
           markerColor[4 * nm + 1] = c[1];
@@ -437,6 +484,7 @@ export function createSmallBodiesLayer(
         // of sight otherwise clutter the hero views), matching the orbit fade above.
         if (fieldM < 3e9 && v.distM > 200 * fieldM && v.entity.id !== ctx.selectedId && v.entity.id !== ctx.focusEntityId) continue;
         if (fieldM >= 3e9 && v.entity.importance < LABEL_TIER_IMPORTANCE && v.entity.id !== ctx.selectedId && v.entity.id !== ctx.focusEntityId) continue;
+        if (fieldM > 1e15 && v.entity.id !== ctx.selectedId && v.entity.id !== ctx.focusEntityId) continue;
         const shownPx = v.px * v.enlarge;
         if (shownPx > ctx.viewport.height * 0.9) continue;
         ctx.project(v.world, screen);

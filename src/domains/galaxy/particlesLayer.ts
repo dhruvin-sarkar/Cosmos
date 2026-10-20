@@ -12,7 +12,7 @@ import type { EngineServices, FrameContext, Layer } from '../../core/types';
 import { KPC_M } from '../../core/units';
 import { FRAGMENT_PRELUDE, LOGDEPTH_FRAGMENT, LOGDEPTH_VERTEX, VERTEX_PRELUDE } from '../../render/glsl/logdepth';
 import { skyExposureForScale } from '../stars/photometry';
-import { generateGalaxyParticles, rng } from './model';
+import { buildShuffledParticlesAsync } from './particlesGen';
 import { galaxyRuntime } from './runtime';
 import { galaxyVolumeVisibility } from './volumeLayer';
 
@@ -77,23 +77,10 @@ export function createGalaxyParticlesLayer(): Layer & GalaxyParticlesHandle {
 
   function generate(budget: number): void {
     generating = true;
-    // One ~0.1 s task, run after the frame that first needs it (never on the first frame).
-    setTimeout(() => {
+    // Generated in a worker (was a 100-340 ms main-thread task when the galaxy first came into view).
+    const n = Math.min(MAX_PARTICLES, Math.max(40_000, Math.round(budget * 0.8)));
+    void buildShuffledParticlesAsync(n).then(({ count, pos, col, lum }) => {
       if (!svcRef || !mat) { generating = false; return; }
-      const n = Math.min(MAX_PARTICLES, Math.max(40_000, Math.round(budget * 0.8)));
-      const g = generateGalaxyParticles(n);
-      // Shuffle so any prefix (drawRange LOD) is a fair sample of every population.
-      const r = rng(77);
-      const idx = new Uint32Array(g.count);
-      for (let i = 0; i < g.count; i++) idx[i] = i;
-      for (let i = g.count - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const t = idx[i]!; idx[i] = idx[j]!; idx[j] = t; }
-      const pos = new Float32Array(g.count * 3), col = new Float32Array(g.count * 3), lum = new Float32Array(g.count);
-      for (let k = 0; k < g.count; k++) {
-        const i = idx[k]!;
-        pos[3 * k] = g.positions[3 * i]!; pos[3 * k + 1] = g.positions[3 * i + 1]!; pos[3 * k + 2] = g.positions[3 * i + 2]!;
-        col[3 * k] = g.colors[3 * i]!; col[3 * k + 1] = g.colors[3 * i + 1]!; col[3 * k + 2] = g.colors[3 * i + 2]!;
-        lum[k] = g.lum[i]!;
-      }
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
@@ -105,10 +92,10 @@ export function createGalaxyParticlesLayer(): Layer & GalaxyParticlesHandle {
       points.visible = false;
       points.renderOrder = -40;
       svcRef.groups.transparent.add(points);
-      total = g.count;
+      total = count;
       generated = true;
       generating = false;
-    }, 0);
+    });
   }
 
   const sunGal = { x: 0, y: 0, z: 0 };

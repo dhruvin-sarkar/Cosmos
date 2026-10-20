@@ -56,6 +56,10 @@ const STORE_MIRROR_INTERVAL_MS = 100;
 const FRAME_STATS_INTERVAL_MS = 500;
 const SCREEN_MARGIN_PX = 32;
 const QUALITY_WARMUP_MS = 1500;
+/** Longest the boot screen waits for the first shader programs to link (engine `ready`). */
+const BOOT_COMPILE_CAP_MS = 6000;
+/** Entity ids that live inside the Solar System (their labels are dropped at extragalactic scales). */
+const SOLAR_LABEL_PREFIX = /^(sol|sc|sb|sat|feat|deb):/;
 
 export class WebGLUnsupportedError extends Error {
   constructor(message = 'WebGL 2 is not available in this browser.') {
@@ -731,6 +735,9 @@ export function createEngine(opts: EngineOptions): Engine {
     rejectReady = reject;
   });
   let firstFrame = true;
+  let readyResolved = false;
+  let readyMs = Number.POSITIVE_INFINITY;
+  let settledFrames = 0;
   let firstFrameMs = Number.POSITIVE_INFINITY;
   let consecutiveRenderErrors = 0;
 
@@ -806,6 +813,18 @@ export function createEngine(opts: EngineOptions): Engine {
         }
       }
     }
+    // Scale bands: beyond the Milky Way (~20 kpc of visible width and wider) Solar System labels (Sun, Earth, moons,
+    // spacecraft, small bodies, surface features) would all sit on the Milky Way's own label: drop them unless selected.
+    if (ctx.scaleLog10 > 21.6) {
+      let w = 0;
+      for (let i = 0; i < labelCandidates.length; i++) {
+        const c = labelCandidates[i];
+        const id = c.entityId;
+        if (id !== null && id !== selectedId && id !== ctx.focusEntityId && SOLAR_LABEL_PREFIX.test(id)) continue;
+        labelCandidates[w++] = c;
+      }
+      labelCandidates.length = w;
+    }
     occludeLabels(labelCandidates);
     labels.update(labelCandidates, {
       selectedId,
@@ -833,7 +852,7 @@ export function createEngine(opts: EngineOptions): Engine {
     shaderWarmup.tick(end);
 
     // Skip the first second: shader compilation and uploads make start-up frames unrepresentative.
-    if (quality.preset === 'auto' && now - firstFrameMs > QUALITY_WARMUP_MS) {
+    if (quality.preset === 'auto' && now - readyMs > QUALITY_WARMUP_MS) {
       const changed = quality.sample(
         { intervalMs: perfMon.lastIntervalMs, cpuMs: perfMon.lastCpuMs, gpuMs: perfMon.lastGpuMs },
         end,
@@ -844,7 +863,15 @@ export function createEngine(opts: EngineOptions): Engine {
     if (firstFrame) {
       firstFrame = false;
       firstFrameMs = now;
-      resolveReady();
+    }
+    // Boot screen stays up while the first programs link in parallel (shader gate), then the scene appears complete.
+    if (!readyResolved) {
+      settledFrames = shaderWarmup.gated === 0 ? settledFrames + 1 : 0;
+      if (settledFrames >= 3 || now - firstFrameMs > BOOT_COMPILE_CAP_MS) {
+        readyResolved = true;
+        readyMs = now;
+        resolveReady();
+      }
     }
     if (now - lastMirrorMs >= STORE_MIRROR_INTERVAL_MS) {
       lastMirrorMs = now;

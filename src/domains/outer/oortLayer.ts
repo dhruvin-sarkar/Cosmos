@@ -106,8 +106,8 @@ export function createOortLayer(registry: Pick<EntityRegistry, 'get'>, count = 1
       sun(ctx.timeMs, sunWorld);
       const dSunAu = ctx.cameraPosition.distanceTo(sunWorld) / AU_M;
       const focus = ctx.focusEntityId === OUTER_IDS.oort || ctx.selectedId === OUTER_IDS.oort;
-      // GLSL smoothstep(16, 15, log10 scale): full below 1e15 m, gone by 1e16 m.
-      const fadeOut = 1 - THREE.MathUtils.smoothstep(ctx.scaleLog10, 15, 16);
+      // Full below ~4e17 m (the tour's 1e17 m Oort chapter), gone by ~2.5e18 m.
+      const fadeOut = 1 - THREE.MathUtils.smoothstep(ctx.scaleLog10, 17.6, 18.4);
       const target = Math.max(THREE.MathUtils.smoothstep(dSunAu, 700, 4500) * fadeOut, focus ? fadeOut : 0);
       opacity += (target - opacity) * Math.min(1, ctx.dtRealSec * 3);
       if (Math.abs(target - opacity) < 0.002) opacity = target;

@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "generated": "2026-10-19T09:07:42.674Z",
+ "generated": "2026-10-20T13:34:54.329Z",
  "datasets": {
   "exoplanets-pscomppars": {
    "id": "exoplanets-pscomppars",
@@ -2670,17 +2670,17 @@
    "files": [
     {
      "path": "textures/earth/night_8k.jpg",
-     "bytes": 990002,
+     "bytes": 871975,
      "records": 1
     },
     {
      "path": "textures/earth/night_4k.jpg",
-     "bytes": 276351,
+     "bytes": 269414,
      "records": 1
     },
     {
      "path": "textures/earth/night_2k.jpg",
-     "bytes": 76925,
+     "bytes": 77486,
      "records": 1
     }
    ],
@@ -2879,12 +2879,12 @@
     },
     {
      "path": "textures/charon/color_4k.jpg",
-     "bytes": 710963,
+     "bytes": 902042,
      "records": 1
     },
     {
      "path": "textures/charon/color_1k.jpg",
-     "bytes": 63008,
+     "bytes": 76678,
      "records": 1
     },
     {
@@ -2929,12 +2929,12 @@
     },
     {
      "path": "textures/mars/color_4k.jpg",
-     "bytes": 1700379,
+     "bytes": 1628340,
      "records": 1
     },
     {
      "path": "textures/mars/color_1k.jpg",
-     "bytes": 105641,
+     "bytes": 145573,
      "records": 1
     },
     {
@@ -3009,7 +3009,7 @@
     },
     {
      "path": "textures/venus/surface_4k.jpg",
-     "bytes": 1988086,
+     "bytes": 2736285,
      "records": 1
     },
     {
@@ -3046,22 +3046,22 @@
    "files": [
     {
      "path": "textures/ceres/color_4k.jpg",
-     "bytes": 2476692,
+     "bytes": 2044125,
      "records": 1
     },
     {
      "path": "textures/ceres/color_1k.jpg",
-     "bytes": 156836,
+     "bytes": 160432,
      "records": 1
     },
     {
      "path": "textures/vesta/color_4k.jpg",
-     "bytes": 1352704,
+     "bytes": 1435406,
      "records": 1
     },
     {
      "path": "textures/vesta/color_1k.jpg",
-     "bytes": 97294,
+     "bytes": 125305,
      "records": 1
     }
    ],
@@ -3093,22 +3093,22 @@
    "files": [
     {
      "path": "textures/jupiter/color_4k.jpg",
-     "bytes": 624638,
+     "bytes": 655053,
      "records": 1
     },
     {
      "path": "textures/jupiter/color_1k.jpg",
-     "bytes": 64289,
+     "bytes": 75465,
      "records": 1
     },
     {
      "path": "textures/neptune/color_2k.jpg",
-     "bytes": 39888,
+     "bytes": 44989,
      "records": 1
     },
     {
      "path": "textures/neptune/color_1k.jpg",
-     "bytes": 13615,
+     "bytes": 14749,
      "records": 1
     },
     {
@@ -3133,12 +3133,12 @@
     },
     {
      "path": "textures/uranus/color_2k.jpg",
-     "bytes": 16615,
+     "bytes": 40180,
      "records": 1
     },
     {
      "path": "textures/uranus/color_1k.jpg",
-     "bytes": 6793,
+     "bytes": 13014,
      "records": 1
     },
     {

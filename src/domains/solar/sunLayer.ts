@@ -218,9 +218,12 @@ export function createSunLayer(sun: SolarEntity): SunLayerHandle {
 
     collectLabels(ctx: FrameContext, out: LabelCandidate[]): void {
       if (px > ctx.viewport.height * 0.9) return;
+      // Beyond the Milky Way's scale the 'Sun' label would sit on the Milky Way and hide its label: hand over (~20 → 100 kpc).
+      const farFade = 1 - THREE.MathUtils.smoothstep(ctx.scaleLog10, 21.3, 22);
+      if (farFade <= 0.01) return;
       ctx.project(world, screen);
       if (!screen.visible) return;
-      out.push({ entityId: sun.id, text: sun.name, x: screen.x, y: screen.y, priority: sun.importance, kind: 'body', offsetPx: Math.min(px / 2, 4000) + 8 });
+      out.push({ entityId: sun.id, text: sun.name, x: screen.x, y: screen.y, priority: sun.importance, kind: 'body', offsetPx: Math.min(px / 2, 4000) + 8, opacity: farFade });
     },
 
     dispose(): void {

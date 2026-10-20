@@ -223,6 +223,7 @@ export function createPostPipeline(opts: PostPipelineOptions): PostPipeline {
     },
 
     update(ctx: FrameContext): void {
+      cinematic.pollMeter();
       cinematic.scaleLog10 = ctx.scaleLog10;
       const sunScreen = cinematic.sun;
       sunScreen.gain = 0;

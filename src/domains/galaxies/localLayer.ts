@@ -11,6 +11,7 @@
 import * as THREE from 'three';
 import type { EngineServices, FrameContext, LabelCandidate, Layer, PickHit } from '../../core/types';
 import { GALACTIC_CENTER_DIRECTION_ICRS, galacticToIcrs } from '../../core/frames';
+import { sliceUpload } from '../../core/perf';
 import { KPC_M, MPC_M } from '../../core/units';
 import { loadGalaxyCatalog, MILKY_WAY_ID, type Galaxy, type GalaxyCatalog } from './catalog';
 import { createGalaxiesProvider, galaxyRadiusM } from './entities';
@@ -61,6 +62,26 @@ export function createLocalGalaxiesLayer(): LocalGalaxiesLayer {
   let mwMat: ImpostorMaterial | null = null;
   const heroes: Hero[] = [];
   const disposables: { dispose(): void }[] = [];
+  let disposed = false;
+
+  /**
+   * A 1x1 black stand-in for `mat`'s map, replaced once `path` has loaded and gone up in slices (each 2K map was a
+   * 20-30 ms texSubImage2D on its first draw, several in the same frame when the Local Group comes into view: perf).
+   */
+  function lazyMap(path: string, anisotropy: number, mat: () => THREE.ShaderMaterial | null): THREE.Texture {
+    const ph = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
+    ph.needsUpdate = true;
+    const s = svc!;
+    void s.assets.textureAsync(path, { colorSpace: 'srgb', anisotropy }).then(t => sliceUpload(s.renderer, t)).then((t) => {
+      const m = mat();
+      // Superseded (quality upgrade landed first) or disposed meanwhile.
+      if (disposed || !m || m.uniforms.uMap.value !== ph) { t.dispose(); return; }
+      m.uniforms.uMap.value = t;
+      disposables.push(t);
+      ph.dispose();
+    }).catch(() => undefined);
+    return ph;
+  }
   let opacity = 0;
   let otherMilkyWay = false;
   let mwCheckFrame = 0;
@@ -131,7 +152,7 @@ export function createLocalGalaxiesLayer(): LocalGalaxiesLayer {
     if (atlasG.length) {
       const geo = createImpostorGeometry(atlasG.length);
       atlasG.forEach((g, k) => fillInstance(geo, k, g, g.impostor!.atlasSlot!));
-      const tex = s.assets.texture(idx.atlas.files['2k'], { colorSpace: 'srgb', fallbackColor: 0x000000, anisotropy: 8 });
+      const tex = lazyMap(idx.atlas.files['2k'], 8, () => atlasMat);
       atlasMat = new ImpostorMaterial(tex, idx.atlas.grid);
       atlasMat.uniforms.uGain.value = IMPOSTOR_GAIN;
       atlasMat.uniforms.uHandover.value.copy(HANDOVER);
@@ -148,8 +169,9 @@ export function createLocalGalaxiesLayer(): LocalGalaxiesLayer {
       const geo = createImpostorGeometry(1);
       fillInstance(geo, 0, g, 0);
       const low = im.fileLow ?? im.file;
-      const tex = s.assets.texture(low, { colorSpace: 'srgb', fallbackColor: 0x000000, anisotropy: 16 });
-      const mat = new ImpostorMaterial(tex, 1);
+      let mat: ImpostorMaterial | null = null;
+      const tex = lazyMap(low, 16, () => mat);
+      mat = new ImpostorMaterial(tex, 1);
       mat.uniforms.uGain.value = IMPOSTOR_GAIN;
       mat.uniforms.uHandover.value.copy(HANDOVER);
       const mesh = new THREE.Mesh(geo, mat);
@@ -172,7 +194,7 @@ export function createLocalGalaxiesLayer(): LocalGalaxiesLayer {
     geo.attrs.axisB.set([gy.x * half, gy.y * half, gy.z * half], 0);
     geo.attrs.params.set([0, 1, 0.9, 1], 0);
     geo.attrs.mode[0] = 2;
-    const tex = s.assets.texture('textures/galaxies/milkyway_faceon_2k.jpg', { colorSpace: 'srgb', fallbackColor: 0x000000, anisotropy: 16 });
+    const tex = lazyMap('textures/galaxies/milkyway_faceon_2k.jpg', 16, () => mwMat);
     mwMat = new ImpostorMaterial(tex, 1);
     mwMat.uniforms.uGain.value = IMPOSTOR_GAIN;
     mwMat.uniforms.uHandover.value.set(0, 1);
@@ -291,7 +313,9 @@ export function createLocalGalaxiesLayer(): LocalGalaxiesLayer {
         if (!atlasUpgraded && cat.impostors && ctx.quality.textureQuality !== 'low') {
           atlasUpgraded = true;
           const old = atlasMat.uniforms.uMap.value;
-          void svc.assets.textureAsync(cat.impostors.atlas.files['4k'], { colorSpace: 'srgb', anisotropy: 16 }).then((t) => {
+          const r = svc.renderer;
+          // Sliced upload: a 4K map in one texSubImage2D stalls the frame 50-500 ms mid-travel (perf).
+          void svc.assets.textureAsync(cat.impostors.atlas.files['4k'], { colorSpace: 'srgb', anisotropy: 16 }).then(t => sliceUpload(r, t)).then((t) => {
             if (!atlasMat) { t.dispose(); return; }
             atlasMat.uniforms.uMap.value = t;
             disposables.push(t);
@@ -321,7 +345,8 @@ export function createLocalGalaxiesLayer(): LocalGalaxiesLayer {
         if (!h.upgraded && ctx.quality.textureQuality !== 'low' && apparentPx(h.g, ctx) > 220) {
           h.upgraded = true;
           const old = h.mat.uniforms.uMap.value;
-          void svc.assets.textureAsync(ctx.quality.textureQuality === 'ultra' ? h.highPath : h.midPath, { colorSpace: 'srgb', anisotropy: 16 }).then((t) => {
+          const r = svc.renderer;
+          void svc.assets.textureAsync(ctx.quality.textureQuality === 'ultra' ? h.highPath : h.midPath, { colorSpace: 'srgb', anisotropy: 16 }).then(t => sliceUpload(r, t)).then((t) => {
             h.mat.uniforms.uMap.value = t;
             disposables.push(t);
             old?.dispose();
@@ -373,6 +398,7 @@ export function createLocalGalaxiesLayer(): LocalGalaxiesLayer {
     },
 
     dispose(): void {
+      disposed = true;
       for (const d of disposables) d.dispose();
       disposables.length = 0;
       points?.removeFromParent();

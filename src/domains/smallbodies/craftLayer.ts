@@ -518,6 +518,8 @@ export function createCraftLayer(entities: readonly Entity[], registry: Pick<Ent
         let fade = 1 - sstep(MARKER_HIDE_PX * 0.4, MARKER_HIDE_PX, shownPx);
         // At planet-scale views only nearby craft keep a marker.
         if (!focusedLike && fieldM < (fid !== 'sol:sun' ? 2e8 : 3e9)) fade *= 1 - sstep(100 * fieldM, 200 * fieldM, v.distM);
+        // Interstellar and wider views: the markers would pile up on the Sun.
+        if (!focusedLike) fade *= 1 - sstep(1e14, 1e15, fieldM);
         tmp.subVectors(ctx.cameraPosition, v.world).normalize();
         v.glint = (0.25 + 0.75 * lambertPhase(Math.acos(Math.min(Math.max(tmp.dot(sunDir), -1), 1)))) * eclipse;
         markerColor[4 * nm] = MARKER_RGB[0];
@@ -556,6 +558,7 @@ export function createCraftLayer(entities: readonly Entity[], registry: Pick<Ent
         const mine = v.entity.id === ctx.selectedId || v.entity.id === ctx.focusEntityId;
         const local = frameOf(v) !== 'sol:sun';
         if (!mine && fieldM < (local ? 2e8 : 3e9) && v.distM > 200 * fieldM) continue;
+        if (!mine && fieldM > 1e15) continue;
         const shownPx = v.px * v.enlarge;
         if (shownPx > ctx.viewport.height * 0.9) continue;
         ctx.project(v.world, screen);

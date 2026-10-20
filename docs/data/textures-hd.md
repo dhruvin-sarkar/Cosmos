@@ -81,7 +81,7 @@ Scripts: `scripts/data/textures-hd/{build-uranian,moons-index,moons-qa,moons-wra
 - **Poles**: Ceres south cap (< -78 deg, Dawn no-data/shadow) and Vesta north (polar night, > ~45 N) filled with albedo-matched neutral fill by `moons-polarfill.mjs`; masks archived.
 - **Rejected**: Enceladus normal from the Bland et al. 2019 topography grid (noisy at 2.2 km, shading baked into the mosaic). No global USGS DEMs exist for the Galilean or Saturnian mid-size moons (bucket listing checked), so those keep detail-normal micro-relief only.
 - **Small moons without global maps** (Amalthea, Thebe, Himalia, Proteus, Nereid, Janus, Epimetheus, ...) remain albedo-tinted procedural bodies with real shape and size, labelled illustrative in their FactSheets.
-- **Not wired**: Vesta's colour map exists but `src/domains/smallbodies` has no texture support (contract change below).
+- **Wired**: Vesta's colour map (`color_1k` preview, `color_4k`/`color_8k` by quality) and DTM normal map (`normal_hd_4k`, slopes x0.5 to undo the baked x2) drive the small-body material through `SURFACE_MAPS` in `src/domains/smallbodies/famousShapes.ts` (brightness relative to the 0.1537 mean times the V-class albedo; procedural craters/bump kept only below the map resolution). Shape is still the published triaxial ellipsoid. Other small bodies: add a `SURFACE_MAPS` entry.
 
 ## Planets, rings, Earth and Moon (tex-planets)
 

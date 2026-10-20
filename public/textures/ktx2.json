@@ -184,10 +184,10 @@
    "colorSpace": "srgb",
    "width": 8192,
    "height": 4096,
-   "bytes": 17511035,
+   "bytes": 17624177,
    "vramBytes": 44739280,
-   "srcBytes": 5030022,
-   "srcMtimeMs": 1792387639866
+   "srcBytes": 5664812,
+   "srcMtimeMs": 1792429267591
   },
   "textures/ceres/color_4k.jpg": {
    "ktx2": "textures/ceres/color_4k.ktx2",
@@ -740,6 +740,6 @@
    "srcMtimeMs": 1792429900960
   }
  },
- "generated": "2026-10-20T05:02:32.880Z",
+ "generated": "2026-10-20T13:50:26.108Z",
  "tool": "KTX-Software ktx create (Apache-2.0); scripts/data/textures-ktx2/convert.mjs"
 }

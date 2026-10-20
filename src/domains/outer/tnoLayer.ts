@@ -10,6 +10,7 @@ import type { EngineServices, FrameContext, Layer, LabelCandidate, PickHit } fro
 import type { EntityRegistry } from '../../core/entity';
 import { AU_M, DEG } from '../../core/units';
 import { KEPLER_GLSL } from '../../render/glsl/kepler';
+import { PSF_GLSL } from '../../render/glsl/psf';
 import { FRAGMENT_PRELUDE, LOGDEPTH_FRAGMENT, LOGDEPTH_VERTEX, VERTEX_PRELUDE } from '../../render/glsl/logdepth';
 import { heliocentricIcrsM, jdTdbFromMs } from '../smallbodies/orbits';
 import { LINKED_TNOS, cleanName, loadTnos, newElements, tnoElements, tnoEntityId, type NamedTno, type TnoData } from './data';
@@ -31,6 +32,7 @@ uniform float uSize;
 uniform float uGain;
 uniform vec3 uPalette[8];
 varying vec3 vColor;
+varying float vSizePx;
 
 void main() {
   float a = aEl0.x;
@@ -40,20 +42,25 @@ void main() {
   vec4 mv = modelViewMatrix * vec4(uEclToIcrs * p * uUnitsPerAu, 1.0);
   gl_Position = projectionMatrix * mv;
   float bright = clamp((9.0 - aEl1.w) * 0.22, 0.0, 1.0); // H ≈ 4 (bright dwarf planets) → 1, H ≥ 9 → 0
-  gl_PointSize = (uSize + 2.2 * bright) * uPixelRatio;
+  vSizePx = uSize + 2.2 * bright;
+  gl_PointSize = (vSizePx + 2.0) * uPixelRatio; // + 1 CSS px padding per side for the pixel-filtered PSF
   vColor = uPalette[int(aClass)] * (0.34 + 0.66 * bright) * uGain * uOpacity;
   ${LOGDEPTH_VERTEX}
 }`;
 
 const FRAGMENT = /* glsl */ `
 ${FRAGMENT_PRELUDE}
+uniform float uPixelRatio;
 varying vec3 vColor;
+varying float vSizePx;
+${PSF_GLSL}
 void main() {
   ${LOGDEPTH_FRAGMENT}
-  vec2 d = gl_PointCoord - 0.5;
-  float r2 = dot(d, d) * 4.0;
-  float a = exp(-r2 * 3.0) * step(r2, 1.0);
-  gl_FragColor = vec4(vColor * a, a);
+  // Pixel-filtered Gaussian in a padded sprite (render kit psfSprite) with the mean flux of the former shader
+  // (≈ 0.125·size²), but independent of the sub-pixel position: 1–3 px dots no longer twinkle as they move.
+  float a = psfSprite(gl_PointCoord, vSizePx, 0.35 + 0.15 * vSizePx, uPixelRatio) * (0.13 * vSizePx * vSizePx);
+  if (a < 1e-4) discard;
+  gl_FragColor = vec4(vColor * a, 1.0);
 }`;
 
 const ECL_TO_ICRS = new THREE.Matrix3();

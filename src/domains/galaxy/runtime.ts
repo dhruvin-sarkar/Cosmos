@@ -130,6 +130,9 @@ export function buildLandmarks(frame: GalacticFrame, lms: readonly LandmarkJson[
   };
   for (const l of lms) {
     if (l.type === 'galactic-centre') continue;
+    // Stellar black holes (Cygnus X-1, Gaia BH1-3, V404 Cyg) are owned by the blackholes domain (bh:*), which draws
+    // them with their companions: skipping them here avoids a second marker, label and search hit for each.
+    if (l.type === 'black-hole') continue;
     let m: MessierJson | null = null;
     const direct = /^m(\d+)$/.exec(l.id);
     if (direct) m = byMessier.get(Number(direct[1])) ?? null;

@@ -14,7 +14,7 @@ import {
 import { aphelionAU, heliocentricIcrsM, heliocentricVelocityIcrs, jdTdbFromMs, perihelionAU, periodDays, type HelioElements } from './orbits';
 import { loadCloseApproaches, loadSentry, normalizeDesignation } from './neoApi';
 import { sunSource, type PositionFn } from './sources';
-import { REAL_SHAPES, SPIN_STATES } from './famousShapes';
+import { REAL_SHAPES, SPIN_STATES, SURFACE_MAPS } from './famousShapes';
 
 export const SB_ENTITY_PREFIX = 'sb:';
 export const sbEntityId = (id: string): string => `${SB_ENTITY_PREFIX}${id}`;
@@ -258,6 +258,9 @@ function buildFactSheet(m: SmallBodyModel): FactSheet {
     representation: REAL_SHAPES[m.id] ? {
       provenance: 'reconstructed',
       description: `Real shape model: ${REAL_SHAPES[m.id].model} (${REAL_SHAPES[m.id].citation}; ${REAL_SHAPES[m.id].license}). Uniform illustrative albedo with procedural fine relief below the model resolution; rotation from ${(SPIN_STATES[m.id]?.source ?? 'an illustrative pole')}.${m.isComet ? ' Coma, jets and tails are illustrative but physically oriented.' : ''}`,
+    } : SURFACE_MAPS[m.id] ? {
+      provenance: 'reconstructed',
+      description: `Surface imagery: ${SURFACE_MAPS[m.id].credit}. The mosaic is draped on a triaxial ellipsoid from published dimensions (not a shape model of ${ed.name}: large craters and basins appear in the imagery only) with procedural fine relief below the mosaic resolution; rotation from ${SPIN_STATES[m.id]?.source ?? 'an illustrative pole'}.`,
     } : {
       provenance: 'illustrative',
       description: m.isComet
@@ -270,6 +273,7 @@ function buildFactSheet(m: SmallBodyModel): FactSheet {
     assumptions: [
       'Orbit: two-body propagation from the osculating epoch (no planetary perturbations).',
       m.sizeFromH ? 'Size: from H with an assumed albedo of 0.14.' : REAL_SHAPES[m.id] ? 'Shape: mission shape model (decimated).' : 'Shape: ellipsoid-based recipe, illustrative.',
+      ...(SURFACE_MAPS[m.id] ? ['Surface brightness: relative brightness from the mission mosaic times a typical albedo and tint for its spectral class (the mosaic is greyscale).'] : []),
       ...(rec.id === 'dimorphos' ? ['Orbital phase and orbit-plane orientation are illustrative; the pre/post-DART periods are measured.'] : []),
     ],
   };
@@ -324,7 +328,7 @@ export function createSmallBodyEntities(registry: Pick<EntityRegistry, 'get'>): 
       capabilities: ['focus', 'orbit', 'travel', 'follow', ...(isMoon ? [] : (['show-orbit'] as const)), 'sources',
         ...((['apophis', 'didymos', 'dimorphos', '2024-yr4'].includes(m.id) ? ['experiment:defense'] : []) as ('experiment:defense')[])],
       importance: ed.importance,
-      representation: 'illustrative',
+      representation: SURFACE_MAPS[m.id] && !REAL_SHAPES[m.id] ? 'reconstructed' : 'illustrative',
       facts: async () => {
         const sheet = buildFactSheet(m);
         const o = await observationFacts(m);

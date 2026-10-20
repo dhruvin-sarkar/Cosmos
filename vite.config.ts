@@ -62,6 +62,18 @@ export default defineConfig({
     chunkSizeWarningLimit: 2500,
     rollupOptions: {
       input: { main: resolve(import.meta.dirname, 'index.html') },
+      output: {
+        // Stable vendor chunks (cached across app rebuilds, fetched in parallel); labs, KaTeX and other lazy
+        // features split off automatically through their dynamic imports.
+        codeSplitting: process.env.COSMOS_NO_SPLIT ? true : {
+          groups: [
+            { name: 'three', test: /node_modules[\/]three[\/]/, priority: 30 },
+            { name: 'react', test: /node_modules[\/](react|react-dom|scheduler|zustand|use-sync-external-store)[\/]/, priority: 30 },
+            { name: 'katex', test: /node_modules[\/]katex[\/]/, priority: 30 },
+            { name: 'astro', test: /node_modules[\/](astronomy-engine|satellite.js)[\/]/, priority: 30 },
+          ],
+        },
+      },
     },
   },
   worker: { format: 'es' },

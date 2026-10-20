@@ -243,7 +243,7 @@ export function createGalacticCentreLayer(): Layer & GcLayerHandle {
         u.uMetresPerUnit.value = mpu;
         u.uRefDist.value = 0.3 * PC_M;
         // Dimmer around the S-stars so the 40 tracked stars stand out against the cluster.
-        u.uGain.value = 0.5 * (1 - 0.55 * sOpacity);
+        u.uGain.value = 0.5 * (1 - 0.8 * sOpacity);
         nscPts!.scale.setScalar(inv);
         nscPts!.visible = true;
       } else if (nscPts) nscPts.visible = false;
@@ -283,7 +283,7 @@ export function createGalacticCentreLayer(): Layer & GcLayerHandle {
         const P = s.periodYr!;
         o.setHead((((yr - s.tPeriYr) / P) % 1 + 1) % 1, 0.12);
         const focused = focusId === `mw:${s.id.toLowerCase()}`;
-        o.material.setFade(sOpacity * lineFade * (s.id === 'S2' || focused ? 0.9 : 0.24));
+        o.material.setFade(sOpacity * lineFade * (s.id === 'S2' || focused ? 0.9 : 0.45));
         o.visible = lineFade > 0.002;
       }
     },

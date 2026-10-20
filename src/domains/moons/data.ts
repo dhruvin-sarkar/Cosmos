@@ -156,13 +156,62 @@ export const PARENT_INFO: Record<ParentKey, { name: string; radiusKm: number; al
  */
 export const SIDEREAL_DAYS: Record<string, number> = {
   phobos: 0.31891023, deimos: 1.2624407, io: 1.769138, europa: 3.551181, ganymede: 7.154553, callisto: 16.689018,
-  amalthea: 0.498179, himalia: 250.5662, mimas: 0.942422, enceladus: 1.370218, tethys: 1.887802, dione: 2.736915,
-  rhea: 4.5175, titan: 15.945421, hyperion: 21.2766, iapetus: 79.3215, miranda: 1.413479, ariel: 2.520379,
+  amalthea: 0.498179, himalia: 250.5662, mimas: 0.942422, enceladus: 1.3702181, tethys: 1.8878025, dione: 2.7369156,
+  rhea: 4.5175027, titan: 15.945448, hyperion: 21.2766577, iapetus: 79.3310395, miranda: 1.413479, ariel: 2.520379,
   umbriel: 4.144176, titania: 8.705867, oberon: 13.463234, triton: 5.876854, proteus: 1.122315, nereid: 360.1362,
   charon: 6.38723, nix: 24.8561, hydra: 38.2018,
 };
 
 /** Moons whose tabulated apsidal precession is retrograde (Laplace-resonant Io and Europa; Mars' Phobos). */
 export const APSIS_RETROGRADE = new Set(['io', 'europa', 'phobos']);
+
+/**
+ * Mean elements that replace the angles of the JPL table (a, e, i and the reference plane still come from the record).
+ * Angles in deg at J2000 (JD 2451545.0 TDB), rates in deg/day, node from the reference plane's node on the ICRF equator.
+ */
+export interface MeanElementFit {
+  /** Mean longitude λ = Ω + ω + M and its rate (the sidereal mean motion). */
+  lambdaDeg: number;
+  nDegPerDay: number;
+  /** Longitude of periapsis ϖ = Ω + ω and its rate. */
+  periLonDeg: number;
+  periRateDegPerDay: number;
+  nodeDeg: number;
+  nodeRateDegPerDay: number;
+  /** Resonant libration of the mean longitude: Σ amp·sin(k·θ), θ = argDeg + rateDegPerYr·(days since J2000)/365.25. */
+  libration?: { argDeg: number; rateDegPerYr: number; terms: [k: number, ampDeg: number][] };
+}
+
+/**
+ * Major Saturnian moons. The JPL SSD mean-element table (SAT441 rows, "epoch 2000-01-01.5") has ω/M/node values that do
+ * not reproduce the SAT441 ephemeris at all: at J2000 itself the mean longitudes are off by 6° (Enceladus) to 157°
+ * (Rhea, Titan), so every Saturnian moon was drawn at the wrong orbital phase. These elements were instead fitted by
+ * least squares to JPL Horizons SAT441 state vectors (CENTER=500@699, ICRF, 6008 epochs 1950-2100, record a/e/i and
+ * Laplace pole held fixed). Fit residuals over 1950-2100 (rms / max angle seen from Saturn): Mimas 0.13°/0.30°,
+ * Enceladus 0.23°/0.49°, Tethys 0.08°/0.17°, Dione 0.04°/0.09°, Rhea 0.12°/0.24°, Titan 0.04°/0.08°, Hyperion 2.1°/4.4°,
+ * Iapetus 0.09°/0.25°. Cross-checks: the Mimas-Tethys libration (43.44°/2.08°, 70.7 yr, θ = 320.78° at J2000) and the
+ * apsidal rates of Mimas/Enceladus/Dione (365.6, 123.4, 30.8 °/yr) match Harper & Taylor's theory (Meeus, Astronomical
+ * Algorithms ch. 46: 43.57°, θ = 5.095°·(year − 1866.39), 365.55, 123.44, 30.82 °/yr). Hyperion's apse regresses (Titan
+ * 4:3 resonance) and its λ librates by 9.1° with a 640-day period. The Tethys ϖ is nominal (its e is ~1e-4).
+ */
+export const SATURN_MEAN_ELEMENTS: Record<string, MeanElementFit> = {
+  mimas: {
+    lambdaDeg: 160.3537, nDegPerDay: 381.994493474, periLonDeg: 145.6024, periRateDegPerDay: 1.0009187, nodeDeg: 173.0024, nodeRateDegPerDay: -0.9995002,
+    libration: { argDeg: 320.78, rateDegPerYr: 5.093504, terms: [[1, -43.4414], [3, -0.7128]] },
+  },
+  enceladus: { lambdaDeg: 182.2537, nDegPerDay: 262.731897987, periLonDeg: 171.5448, periRateDegPerDay: 0.3379632, nodeDeg: 0, nodeRateDegPerDay: 0 },
+  tethys: {
+    lambdaDeg: 188.3824, nDegPerDay: 190.697910681, periLonDeg: 305.7592, periRateDegPerDay: 0.1978493, nodeDeg: 259.8255, nodeRateDegPerDay: -0.1978494,
+    libration: { argDeg: 320.7673, rateDegPerYr: 5.093581, terms: [[1, 2.0849]] },
+  },
+  dione: { lambdaDeg: 176.9032, nDegPerDay: 131.534930416, periLonDeg: 214.6768, periRateDegPerDay: 0.084248, nodeDeg: 0, nodeRateDegPerDay: 0 },
+  rhea: { lambdaDeg: 52.1641, nDegPerDay: 79.690045686, periLonDeg: 236.2495, periRateDegPerDay: 0.0276307, nodeDeg: 351.1328, nodeRateDegPerDay: -0.027503 },
+  titan: { lambdaDeg: 11.7238, nDegPerDay: 22.576976193, periLonDeg: 208.2187, periRateDegPerDay: 0.0014139, nodeDeg: 23.5257, nodeRateDegPerDay: -0.0012875 },
+  hyperion: {
+    lambdaDeg: 289.537, nDegPerDay: 16.919950702, periLonDeg: 234.3142, periRateDegPerDay: -0.0511258, nodeDeg: 259.9011, nodeRateDegPerDay: -0.0047807,
+    libration: { argDeg: 102.7409, rateDegPerYr: 205.294206, terms: [[1, 9.1386]] },
+  },
+  iapetus: { lambdaDeg: 200.2239, nDegPerDay: 4.537946337, periLonDeg: 351.368, periRateDegPerDay: 0.0002663, nodeDeg: 74.7892, nodeRateDegPerDay: -0.0003128 },
+};
 
 export const moonEntityId = (id: string): string => `sol:${id}`;

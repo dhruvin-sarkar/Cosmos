@@ -16,6 +16,7 @@
  */
 import * as THREE from 'three';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+import { sliceUpload, sliceUploadCompressed } from '../perf';
 import type { AssetLoader, QualityProfile } from '../types';
 import { HD_BUDGET_BYTES, chooseEvictions, chooseRestore, type ResidentState } from './budget';
 import { KTX2_MANIFEST_PATH, compressedMipBytes, normalizeKey, parseKtx2Manifest, rgbaBytes, type Ktx2Entry, type Ktx2Manifest } from './manifest';
@@ -157,6 +158,8 @@ function baseUrl(): string {
 
 export class TextureManager {
   private renderer: THREE.WebGLRenderer | null = null;
+  /** Sliced GPU copies of big fallback images (keyed by the cached source texture). */
+  private readonly sliced = new WeakMap<THREE.Texture, Promise<THREE.Texture>>();
   private rendererWaiters: Array<(ok: boolean) => void> = [];
   private ktx2: KTX2Loader | null = null;
   private ktx2Supported: boolean | null = null;
@@ -316,7 +319,9 @@ export class TextureManager {
       tex.name = path;
       this.configure(tex, opts, true);
       this.managed.set(tex, estimateTextureBytes(tex));
-      await this.upload(tex, opts.priority ?? 0);
+      // Big maps (4K/8K with mips) fill their storage in slices over frames; small ones use the upload queue (perf).
+      if (this.renderer && estimateTextureBytes(tex) > 8 * 1024 * 1024) await sliceUploadCompressed(this.renderer, tex);
+      else await this.upload(tex, opts.priority ?? 0);
       this.s.ktx2Loaded++;
       return tex;
     } catch (err) {
@@ -367,14 +372,29 @@ export class TextureManager {
   async load(path: string, opts: ManagedTextureOptions): Promise<THREE.Texture> {
     const k = await this.loadKtx2(path, opts);
     if (k) return k;
-    const tex = await this.track(this.assets.textureAsync(path, { colorSpace: opts.colorSpace, anisotropy: opts.anisotropy ?? 16 }));
-    this.configure(tex, opts, false);
+    const src = await this.track(this.assets.textureAsync(path, { colorSpace: opts.colorSpace, anisotropy: opts.anisotropy ?? 16 }));
+    this.configure(src, opts, false);
+    // A 4K/8K image in one initTexture() blocks the frame 100-450 ms: big bitmaps go up in slices over frames instead (perf).
+    // Shared (cached) images that are already on the GPU keep the queue path, which is then a no-op.
+    const big = this.renderer !== null && !this.managed.has(src) && typeof ImageBitmap !== 'undefined' && src.image instanceof ImageBitmap
+      && (src.image as ImageBitmap).width * (src.image as ImageBitmap).height >= 4096 * 2048;
+    let tex = src;
+    if (big) {
+      // One GPU copy per cached image even when two callers load the same path.
+      let p = this.sliced.get(src);
+      if (!p) {
+        p = sliceUpload(this.renderer!, src);
+        this.sliced.set(src, p);
+        void p.then(t => t.addEventListener('dispose', () => this.sliced.delete(src)), () => this.sliced.delete(src));
+      }
+      tex = await p;
+    }
     if (!this.managed.has(tex)) {
       this.managed.set(tex, estimateTextureBytes(tex));
       tex.addEventListener('dispose', () => this.managed.delete(tex));
       this.s.fallbackLoaded++;
     }
-    await this.upload(tex, opts.priority ?? 0);
+    if (tex === src) await this.upload(tex, opts.priority ?? 0);
     return tex;
   }
 

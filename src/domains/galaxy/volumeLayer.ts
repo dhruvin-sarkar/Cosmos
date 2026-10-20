@@ -89,6 +89,8 @@ void main() {
   gl_FragColor = vec4(young, hii, dust, old);
 }`;
 
+const bakers = new WeakMap<THREE.WebGLRenderer, { scene: THREE.Scene; cam: THREE.OrthographicCamera }>();
+
 function bakeArmMap(renderer: THREE.WebGLRenderer, size: number): THREE.WebGLRenderTarget {
   const A: THREE.Vector4[] = [], B: THREE.Vector4[] = [], C: THREE.Vector4[] = [], D: THREE.Vector4[] = [];
   const clampTan = (deg: number): number => Math.tan(Math.min(14, Math.max(7, deg)) * DEG);
@@ -102,15 +104,22 @@ function bakeArmMap(renderer: THREE.WebGLRenderer, size: number): THREE.WebGLRen
     type: THREE.HalfFloatType, format: THREE.RGBAFormat, generateMipmaps: true,
     minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false,
   });
-  const mat = new THREE.ShaderMaterial({
-    vertexShader: BAKE_VERT, fragmentShader: BAKE_FRAG,
-    uniforms: { uArmA: { value: A }, uArmB: { value: B }, uArmC: { value: C }, uArmD: { value: D }, uExtent: { value: MAP_EXTENT_KPC } },
-    depthTest: false, depthWrite: false,
-  });
-  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
-  const scene = new THREE.Scene();
-  scene.add(quad);
-  const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  // The bake quad is kept for the renderer's lifetime: disposing its material released the program, so the quality
+  // re-bake (Ultra 4K map, first shown on approach) re-linked it synchronously: a 300-700 ms freeze mid-travel (perf).
+  let baker = bakers.get(renderer);
+  if (!baker) {
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: BAKE_VERT, fragmentShader: BAKE_FRAG,
+      uniforms: { uArmA: { value: A }, uArmB: { value: B }, uArmC: { value: C }, uArmD: { value: D }, uExtent: { value: MAP_EXTENT_KPC } },
+      depthTest: false, depthWrite: false,
+    });
+    const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
+    const bakeScene = new THREE.Scene();
+    bakeScene.add(quad);
+    baker = { scene: bakeScene, cam: new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1) };
+    bakers.set(renderer, baker);
+  }
+  const { scene, cam } = baker;
   const prevTarget = renderer.getRenderTarget();
   const prevAutoClear = renderer.autoClear;
   renderer.autoClear = true;
@@ -118,8 +127,6 @@ function bakeArmMap(renderer: THREE.WebGLRenderer, size: number): THREE.WebGLRen
   renderer.render(scene, cam);
   renderer.setRenderTarget(prevTarget);
   renderer.autoClear = prevAutoClear;
-  quad.geometry.dispose();
-  mat.dispose();
   rt.texture.colorSpace = THREE.NoColorSpace;
   rt.texture.wrapS = rt.texture.wrapT = THREE.ClampToEdgeWrapping;
   rt.texture.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy());
@@ -183,7 +190,9 @@ void sampleGalaxy(vec3 p, float lod, out vec3 emis, out vec3 kap) {
   float rc = sqrt(R * R + (p.z / 0.5) * (p.z / 0.5) + uCoreSoft * uCoreSoft);
   float core = 0.9 * exp(-rc / 0.12) + 0.25 * exp(-rc / 0.35);
   float young = m.r * exp(-az / 0.09) / 0.18 * (0.45 + 0.75 * exp(-max(R - 5.0, 0.0) / 6.0));
-  float hii = m.g * exp(-az / 0.06) / 0.12;
+  // HII knots are baked at ~100 pc texels: from within a few kpc they read as large soft pink blobs, so the diffuse
+  // knots give way to the (sharp) HII particles close to the camera.
+  float hii = m.g * exp(-az / 0.06) / 0.12 * mix(0.1, 1.0, smoothstep(6.0, 20.0, length(p - uCam)));
   emis = C_OLD * (thin + thick) * 1.4 + C_BULGE * (bulge + bar + core) + C_YOUNG * young * 0.2 + C_HII * hii * 1.6;
   // Dust: exponential disc with an inner hole (except the Central Molecular Zone) and sech² profile.
   float hd = 0.1344 * (1.0 + 0.0148 / 0.1344 * max(R - 4.4, 0.0));
@@ -252,7 +261,26 @@ export interface GalaxyVolumeHandle {
   readonly opacity: number;
 }
 
-const STEPS: Record<string, number> = { performance: 72, balanced: 112, ultra: 176 };
+const STEPS: Record<string, number> = { performance: 64, balanced: 96, ultra: 176 };
+/** The march renders off-screen at this fraction of the drawing buffer and is upsampled (the glow is smooth). */
+const MARCH_SCALE: Record<string, number> = { performance: 0.5, balanced: 0.5, ultra: 0.75 };
+
+const COMP_VERT = /* glsl */ `
+${VERTEX_PRELUDE}
+varying vec2 vUv;
+void main() {
+  vUv = position.xy * 0.5 + 0.5;
+  gl_Position = vec4(position.xy, 1.0, 1.0);
+}`;
+
+const COMP_FRAG = /* glsl */ `
+${FRAGMENT_PRELUDE}
+uniform sampler2D uVol;
+varying vec2 vUv;
+void main() {
+  ${LOGDEPTH_FRAGMENT_AT_INFINITY}
+  gl_FragColor = texture2D(uVol, vUv);
+}`;
 const MAP_SIZE: Record<string, number> = { low: 1024, high: 2048, ultra: 2048 };
 
 /** Volume visibility from the camera position: complement of the sky maps' 50 → 500 pc fade; off beyond ~4 Mpc. */
@@ -274,6 +302,13 @@ export function createGalaxyVolumeLayer(): Layer & GalaxyVolumeHandle {
   let map: THREE.WebGLRenderTarget | null = null;
   let mesh: THREE.Mesh | null = null;
   let mat: THREE.ShaderMaterial | null = null;
+  // Off-screen march (reduced resolution) + full-screen composite in the transparent group.
+  let marchRt: THREE.WebGLRenderTarget | null = null;
+  let marchScene: THREE.Scene | null = null;
+  let compMat: THREE.ShaderMaterial | null = null;
+  const marchCam = new THREE.Camera();
+  const bufSize = new THREE.Vector2();
+  const savedClear = new THREE.Color();
   let opacity = 0;
   const camGal = { x: 0, y: 0, z: 0 };
   const w2g = new THREE.Matrix3().set(
@@ -312,6 +347,22 @@ export function createGalaxyVolumeLayer(): Layer & GalaxyVolumeHandle {
           uPixelAngle: { value: 1e-3 },
           uTexel: { value: (2 * MAP_EXTENT_KPC) / 2048 },
         },
+        depthTest: false,
+        depthWrite: false,
+        blending: THREE.NoBlending,
+      });
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-1, -1, 0, 3, -1, 0, -1, 3, 0]), 3));
+      const march = new THREE.Mesh(geo, mat);
+      march.frustumCulled = false;
+      marchScene = new THREE.Scene();
+      marchScene.add(march);
+      marchRt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, depthBuffer: false, generateMipmaps: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+      // Composite: (glow, transmittance) from the march → dst · alpha + glow.
+      compMat = new THREE.ShaderMaterial({
+        vertexShader: COMP_VERT,
+        fragmentShader: COMP_FRAG,
+        uniforms: { uVol: { value: marchRt.texture } },
         transparent: true,
         depthTest: false,
         depthWrite: false,
@@ -322,18 +373,11 @@ export function createGalaxyVolumeLayer(): Layer & GalaxyVolumeHandle {
         blendSrcAlpha: THREE.ZeroFactor,
         blendDstAlpha: THREE.OneFactor,
       });
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-1, -1, 0, 3, -1, 0, -1, 3, 0]), 3));
-      mesh = new THREE.Mesh(geo, mat);
+      mesh = new THREE.Mesh(geo, compMat);
       mesh.name = 'galaxy-volume';
       mesh.frustumCulled = false;
       mesh.renderOrder = -50;
       mesh.visible = false;
-      const m = mat;
-      mesh.onBeforeRender = (_r, _s, camera) => {
-        m.uniforms.uInvProjection.value.copy(camera.projectionMatrixInverse);
-        m.uniforms.uCameraRotation.value.setFromMatrix4(camera.matrixWorld);
-      };
       svc.groups.transparent.add(mesh);
     },
 
@@ -367,7 +411,7 @@ export function createGalaxyVolumeLayer(): Layer & GalaxyVolumeHandle {
       (u.uCam.value as THREE.Vector3).set(camGal.x, camGal.y, camGal.z);
       u.uOpacity.value = opacity;
       // Deep in the bulge the structure seen is smooth and distant: fewer steps suffice.
-      const steps = STEPS[ctx.quality.preset] ?? 112;
+      const steps = STEPS[ctx.quality.preset] ?? 96;
       u.uMaxSteps.value = Math.round(steps * (0.5 + 0.5 * THREE.MathUtils.smoothstep(lgc, -2.5, -0.5)));
       // Dust dims the background only once the catalogue stars (no depth here) have faded (view ≳ 30 kpc).
       u.uBgDim.value = THREE.MathUtils.smoothstep(ctx.scaleLog10, 20.6, 21.3);
@@ -376,14 +420,41 @@ export function createGalaxyVolumeLayer(): Layer & GalaxyVolumeHandle {
       // Eye adaptation inside the bulge: the diffuse glow dims so the nuclear cluster, the S-stars and Sgr A* read
       // against it (a deep-sky exposure, not a white-out). 1 beyond 2 kpc → 0.05 within 1 pc of Sgr A*.
       u.uIntensity.value = Math.pow(10, -1.3 * (1 - THREE.MathUtils.smoothstep(lgc, -3, 0.3))) * deepFade;
-      u.uPixelAngle.value = ctx.fovYRad / Math.max(1, ctx.viewport.height * ctx.viewport.pixelRatio);
       u.uTexel.value = (2 * MAP_EXTENT_KPC) / (map?.width ?? 2048);
+
+      // March off-screen at reduced resolution (the dominant cost of galactic views), upsampled by the composite.
+      if (!svcRef || !marchRt || !marchScene) return;
+      const r = svcRef.renderer;
+      const scale = (MARCH_SCALE[ctx.quality.preset] ?? 0.5) * (ctx.quality.renderScale || 1);
+      r.getDrawingBufferSize(bufSize);
+      const w = Math.max(16, Math.round(bufSize.x * scale)), h = Math.max(16, Math.round(bufSize.y * scale));
+      if (marchRt.width !== w || marchRt.height !== h) marchRt.setSize(w, h);
+      u.uPixelAngle.value = ctx.fovYRad / h;
+      const camera = svcRef.camera;
+      camera.updateMatrixWorld();
+      u.uInvProjection.value.copy(camera.projectionMatrixInverse);
+      u.uCameraRotation.value.setFromMatrix4(camera.matrixWorld);
+      const prevTarget = r.getRenderTarget();
+      const prevAlpha = r.getClearAlpha();
+      r.getClearColor(savedClear);
+      const prevAutoClear = r.autoClear;
+      r.setRenderTarget(marchRt);
+      r.setClearColor(0x000000, 1);
+      r.clear(true, false, false);
+      r.autoClear = false;
+      r.render(marchScene, marchCam);
+      r.autoClear = prevAutoClear;
+      r.setClearColor(savedClear, prevAlpha);
+      r.setRenderTarget(prevTarget);
     },
 
     dispose(): void {
       mesh?.removeFromParent();
       mesh?.geometry.dispose();
       mat?.dispose();
+      compMat?.dispose();
+      marchRt?.dispose();
+      marchRt = null; marchScene = null; compMat = null;
       map?.dispose();
       mesh = null; mat = null; map = null;
     },

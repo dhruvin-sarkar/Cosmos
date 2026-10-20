@@ -413,7 +413,9 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
           const phys = (L * areaPx) / 4.5;
           const floor = def.kind === 'planet' ? 0.5 : 0.28;
           pointSize[v.index] = def.kind === 'planet' ? 4.2 : 3.4;
-          const intensity = Math.max(phys, floor) * v.lod.point;
+          // Beyond the Oort-cloud scale the floored dots would pile up into a blob on the Sun: fade them out (2000 → 20000 AU).
+          const farFade = 1 - THREE.MathUtils.smoothstep(v.distM, 3e14, 3e15);
+          const intensity = Math.max(phys, floor) * v.lod.point * farFade;
           pointCol[i3] = (DOT_COLOR[def.id]?.[0] ?? 1) * intensity;
           pointCol[i3 + 1] = (DOT_COLOR[def.id]?.[1] ?? 1) * intensity;
           pointCol[i3 + 2] = (DOT_COLOR[def.id]?.[2] ?? 1) * intensity;

@@ -202,6 +202,11 @@ export class CinematicPass extends Pass {
     return this.bloom.settings;
   }
 
+  /** Collect the exposure meter's pending readback; call before the frame's draw calls are queued (perf). */
+  pollMeter(): void {
+    this.meter.poll();
+  }
+
   override setSize(width: number, height: number): void {
     this.width = Math.max(1, width);
     this.height = Math.max(1, height);

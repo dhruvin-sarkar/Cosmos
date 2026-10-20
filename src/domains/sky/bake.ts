@@ -107,21 +107,7 @@ let quad: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial> | null = null;
 let quadScene: THREE.Scene | null = null;
 const quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-/** Bake `src` (an sRGB image texture) into a new mipmapped sRGB render target. The caller owns the result. */
-export function bakeSkyMap(renderer: THREE.WebGLRenderer, src: THREE.Texture, opts: BakeOptions): THREE.WebGLRenderTarget {
-  const img = src.image as { width: number; height: number };
-  const w = img.width;
-  const h = img.height;
-  src.wrapS = THREE.RepeatWrapping;
-  src.wrapT = THREE.ClampToEdgeWrapping;
-  // Mipmapped: the faint-sky smoothing samples coarse levels (skyTap).
-  src.minFilter = THREE.LinearMipmapLinearFilter;
-  src.magFilter = THREE.LinearFilter;
-  src.generateMipmaps = true;
-  src.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy());
-  src.colorSpace = THREE.SRGBColorSpace;
-  src.needsUpdate = true;
-
+function ensureQuad(): void {
   if (!quad) {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 3, -1, 0, -1, 3, 0], 3));
@@ -137,7 +123,26 @@ export function bakeSkyMap(renderer: THREE.WebGLRenderer, src: THREE.Texture, op
     quadScene = new THREE.Scene();
     quadScene.add(quad);
   }
-  const u = quad.material.uniforms;
+}
+
+/** Bake `src` (an sRGB image texture) into a new mipmapped sRGB render target. The caller owns the result. */
+export function bakeSkyMap(renderer: THREE.WebGLRenderer, src: THREE.Texture, opts: BakeOptions): THREE.WebGLRenderTarget {
+  const img = src.image as { width: number; height: number };
+  const w = img.width;
+  const h = img.height;
+  src.wrapS = THREE.RepeatWrapping;
+  src.wrapT = THREE.ClampToEdgeWrapping;
+  // Mipmapped: the faint-sky smoothing samples coarse levels (skyTap).
+  src.minFilter = THREE.LinearMipmapLinearFilter;
+  src.magFilter = THREE.LinearFilter;
+  src.generateMipmaps = true;
+  src.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy());
+  src.colorSpace = THREE.SRGBColorSpace;
+  src.needsUpdate = true;
+
+  ensureQuad();
+  const q = quad!;
+  const u = q.material.uniforms;
   u.uSrc.value = src;
   u.uTexel.value.set(1 / w, 1 / h);
   u.uStarless.value = opts.starless ? 1 : 0;

@@ -2,13 +2,14 @@
 
 Owner's request: *"make the planets and sun bigger in scale like scale everything up"*. Cosmos defaults to **Exhibition scale**:
 bodies are drawn enlarged so they read as discs at system scale, and shrink smoothly to their true size as the camera
-approaches them. **True scale** (one click in the top bar, or Layers → Exhibition scale) draws everything at its real size.
+approaches them. **True scale** (Settings → View scale, or Layers → Exhibition scale) draws everything at its real size.
 Heliocentric distances never change.
 
 Single source of truth: `src/core/visualScale.ts` (tests: `src/core/visualScale.test.ts`). Store: `visualScale:
 'exhibition' | 'true'` in `src/state/store.ts`, changed with `setVisualScale(store, mode)` (which also mirrors the legacy
-`'enlarge-bodies'` overlay for layers that have not migrated yet). HUD: `src/ui/shell/ScaleToggle.tsx` — the top-bar pill
-"Exhibition scale · Enlarged for visibility" (dotted ring = illustrative, per the provenance mark language) / "True scale".
+`'enlarge-bodies'` overlay for layers that have not migrated yet). HUD: Settings → "View scale" (`SettingsPanel` in
+`src/ui/shell/Panels.tsx`): "Enlarged for visibility" / "True scale" with a one-line explanation. The owner moved it out
+of the top bar on 2026-10-20 (the former `ScaleToggle.tsx` pill is gone); Layers keeps its "Exhibition scale" toggle.
 
 ## The laws
 

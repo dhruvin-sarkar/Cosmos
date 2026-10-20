@@ -11,6 +11,7 @@
  */
 import * as THREE from 'three';
 import type { EngineServices, FrameContext, LabelCandidate, Layer, PickHit } from '../../core/types';
+import { sliceUpload } from '../../core/perf';
 import { GPC_M, JULIAN_YEAR_S, MPC_M } from '../../core/units';
 import { comovingDistanceM, lookbackTimeS, redshiftFromComovingDistance, Z_LAST_SCATTERING } from '../../science/cosmology';
 import { FRAGMENT_PRELUDE, LOGDEPTH_FRAGMENT, LOGDEPTH_VERTEX, VERTEX_PRELUDE } from '../../render/glsl/logdepth';
@@ -159,8 +160,11 @@ export function createEdgeLayer(): Layer {
         mat.uniforms.uOpacity.value = cmbOp;
         if (!upgraded && ctx.quality.textureQuality !== 'low') {
           upgraded = true;
+          const r = svc.renderer;
           void svc.assets.textureAsync('textures/galaxies/cmb_dT_4k.jpg', { colorSpace: 'linear', anisotropy: 16 }).then((t) => {
             t.wrapS = THREE.RepeatWrapping;
+            return sliceUpload(r, t); // spread the 4K upload over frames (perf)
+          }).then((t) => {
             const old = mat!.uniforms.uMap.value;
             mat!.uniforms.uMap.value = t;
             old?.dispose();
@@ -214,8 +218,9 @@ export function createEdgeLayer(): Layer {
       for (let j = 0; j <= shells.length; j++) {
         const op = shellOp[j];
         if (op < 0.2) continue;
-        const rM = j < shells.length ? shells[j].distanceM : horizonM;
-        const ang = j === shells.length ? -0.62 : 0.62 - j * 0.035;
+        // The horizon readout sits above and just outside its circle (which nearly coincides with the CMB sphere).
+        const rM = j < shells.length ? shells[j].distanceM : horizonM * 1.12;
+        const ang = j === shells.length ? 1.42 : 0.62 - j * 0.035;
         scratch.copy(right).multiplyScalar(Math.cos(ang) * rM).addScaledVector(up, Math.sin(ang) * rM);
         ctx.project(scratch, sp);
         if (!sp.visible) continue;
