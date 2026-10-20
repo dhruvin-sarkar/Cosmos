@@ -1,0 +1,169 @@
+/* Black hole lab (src/labs/relativity). Scoped under .rl-* ; uses tokens from src/styles/tokens.css. */
+.rl-lab,
+.rl-viz {
+  --rl-hover: oklch(0.86 0.12 75);
+  --rl-orbit: oklch(0.78 0.1 230);
+  --rl-hole-ring: oklch(0.82 0.13 65);
+}
+.cx-lab-viewport.has-content:has(.rl-viz--wrap-live) {
+  pointer-events: none;
+}
+.rl-viz {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-height: 0;
+  font: var(--type-body);
+  font-feature-settings: var(--font-features-ui);
+  color: var(--text-primary);
+}
+.rl-viz--live {
+  position: static;
+  flex: 1 1 auto;
+  justify-content: space-between;
+}
+.rl-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  pointer-events: auto;
+  align-self: flex-start;
+  padding: 6px;
+  background: var(--faceplate);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-plate);
+}
+.rl-strip {
+  pointer-events: auto;
+  align-self: stretch;
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  font: var(--type-label);
+  color: var(--text-secondary, #bebebe);
+  background: var(--faceplate);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-plate);
+}
+.rl-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--faceplate);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-plate);
+  pointer-events: auto;
+  overflow: auto;
+}
+.rl-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.rl-card__actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+.rl-card__title {
+  margin: 0;
+  font: var(--type-control);
+  color: var(--text-secondary, #bebebe);
+}
+.rl-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  flex: 1 1 auto;
+  min-height: 180px;
+}
+.rl-grid {
+  stroke: oklch(1 0 0 / 0.06);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.rl-mark {
+  stroke: oklch(1 0 0 / 0.22);
+  stroke-dasharray: 3 4;
+}
+.rl-axis {
+  font: var(--type-label);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  fill: var(--text-secondary, #bebebe);
+}
+.rl-axis--title {
+  fill: var(--text-primary);
+  font-size: 12px;
+}
+.rl-line {
+  fill: none;
+  stroke-width: 2;
+}
+.rl-line--hover { stroke: var(--rl-hover); }
+.rl-line--orbit { stroke: var(--rl-orbit); stroke-dasharray: 6 4; }
+.rl-dot { fill: var(--rl-hover); stroke: black; stroke-width: 1.5; }
+.rl-dot--orbit { fill: var(--rl-orbit); }
+.rl-track { stroke: oklch(1 0 0 / 0.14); stroke-width: 1; }
+.rl-hole { fill: black; }
+.rl-horizon { fill: none; stroke: var(--rl-hole-ring); stroke-width: 1.5; opacity: 0.85; }
+.rl-clock { stroke: oklch(1 0 0 / 0.5); stroke-width: 1; transition: opacity 120ms linear; }
+.rl-orbit { fill: none; stroke: oklch(1 0 0 / 0.16); stroke-width: 1; }
+.rl-orbit--now { stroke: var(--rl-orbit); stroke-width: 1.5; }
+.rl-star { fill: oklch(0.9 0.06 240); filter: drop-shadow(0 0 4px oklch(0.85 0.1 240)); }
+.rl-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: var(--type-label);
+  color: var(--text-secondary, #bebebe);
+}
+.rl-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.rl-swatch--hover { background: var(--rl-hover); }
+.rl-swatch--orbit { background: var(--rl-orbit); }
+.rl-real {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.rl-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-1, 4px) var(--sp-3);
+  margin: 0;
+  font: var(--type-label);
+}
+.rl-facts dt { color: var(--text-secondary, #bebebe); }
+.rl-facts dd { margin: 0; text-align: right; color: var(--text-primary); }
+.rl-note {
+  margin: 0;
+  font: var(--type-label);
+  color: var(--text-secondary, #bebebe);
+}
+.rl-prose {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  font: var(--type-body);
+  color: var(--text-primary);
+}
+.rl-prose p { margin: 0; }
+.rl-list { margin: 0; padding-left: 1.1em; }
+@media (prefers-reduced-motion: reduce) {
+  .rl-clock { transition: none; }
+}
