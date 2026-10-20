@@ -177,7 +177,7 @@ export const SOLAR_BODIES: readonly SolarBodyDef[] = [
   {
     id: 'sol:uranus', key: 'uranus', name: 'Uranus', aliases: [], kind: 'planet', aeBody: 'Uranus',
     axesM: [km(25559), km(25559), km(24973)], meanRadiusM: km(25362), gmM3S2: GM(5793951.26),
-    geometricAlbedo: 0.51, tint: [0.68, 1.0, 1.13], surface: 'giant', colorMap: 'color', minnaertK: 1.1,
+    geometricAlbedo: 0.51, tint: [0.68, 1.0, 1.13], hdTint: [1, 1, 1], surface: 'giant', colorMap: 'color', minnaertK: 1.1,
     // Voyager 2 / HST true colour ≈ sRGB (172, 208, 214) at disc centre, clear limb darkening; the sunward north pole
     // (2026, near solstice) shows the bright polar hood poleward of ~60° N (Sromovsky et al. 2015; Karkoschka 2015).
     limbPow: 0.7, polarCap: [52, 64, 0.12],
@@ -190,7 +190,7 @@ export const SOLAR_BODIES: readonly SolarBodyDef[] = [
   {
     id: 'sol:neptune', key: 'neptune', name: 'Neptune', aliases: [], kind: 'planet', aeBody: 'Neptune',
     axesM: [km(24764), km(24764), km(24341)], meanRadiusM: km(24622), gmM3S2: GM(6835103.15),
-    geometricAlbedo: 0.41, tint: [2, 1.6, 0.95], surface: 'giant', colorMap: 'color', minnaertK: 1.1,
+    geometricAlbedo: 0.41, tint: [2, 1.6, 0.95], hdTint: [1, 1, 1], surface: 'giant', colorMap: 'color', minnaertK: 1.1,
     winds: { profile: 'neptune', shearBudgetDeg: 60 },
     appearance: 'reconstructed', appearanceNote: 'Deep blue disc after Voyager 2 imagery (Solar System Scope, CC BY 4.0); storm positions are illustrative.',
     rotation: { ra0: 299.36, dec0: 43.46, raRate: 0, decRate: 0, w0: 249.978, wDot: 541.1397757, neptuneTerms: true },

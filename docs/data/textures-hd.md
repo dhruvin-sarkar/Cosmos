@@ -82,3 +82,23 @@ Scripts: `scripts/data/textures-hd/{build-uranian,moons-index,moons-qa,moons-wra
 - **Rejected**: Enceladus normal from the Bland et al. 2019 topography grid (noisy at 2.2 km, shading baked into the mosaic). No global USGS DEMs exist for the Galilean or Saturnian mid-size moons (bucket listing checked), so those keep detail-normal micro-relief only.
 - **Small moons without global maps** (Amalthea, Thebe, Himalia, Proteus, Nereid, Janus, Epimetheus, ...) remain albedo-tinted procedural bodies with real shape and size, labelled illustrative in their FactSheets.
 - **Not wired**: Vesta's colour map exists but `src/domains/smallbodies` has no texture support (contract change below).
+
+## Planets, rings, Earth and Moon (tex-planets)
+
+Scripts in `scripts/data/textures-hd/`; raw downloads in `data-raw/big/tex-planets/` (G: junction); manifest fragments `data-raw/textures-hd/hd2.tp-*.json` (run `finalize2.mjs` after each build; `convert.mjs` in `scripts/data/textures-ktx2/` regenerates the GPU twins - delete a stale `.ktx2` first on Windows, the in-place rename can fail with EPERM).
+
+| Body / map | Tiers | Source | Licence | Script |
+|---|---|---|---|---|
+| Saturn rings `rings_16k.png` (hd.json `saturn.rings["8k"]`) | 16384 x 4 radial strip | Cassini RSS optical depth profile + Voyager ISS lit-side I/F (PDS Ring-Moon Systems Node); Cassini Division, Encke Gap, Keeler Gap resolved; F ring modelled (illustrative) | public domain (NASA/JPL/PDS) | `build-rings.mjs` |
+| Jupiter colour | 4k/1k (index.json, all presets) | Hubble OPAL 2025 (cycle 32) F631N/F502N/F467M global maps, 10 px/deg, Minnaert-corrected; Great Red Spot at 38 E / 20 S. Poleward of ~77 deg: nearest observed zonal mean (illustrative) | public domain (NASA/ESA HST via STScI MAST HLSP OPAL, doi:10.17909/T9G593) | `build-opal.mjs`, `apply-tp.mjs` |
+| Uranus / Neptune colour | 2k/1k | Hubble OPAL 2024/2025 true colour, 2 px/deg; Uranus south and Neptune north polar caps are zonal-mean fills (illustrative) | public domain (as above) | `build-opal.mjs`, `apply-tp.mjs` |
+| Saturn colour | unchanged (Solar System Scope 4k) | OPAL 2025 Saturn was built and rejected: at equinox the rings hide the equator and the map is mostly mauve fill | CC BY 4.0 Solar System Scope | - |
+| Earth night `night_8k/4k/2k.jpg` | 8192/4096/2048, greyscale | NASA Black Marble 2016 (VIIRS Day/Night Band, 500 m tiles) | public domain (NASA Earth Observatory / GSFC) | `build-night.mjs` |
+| Earth day `day_16k.jpg` | 16384 | NASA Blue Marble Next Generation (Dec 2004) | public domain | `build-earth16k.mjs` |
+| Moon colour `color_8k.jpg` | 8192 | NASA SVS CGI Moon Kit (LROC WAC + Kaguya poles), SSS fill poleward of ~65 deg | public domain; polar band CC BY 4.0 | `build-color.mjs` |
+| Moon normal `normal_hd_8k.webp` | 8192 lossless WebP (4k/2k PNG kept) | LRO LOLA LDEM_64, 64 px/deg (1.33 km/px at 8k), slopes x2.5 | public domain | `build-normals8k.mjs` |
+| Mars colour `color_8k/4k/1k.jpg` | 8192/4096/1024 | USGS Astrogeology Viking Orbiter colour mosaic 925 m (23059 x 11530). Brightness and redness are Viking measurements; absolute colour re-graded to a true-colour dark-basalt to bright-dust ramp (Viking's composite has a violet cast); albedo 0.18; polar gaps filled from the previous SSS map (illustrative) | public domain (SSS fill CC BY 4.0) | `build-mars-viking.mjs` |
+| Mars normal `normal_hd_8k.webp` | 8192 lossless WebP | MGS MOLA MEGDR 32 px/deg (2.6 km/px at 8k), slopes x4 | public domain | `build-normals8k.mjs` |
+| Mercury normal `normal_hd_8k.webp` | 8192 lossless WebP | MESSENGER USGS global DEM 665 m v2, slopes x3 | public domain | `build-normals8k.mjs` |
+
+Orientation of every map: x = 0 at 180 W, east-positive, north up (Mars checked against Olympus Mons 134 W and Syrtis Major 70 E; Jupiter against the GRS). Relief normals are differentiated at the source resolution only; no detail is invented. Remaining gaps: Mercury/Moon/Venus colour are still Solar System Scope (CC BY 4.0) renderings of MESSENGER/LROC/Magellan data (Moon uses the NASA SVS kit for colour); Saturn global colour is SSS-derived; Venus has no Magellan SAR global mosaic at 8k from a primary source in this build, and its surface is hidden under the cloud deck.

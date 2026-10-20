@@ -18,6 +18,14 @@
      "url": "https://imbrium.mit.edu/DATA/LOLA_GDR/CYLINDRICAL/IMG/LDEM_64.IMG",
      "license": "public domain (NASA/USGS)",
      "retrieved": "2026-10-18"
+    },
+    {
+     "map": "normal",
+     "tier": "8k",
+     "name": "LRO LOLA LDEM_64 gridded topography, 64 px/deg (Smith et al. 2010; NASA GSFC / PDS Geosciences Node)",
+     "url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_64.img",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
     }
    ],
    "color": {
@@ -26,7 +34,8 @@
    "bytes": {
     "color_8k": 5991049,
     "normal_4k": 6840941,
-    "normal_2k": 1772588
+    "normal_2k": 1772588,
+    "normal_8k": 52138898
    },
    "albedo": {
     "meanLinear": 0.12,
@@ -34,7 +43,8 @@
    },
    "normal": {
     "4k": "textures/moon/normal_hd_4k.png",
-    "2k": "textures/moon/normal_hd_2k.png"
+    "2k": "textures/moon/normal_hd_2k.png",
+    "8k": "textures/moon/normal_hd_8k.webp"
    },
    "normalInfo": {
     "convention": "OpenGL tangent space (R=+east, G=+north, B=up), linear data, PNG",
@@ -45,8 +55,11 @@
     ],
     "note": "LRO LOLA (NASA/GSFC) LDEM_64, public domain. Slopes x2.5 exaggerated; box-filtered to 4096x2048 (2.7 km/px) and 2048x1024."
    },
-   "license": "CC BY 4.0 - Solar System Scope (https://www.solarsystemscope.com/textures/), attribution required; elevation data public domain",
-   "source": "NASA SVS CGI Moon Kit (a004720) lroc_color_poles_8k: LRO LROC WAC normalized-reflectance mosaic + Kaguya poles; poleward of ~65 deg blended with the Solar System Scope 8k Moon (CC BY 4.0) to hide the flat polar fill | LRO LOLA LDEM_64 (64 px/deg, int16 x0.5 m, vs 1737.4 km sphere)"
+   "license": "public domain (NASA/GSFC/SVS); polar band CC BY 4.0 Solar System Scope; public domain (NASA/USGS)",
+   "source": "NASA SVS CGI Moon Kit (a004720) lroc_color_poles_8k: LRO LROC WAC normalized-reflectance mosaic + Kaguya poles; poleward of ~65 deg blended with the Solar System Scope 8k Moon (CC BY 4.0) to hide the flat polar fill | LRO LOLA LDEM_64 (64 px/deg, int16 x0.5 m, vs 1737.4 km sphere) | LRO LOLA LDEM_64 gridded topography, 64 px/deg (Smith et al. 2010; NASA GSFC / PDS Geosciences Node)",
+   "notes": {
+    "normal_8k": "8192 x 4096 tangent-space normal map (OpenGL: R=+east, G=+north, B=up; linear; lossless WebP) differentiated from the elevation model area-averaged to 8k; slopes x2.5 exaggerated as in the 4k tier; height range -9100..10752 m."
+   }
   },
   "mercury": {
    "sources": [
@@ -63,6 +76,14 @@
      "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mercury_Messenger_USGS_DEM_Global_665m_v2.tif",
      "license": "public domain (NASA/USGS)",
      "retrieved": "2026-10-18"
+    },
+    {
+     "map": "normal",
+     "tier": "8k",
+     "name": "MESSENGER USGS global DEM of Mercury, 665 m/px v2 (Becker et al. 2016; USGS Astrogeology)",
+     "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mercury_Messenger_USGS_DEM_Global_665m_v2.tif",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
     }
    ],
    "color": {
@@ -71,7 +92,8 @@
    "bytes": {
     "color_8k": 9250682,
     "normal_4k": 6777445,
-    "normal_2k": 1819317
+    "normal_2k": 1819317,
+    "normal_8k": 38818446
    },
    "albedo": {
     "meanLinear": 0.11,
@@ -79,7 +101,8 @@
    },
    "normal": {
     "4k": "textures/mercury/normal_hd_4k.png",
-    "2k": "textures/mercury/normal_hd_2k.png"
+    "2k": "textures/mercury/normal_hd_2k.png",
+    "8k": "textures/mercury/normal_hd_8k.webp"
    },
    "normalInfo": {
     "convention": "OpenGL tangent space (R=+east, G=+north, B=up), linear data, PNG",
@@ -90,33 +113,46 @@
     ],
     "note": "MESSENGER USGS Global DEM 665 m v2 (USGS Astrogeology), public domain. Slopes x3 exaggerated. Source DEM has residual noise near the poles."
    },
-   "license": "CC BY 4.0 - Solar System Scope (https://www.solarsystemscope.com/textures/), attribution required; elevation data public domain",
-   "source": "Solar System Scope 8k Mercury (derived from MESSENGER MDIS imagery), albedo-calibrated | MESSENGER USGS Global DEM 665 m v2 (64 px/deg, int16 metres)"
+   "license": "CC BY 4.0 Solar System Scope; public domain (NASA/USGS)",
+   "source": "Solar System Scope 8k Mercury (derived from MESSENGER MDIS imagery), albedo-calibrated | MESSENGER USGS Global DEM 665 m v2 (64 px/deg, int16 metres) | MESSENGER USGS global DEM of Mercury, 665 m/px v2 (Becker et al. 2016; USGS Astrogeology)",
+   "notes": {
+    "normal_8k": "8192 x 4096 tangent-space normal map (OpenGL: R=+east, G=+north, B=up; linear; lossless WebP) differentiated from the elevation model area-averaged to 8k; slopes x3 exaggerated as in the 4k tier; height range -10756..8959 m."
+   }
   },
   "mars": {
    "sources": [
-    {
-     "map": "color",
-     "name": "Solar System Scope 8k Mars (derived from Viking/MGS imagery), desaturated x0.62 toward Viking/HST colour and albedo-calibrated",
-     "url": "https://www.solarsystemscope.com/textures/",
-     "license": "CC BY 4.0 Solar System Scope",
-     "retrieved": "2026-10-18"
-    },
     {
      "map": "normal",
      "name": "MGS MOLA MEGDR megt90n000eb (16 px/deg, int16 metres)",
      "url": "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg016/megt90n000eb.img",
      "license": "public domain (NASA/USGS)",
      "retrieved": "2026-10-18"
+    },
+    {
+     "map": "color",
+     "tier": "8k",
+     "name": "USGS Astrogeology Mars Viking Colorized Mosaic Global 925 m (Viking Orbiter, MDIM 2.1 colour), re-graded to true colour and albedo-calibrated",
+     "url": "https://astrogeology.usgs.gov/search/map/mars_viking_colorized_global_mosaic_925m",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-20"
+    },
+    {
+     "map": "normal",
+     "tier": "8k",
+     "name": "MGS MOLA MEGDR megt90n000fb topography, 32 px/deg (Smith et al. 2003; NASA GSFC / PDS Geosciences Node)",
+     "url": "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg032/megt90n000fb.img",
+     "license": "public domain (NASA/USGS)",
+     "retrieved": "2026-10-19"
     }
    ],
    "color": {
     "8k": "textures/mars/color_8k.jpg"
    },
    "bytes": {
-    "color_8k": 5602273,
+    "color_8k": 3890534,
     "normal_4k": 6351562,
-    "normal_2k": 1549496
+    "normal_2k": 1549496,
+    "normal_8k": 36981570
    },
    "albedo": {
     "meanLinear": 0.18,
@@ -124,7 +160,8 @@
    },
    "normal": {
     "4k": "textures/mars/normal_hd_4k.png",
-    "2k": "textures/mars/normal_hd_2k.png"
+    "2k": "textures/mars/normal_hd_2k.png",
+    "8k": "textures/mars/normal_hd_8k.webp"
    },
    "normalInfo": {
     "convention": "OpenGL tangent space (R=+east, G=+north, B=up), linear data, PNG",
@@ -135,8 +172,12 @@
     ],
     "note": "MGS MOLA MEGDR 16 ppd (NASA/GSFC), public domain. Slopes x4 exaggerated (Mars relief is gentle at 5 km/px)."
    },
-   "license": "CC BY 4.0 - Solar System Scope (https://www.solarsystemscope.com/textures/), attribution required; elevation data public domain",
-   "source": "Solar System Scope 8k Mars (derived from Viking/MGS imagery), desaturated x0.62 toward Viking/HST colour and albedo-calibrated | MGS MOLA MEGDR megt90n000eb (16 px/deg, int16 metres)"
+   "license": "public domain (NASA/USGS)",
+   "source": "MGS MOLA MEGDR megt90n000eb (16 px/deg, int16 metres) | USGS Astrogeology Mars Viking Colorized Mosaic Global 925 m (Viking Orbiter, MDIM 2.1 colour), re-graded to true colour and albedo-calibrated | MGS MOLA MEGDR megt90n000fb topography, 32 px/deg (Smith et al. 2003; NASA GSFC / PDS Geosciences Node)",
+   "notes": {
+    "color_8k": "8192x4096 from the 23059x11530 Viking colour mosaic. Brightness and redness (dust cover) are measured Viking values; the absolute colour is the true-colour dark-basalt to bright-dust ramp (Viking's stretched composite has a violet cast). Mean linear albedo 0.18 (|lat|<60). Poleward of ~76 deg the previous Solar System Scope map fills the mosaic's polar gaps (illustrative). The 4k and 1k tiers in index.json are downsamples of this map.",
+    "normal_8k": "8192 x 4096 tangent-space normal map (OpenGL: R=+east, G=+north, B=up; linear; lossless WebP) differentiated from the elevation model area-averaged to 8k; slopes x4 exaggerated as in the 4k tier; height range -8184..21178 m."
+   }
   },
   "venus": {
    "sources": [
@@ -165,20 +206,39 @@
    "sources": [
     {
      "map": "color",
-     "name": "Solar System Scope 8k Jupiter (Cassini/Juno-derived, illustrative)",
-     "url": "https://www.solarsystemscope.com/textures/",
-     "license": "CC BY 4.0 Solar System Scope",
-     "retrieved": "2026-10-18"
+     "tier": "4k",
+     "name": "Hubble OPAL jupiter-2025a global maps (HST WFC3/UVIS 2025; F631N/F502N/F467M, Minnaert-corrected, 11.4 px/deg; Simon et al., STScI MAST HLSP OPAL)",
+     "url": "https://archive.stsci.edu/hlsps/opal/cycle32/jupiter/",
+     "license": "public domain (NASA/ESA HST data via STScI MAST; acknowledge the OPAL program, doi:10.17909/T9G593)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Hubble OPAL jupiter-2025a global maps (HST WFC3/UVIS 2025; F631N/F502N/F467M, Minnaert-corrected, 11.4 px/deg; Simon et al., STScI MAST HLSP OPAL)",
+     "url": "https://archive.stsci.edu/hlsps/opal/cycle32/jupiter/",
+     "license": "public domain (NASA/ESA HST data via STScI MAST; acknowledge the OPAL program, doi:10.17909/T9G593)",
+     "retrieved": "2026-10-19"
     }
    ],
    "color": {
-    "8k": "textures/jupiter/color_8k.jpg"
+    "4k": "textures/jupiter/color_hd_4k.jpg",
+    "1k": "textures/jupiter/color_hd_1k.jpg"
    },
    "bytes": {
-    "color_8k": 3080980
+    "color_4k": 641782,
+    "color_1k": 74671
    },
-   "license": "CC BY 4.0 - Solar System Scope (https://www.solarsystemscope.com/textures/), attribution required; elevation data public domain",
-   "source": "Solar System Scope 8k Jupiter (Cassini/Juno-derived, illustrative)"
+   "license": "public domain (NASA/ESA HST data via STScI MAST; acknowledge the OPAL program, doi:10.17909/T9G593)",
+   "source": "Hubble OPAL jupiter-2025a global maps (HST WFC3/UVIS 2025; F631N/F502N/F467M, Minnaert-corrected, 11.4 px/deg; Simon et al., STScI MAST HLSP OPAL) | Hubble OPAL jupiter-2025a global maps (HST WFC3/UVIS 2025; F631N/F502N/F467M, Minnaert-corrected, 11.4 px/deg; Simon et al., STScI MAST HLSP OPAL)",
+   "albedo": {
+    "meanLinear": 0.431,
+    "note": "Map is albedo-calibrated: mean linear luminance (|lat|<60) equals this albedo; do not scale again in the material. Colour = sRGB."
+   },
+   "notes": {
+    "color_4k": "Current-epoch true colour: per-channel factors set so the |lat|<60 mean colour equals the app's art-directed mean (previous map x tint 1.04,1,0.86); band-to-band colour and all structure are measured; contrast stretched x1.7 about the mean in linear light (HST maps are softer than Cassini/Juno true-colour views). Albedo-calibrated (mean linear luminance 0.431); use hdTint [1,1,1]. Planetographic -> planetocentric latitude. Observed fraction 0.86 (latitudes 79 to -75); polar caps beyond are the nearest observed zonal mean (illustrative fill). System III longitudes (epoch HST WFC3/UVIS 2025).",
+    "color_1k": "Current-epoch true colour: per-channel factors set so the |lat|<60 mean colour equals the app's art-directed mean (previous map x tint 1.04,1,0.86); band-to-band colour and all structure are measured; contrast stretched x1.7 about the mean in linear light (HST maps are softer than Cassini/Juno true-colour views). Albedo-calibrated (mean linear luminance 0.431); use hdTint [1,1,1]. Planetographic -> planetocentric latitude. Observed fraction 0.86 (latitudes 79 to -75); polar caps beyond are the nearest observed zonal mean (illustrative fill). System III longitudes (epoch HST WFC3/UVIS 2025)."
+   }
   },
   "saturn": {
    "sources": [
@@ -188,16 +248,31 @@
      "url": "https://www.solarsystemscope.com/textures/",
      "license": "CC BY 4.0 Solar System Scope",
      "retrieved": "2026-10-18"
+    },
+    {
+     "map": "rings",
+     "tier": "8k",
+     "name": "Cassini RSS Rev 7 egress X-band ring occultation, normal optical depth at 1 km resolution (Marouf et al.; PDS Ring-Moon Systems Node CORSS_8001 RSS_2005_123_X43_E_TAU_01KM); brightness from the Voyager 2 ISS lit-side I/F profile (Showalter & Gordon 2004, PDS VG_2810 IS2_P0001); region hues from the Solar System Scope Cassini-derived strip",
+     "url": "https://pds-rings.seti.org/holdings/volumes/CORSS_8xxx/CORSS_8001/data/Rev007/Rev007E/Rev007E_RSS_2005_123_X43_E/",
+     "license": "public domain (NASA/JPL PDS); region hues CC BY 4.0 Solar System Scope",
+     "retrieved": "2026-10-19"
     }
    ],
    "color": {
     "8k": "textures/saturn/color_8k.jpg"
    },
    "bytes": {
-    "color_8k": 1098204
+    "color_8k": 1098204,
+    "rings_8k": 106579
    },
-   "license": "CC BY 4.0 - Solar System Scope (https://www.solarsystemscope.com/textures/), attribution required; elevation data public domain",
-   "source": "Solar System Scope 8k Saturn (Cassini-derived, illustrative)"
+   "license": "CC BY 4.0 Solar System Scope; public domain (NASA/JPL PDS); region hues CC BY 4.0 Solar System Scope",
+   "source": "Solar System Scope 8k Saturn (Cassini-derived, illustrative) | Cassini RSS Rev 7 egress X-band ring occultation, normal optical depth at 1 km resolution (Marouf et al.; PDS Ring-Moon Systems Node CORSS_8001 RSS_2005_123_X43_E_TAU_01KM); brightness from the Voyager 2 ISS lit-side I/F profile (Showalter & Gordon 2004, PDS VG_2810 IS2_P0001); region hues from the Solar System Scope Cassini-derived strip",
+   "rings": {
+    "8k": "textures/saturn/rings_16k.png"
+   },
+   "notes": {
+    "rings_8k": "16384 x 4 RGBA strip under the 8k (ultra) key: x = 74,500 -> 140,220 km (4.0 km/px), alpha = 1 - mean transmission at normal incidence from the X-band (3.6 cm) optical depth; tau above the detection threshold (~4, opaque B-ring core) is held at the threshold. Shows the Colombo/Maxwell/Huygens gaps, Cassini Division, Encke (133,589 km) and Keeler (136,530 km) gaps and the F ring (modelled from published visible parameters: core a = 140,221 km, Bosh et al. 2002; envelope tau ~0.02, Showalter et al. 1992 - not detected at X band). RGB luminance = effective particle albedo obtained by inverting the ring shader against the Voyager lit-side I/F at 47 deg phase (so the renderer reproduces the measured brightness at that geometry). Radio tau underestimates visible tau slightly in dusty regions (C ring, Cassini Division, F ring)."
+   }
   },
   "earth": {
    "sources": [
@@ -835,7 +910,373 @@
     "4k": "textures/vesta/normal_hd_4k.png"
    },
    "normalExaggeration": 2
+  },
+  "ariel": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "2k",
+     "name": "Voyager 2 ISS global mosaic of Ariel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura1vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "coverage",
+     "tier": "2k",
+     "name": "Voyager 2 ISS global mosaic of Ariel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura1vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Voyager 2 ISS global mosaic of Ariel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura1vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "coverage",
+     "tier": "1k",
+     "name": "Voyager 2 ISS global mosaic of Ariel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura1vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "2k": "textures/ariel/color_2k.jpg",
+    "1k": "textures/ariel/color_1k.jpg"
+   },
+   "bytes": {
+    "color_2k": 102781,
+    "coverage_2k": 8793,
+    "color_1k": 35641,
+    "coverage_1k": 6810
+   },
+   "notes": {
+    "color_2k": "Greyscale Voyager 2 mosaic (source 1440x720, 4 px/deg; 2k is a 1.42x lanczos upsample, no added detail). Only the southern hemisphere was sunlit during the 1986 flyby: observed (area-weighted) fraction 0.322; the unimaged north is an albedo-matched neutral fill (mean observed grey 108.2/255) ramped over ~4 deg - illustrative, no real detail; see coverage_*.png.",
+    "coverage_2k": "1 = imaged by Voyager 2, 0 = neutral fill",
+    "color_1k": "Greyscale Voyager 2 mosaic (source 1440x720, 4 px/deg; 2k is a 1.42x lanczos upsample, no added detail). Only the southern hemisphere was sunlit during the 1986 flyby: observed (area-weighted) fraction 0.322; the unimaged north is an albedo-matched neutral fill (mean observed grey 108.2/255) ramped over ~4 deg - illustrative, no real detail; see coverage_*.png.",
+    "coverage_1k": "1 = imaged by Voyager 2, 0 = neutral fill"
+   },
+   "license": "public domain (NASA/JPL-Caltech/USGS)",
+   "source": "Voyager 2 ISS global mosaic of Ariel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Ariel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Ariel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Ariel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+   "coverage": {
+    "2k": "textures/ariel/coverage_2k.png",
+    "1k": "textures/ariel/coverage_1k.png"
+   }
+  },
+  "miranda": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "2k",
+     "name": "Voyager 2 ISS global mosaic of Miranda (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura5vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "coverage",
+     "tier": "2k",
+     "name": "Voyager 2 ISS global mosaic of Miranda (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura5vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Voyager 2 ISS global mosaic of Miranda (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura5vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "coverage",
+     "tier": "1k",
+     "name": "Voyager 2 ISS global mosaic of Miranda (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura5vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "2k": "textures/miranda/color_2k.jpg",
+    "1k": "textures/miranda/color_1k.jpg"
+   },
+   "bytes": {
+    "color_2k": 154942,
+    "coverage_2k": 9009,
+    "color_1k": 51781,
+    "coverage_1k": 6624
+   },
+   "notes": {
+    "color_2k": "Greyscale Voyager 2 mosaic (source 1440x720, 4 px/deg; 2k is a 1.42x lanczos upsample, no added detail). Only the southern hemisphere was sunlit during the 1986 flyby: observed (area-weighted) fraction 0.370; the unimaged north is an albedo-matched neutral fill (mean observed grey 106.6/255) ramped over ~4 deg - illustrative, no real detail; see coverage_*.png.",
+    "coverage_2k": "1 = imaged by Voyager 2, 0 = neutral fill",
+    "color_1k": "Greyscale Voyager 2 mosaic (source 1440x720, 4 px/deg; 2k is a 1.42x lanczos upsample, no added detail). Only the southern hemisphere was sunlit during the 1986 flyby: observed (area-weighted) fraction 0.370; the unimaged north is an albedo-matched neutral fill (mean observed grey 106.6/255) ramped over ~4 deg - illustrative, no real detail; see coverage_*.png.",
+    "coverage_1k": "1 = imaged by Voyager 2, 0 = neutral fill"
+   },
+   "license": "public domain (NASA/JPL-Caltech/USGS)",
+   "source": "Voyager 2 ISS global mosaic of Miranda (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Miranda (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Miranda (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Miranda (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+   "coverage": {
+    "2k": "textures/miranda/coverage_2k.png",
+    "1k": "textures/miranda/coverage_1k.png"
+   }
+  },
+  "oberon": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "2k",
+     "name": "Voyager 2 ISS global mosaic of Oberon (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura4vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "coverage",
+     "tier": "2k",
+     "name": "Voyager 2 ISS global mosaic of Oberon (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura4vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Voyager 2 ISS global mosaic of Oberon (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura4vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "coverage",
+     "tier": "1k",
+     "name": "Voyager 2 ISS global mosaic of Oberon (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura4vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "2k": "textures/oberon/color_2k.jpg",
+    "1k": "textures/oberon/color_1k.jpg"
+   },
+   "bytes": {
+    "color_2k": 106155,
+    "coverage_2k": 9100,
+    "color_1k": 36275,
+    "coverage_1k": 7648
+   },
+   "notes": {
+    "color_2k": "Greyscale Voyager 2 mosaic (source 1440x720, 4 px/deg; 2k is a 1.42x lanczos upsample, no added detail). Only the southern hemisphere was sunlit during the 1986 flyby: observed (area-weighted) fraction 0.316; the unimaged north is an albedo-matched neutral fill (mean observed grey 126.7/255) ramped over ~4 deg - illustrative, no real detail; see coverage_*.png.",
+    "coverage_2k": "1 = imaged by Voyager 2, 0 = neutral fill",
+    "color_1k": "Greyscale Voyager 2 mosaic (source 1440x720, 4 px/deg; 2k is a 1.42x lanczos upsample, no added detail). Only the southern hemisphere was sunlit during the 1986 flyby: observed (area-weighted) fraction 0.316; the unimaged north is an albedo-matched neutral fill (mean observed grey 126.7/255) ramped over ~4 deg - illustrative, no real detail; see coverage_*.png.",
+    "coverage_1k": "1 = imaged by Voyager 2, 0 = neutral fill"
+   },
+   "license": "public domain (NASA/JPL-Caltech/USGS)",
+   "source": "Voyager 2 ISS global mosaic of Oberon (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Oberon (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Oberon (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Oberon (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+   "coverage": {
+    "2k": "textures/oberon/coverage_2k.png",
+    "1k": "textures/oberon/coverage_1k.png"
+   }
+  },
+  "titania": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "2k",
+     "name": "Voyager 2 ISS global mosaic of Titania (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura3vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "coverage",
+     "tier": "2k",
+     "name": "Voyager 2 ISS global mosaic of Titania (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura3vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Voyager 2 ISS global mosaic of Titania (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura3vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "coverage",
+     "tier": "1k",
+     "name": "Voyager 2 ISS global mosaic of Titania (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura3vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "2k": "textures/titania/color_2k.jpg",
+    "1k": "textures/titania/color_1k.jpg"
+   },
+   "bytes": {
+    "color_2k": 133894,
+    "coverage_2k": 9034,
+    "color_1k": 44182,
+    "coverage_1k": 7308
+   },
+   "notes": {
+    "color_2k": "Greyscale Voyager 2 mosaic (source 1440x720, 4 px/deg; 2k is a 1.42x lanczos upsample, no added detail). Only the southern hemisphere was sunlit during the 1986 flyby: observed (area-weighted) fraction 0.297; the unimaged north is an albedo-matched neutral fill (mean observed grey 142.7/255) ramped over ~4 deg - illustrative, no real detail; see coverage_*.png.",
+    "coverage_2k": "1 = imaged by Voyager 2, 0 = neutral fill",
+    "color_1k": "Greyscale Voyager 2 mosaic (source 1440x720, 4 px/deg; 2k is a 1.42x lanczos upsample, no added detail). Only the southern hemisphere was sunlit during the 1986 flyby: observed (area-weighted) fraction 0.297; the unimaged north is an albedo-matched neutral fill (mean observed grey 142.7/255) ramped over ~4 deg - illustrative, no real detail; see coverage_*.png.",
+    "coverage_1k": "1 = imaged by Voyager 2, 0 = neutral fill"
+   },
+   "license": "public domain (NASA/JPL-Caltech/USGS)",
+   "source": "Voyager 2 ISS global mosaic of Titania (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Titania (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Titania (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Titania (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+   "coverage": {
+    "2k": "textures/titania/coverage_2k.png",
+    "1k": "textures/titania/coverage_1k.png"
+   }
+  },
+  "umbriel": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "2k",
+     "name": "Voyager 2 ISS global mosaic of Umbriel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura2vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "coverage",
+     "tier": "2k",
+     "name": "Voyager 2 ISS global mosaic of Umbriel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura2vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Voyager 2 ISS global mosaic of Umbriel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura2vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "coverage",
+     "tier": "1k",
+     "name": "Voyager 2 ISS global mosaic of Umbriel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+     "url": "https://space.jpl.nasa.gov/tmaps/pix/ura2vuu2.tif",
+     "license": "public domain (NASA/JPL-Caltech/USGS)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "2k": "textures/umbriel/color_2k.jpg",
+    "1k": "textures/umbriel/color_1k.jpg"
+   },
+   "bytes": {
+    "color_2k": 71625,
+    "coverage_2k": 9042,
+    "color_1k": 25388,
+    "coverage_1k": 7047
+   },
+   "notes": {
+    "color_2k": "Greyscale Voyager 2 mosaic (source 1440x720, 4 px/deg; 2k is a 1.42x lanczos upsample, no added detail). Only the southern hemisphere was sunlit during the 1986 flyby: observed (area-weighted) fraction 0.350; the unimaged north is an albedo-matched neutral fill (mean observed grey 127.9/255) ramped over ~4 deg - illustrative, no real detail; see coverage_*.png.",
+    "coverage_2k": "1 = imaged by Voyager 2, 0 = neutral fill",
+    "color_1k": "Greyscale Voyager 2 mosaic (source 1440x720, 4 px/deg; 2k is a 1.42x lanczos upsample, no added detail). Only the southern hemisphere was sunlit during the 1986 flyby: observed (area-weighted) fraction 0.350; the unimaged north is an albedo-matched neutral fill (mean observed grey 127.9/255) ramped over ~4 deg - illustrative, no real detail; see coverage_*.png.",
+    "coverage_1k": "1 = imaged by Voyager 2, 0 = neutral fill"
+   },
+   "license": "public domain (NASA/JPL-Caltech/USGS)",
+   "source": "Voyager 2 ISS global mosaic of Umbriel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Umbriel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Umbriel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator | Voyager 2 ISS global mosaic of Umbriel (USGS Astrogeology; T. Becker), 4 px/deg simple cylindrical, distributed by the JPL Solar System Simulator",
+   "coverage": {
+    "2k": "textures/umbriel/coverage_2k.png",
+    "1k": "textures/umbriel/coverage_1k.png"
+   }
+  },
+  "neptune": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "4k",
+     "name": "Hubble OPAL neptune-2025b global maps (HST WFC3/UVIS 2025-08-24; F657N/F547M/F467M, Minnaert-corrected, 2 px/deg; Simon et al., STScI MAST HLSP OPAL)",
+     "url": "https://archive.stsci.edu/hlsps/opal/cycle32/neptune/",
+     "license": "public domain (NASA/ESA HST data via STScI MAST; acknowledge the OPAL program, doi:10.17909/T9G593)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Hubble OPAL neptune-2025b global maps (HST WFC3/UVIS 2025-08-24; F657N/F547M/F467M, Minnaert-corrected, 2 px/deg; Simon et al., STScI MAST HLSP OPAL)",
+     "url": "https://archive.stsci.edu/hlsps/opal/cycle32/neptune/",
+     "license": "public domain (NASA/ESA HST data via STScI MAST; acknowledge the OPAL program, doi:10.17909/T9G593)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "4k": "textures/neptune/color_hd_4k.jpg",
+    "1k": "textures/neptune/color_hd_1k.jpg"
+   },
+   "bytes": {
+    "color_4k": 128564,
+    "color_1k": 14445
+   },
+   "albedo": {
+    "meanLinear": 0.41,
+    "note": "Map is albedo-calibrated: mean linear luminance (|lat|<60) equals this geometric albedo; do not scale again in the material. Colour = sRGB."
+   },
+   "notes": {
+    "color_4k": "True colour: channel factors fixed on Uranus (sRGB 172,208,214 reference), same factors for Neptune; albedo-calibrated (mean linear luminance |lat|<60 = 0.41); hue+albedo already in the map (use hdTint [1,1,1]). Native resolution 0.5 deg/px (~216 km/px), smoothly upsampled. Observed fraction 0.77 (latitudes 49 to -90); the rest is the nearest observed zonal mean (illustrative fill). Longitudes are System III, not tied to fixed features.",
+    "color_1k": "True colour: channel factors fixed on Uranus (sRGB 172,208,214 reference), same factors for Neptune; albedo-calibrated (mean linear luminance |lat|<60 = 0.41); hue+albedo already in the map (use hdTint [1,1,1]). Native resolution 0.5 deg/px (~216 km/px), smoothly upsampled. Observed fraction 0.77 (latitudes 49 to -90); the rest is the nearest observed zonal mean (illustrative fill). Longitudes are System III, not tied to fixed features."
+   },
+   "license": "public domain (NASA/ESA HST data via STScI MAST; acknowledge the OPAL program, doi:10.17909/T9G593)",
+   "source": "Hubble OPAL neptune-2025b global maps (HST WFC3/UVIS 2025-08-24; F657N/F547M/F467M, Minnaert-corrected, 2 px/deg; Simon et al., STScI MAST HLSP OPAL) | Hubble OPAL neptune-2025b global maps (HST WFC3/UVIS 2025-08-24; F657N/F547M/F467M, Minnaert-corrected, 2 px/deg; Simon et al., STScI MAST HLSP OPAL)"
+  },
+  "uranus": {
+   "sources": [
+    {
+     "map": "color",
+     "tier": "4k",
+     "name": "Hubble OPAL uranus-2024a global maps (HST WFC3/UVIS 2024-11-09; F657N/F547M/F467M, Minnaert-corrected, 2 px/deg; Simon et al., STScI MAST HLSP OPAL)",
+     "url": "https://archive.stsci.edu/hlsps/opal/cycle32/uranus/",
+     "license": "public domain (NASA/ESA HST data via STScI MAST; acknowledge the OPAL program, doi:10.17909/T9G593)",
+     "retrieved": "2026-10-19"
+    },
+    {
+     "map": "color",
+     "tier": "1k",
+     "name": "Hubble OPAL uranus-2024a global maps (HST WFC3/UVIS 2024-11-09; F657N/F547M/F467M, Minnaert-corrected, 2 px/deg; Simon et al., STScI MAST HLSP OPAL)",
+     "url": "https://archive.stsci.edu/hlsps/opal/cycle32/uranus/",
+     "license": "public domain (NASA/ESA HST data via STScI MAST; acknowledge the OPAL program, doi:10.17909/T9G593)",
+     "retrieved": "2026-10-19"
+    }
+   ],
+   "color": {
+    "4k": "textures/uranus/color_hd_4k.jpg",
+    "1k": "textures/uranus/color_hd_1k.jpg"
+   },
+   "bytes": {
+    "color_4k": 112922,
+    "color_1k": 12864
+   },
+   "albedo": {
+    "meanLinear": 0.51,
+    "note": "Map is albedo-calibrated: mean linear luminance (|lat|<60) equals this geometric albedo; do not scale again in the material. Colour = sRGB."
+   },
+   "notes": {
+    "color_4k": "True colour: channel factors fixed on Uranus (sRGB 172,208,214 reference), same factors for Neptune; albedo-calibrated (mean linear luminance |lat|<60 = 0.51); hue+albedo already in the map (use hdTint [1,1,1]). Native resolution 0.5 deg/px (~223 km/px), smoothly upsampled. Observed fraction 0.50 (latitudes 90 to -1); the rest is the zonal-mean profile mirrored from the north (illustrative fill). Longitudes are System III, not tied to fixed features.",
+    "color_1k": "True colour: channel factors fixed on Uranus (sRGB 172,208,214 reference), same factors for Neptune; albedo-calibrated (mean linear luminance |lat|<60 = 0.51); hue+albedo already in the map (use hdTint [1,1,1]). Native resolution 0.5 deg/px (~223 km/px), smoothly upsampled. Observed fraction 0.50 (latitudes 90 to -1); the rest is the zonal-mean profile mirrored from the north (illustrative fill). Longitudes are System III, not tied to fixed features."
+   },
+   "license": "public domain (NASA/ESA HST data via STScI MAST; acknowledge the OPAL program, doi:10.17909/T9G593)",
+   "source": "Hubble OPAL uranus-2024a global maps (HST WFC3/UVIS 2024-11-09; F657N/F547M/F467M, Minnaert-corrected, 2 px/deg; Simon et al., STScI MAST HLSP OPAL) | Hubble OPAL uranus-2024a global maps (HST WFC3/UVIS 2024-11-09; F657N/F547M/F467M, Minnaert-corrected, 2 px/deg; Simon et al., STScI MAST HLSP OPAL)"
   }
  },
- "generated2": "2026-10-19T05:35:54.790Z"
+ "generated2": "2026-10-20T04:31:49.249Z"
 }
