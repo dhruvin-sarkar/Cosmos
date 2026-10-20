@@ -24,6 +24,52 @@ export function landmarkOffsets(logs: readonly number[], ppd: number): number[] 
 
 const LANDMARK_LOGS = RULER_LANDMARKS.map(l => Math.log10(l.widthM));
 const DRAG_THRESHOLD_PX = 4;
+/** The ruler returns to its discreet idle look this long after the last zoom, hover, drag or focus. */
+export const RULER_IDLE_MS = 1500;
+/** Smallest scale change (decades) that counts as "the visitor is zooming". */
+const ZOOM_EPS = 0.003;
+
+/**
+ * Idle / active state of the ruler: active while zooming (the view scale changes), hovering, dragging, focusing or
+ * travelling, and for RULER_IDLE_MS after the last of those stops. React re-renders only on the two transitions.
+ */
+function useRulerActivity(scale: number, traveling: boolean) {
+  const [active, setActive] = useState(false);
+  const holds = useRef({ hover: false, focus: false, drag: false, traveling });
+  const timer = useRef(0);
+  const lastScale = useRef(scale);
+  holds.current.traveling = traveling;
+
+  const schedule = useRef((): void => undefined);
+  schedule.current = (): void => {
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => {
+      const h = holds.current;
+      if (h.hover || h.focus || h.drag || h.traveling) return;
+      setActive(false);
+    }, RULER_IDLE_MS);
+  };
+  const ping = (): void => {
+    setActive(true);
+    schedule.current();
+  };
+  const hold = (key: 'hover' | 'focus' | 'drag', on: boolean): void => {
+    holds.current[key] = on;
+    ping();
+  };
+
+  useEffect(() => {
+    const d = Math.abs(scale - lastScale.current);
+    lastScale.current = scale;
+    if (d > ZOOM_EPS) ping();
+  }, [scale]);
+  useEffect(() => {
+    ping();
+  }, [traveling]);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  return { active, ping, hold };
+}
 
 function pxPerDecadeFor(height: number): number {
   return Math.min(132, Math.max(72, height / 7.5));
@@ -31,6 +77,8 @@ function pxPerDecadeFor(height: number): number {
 
 /**
  * The Cosmic Ruler: a vertical slide-rule log scale (10⁰–10²⁷ m) that slides under a fixed brass cursor.
+ * Discreet when idle (dim, slim, decade numbers only); bright with every label while the visitor zooms, hovers,
+ * drags or focuses it, easing back RULER_IDLE_MS after activity stops.
  * Drag or wheel to scrub the view scale, arrow keys step a decade, click a landmark to go there. The magnitude
  * reads in the Atlas voice: large while travelling or scrubbing, compact at rest.
  */
@@ -50,6 +98,7 @@ export function CosmicRuler({ className }: { className?: string }) {
   const landmarksRef = useRef<HTMLUListElement | null>(null);
   const [height, setHeight] = useState(800);
   const [scrubbing, setScrubbing] = useState(false);
+  const activity = useRulerActivity(scale, traveling);
   const ppd = pxPerDecadeFor(height);
   const ppdRef = useRef(ppd);
   ppdRef.current = ppd;
@@ -110,7 +159,9 @@ export function CosmicRuler({ className }: { className?: string }) {
   }, []);
 
   useEffect(() => () => {
+    // Reset the handle too: under StrictMode the effect re-mounts, and a stale id would stop kick() forever.
     if (raf.current) cancelAnimationFrame(raf.current);
+    raf.current = 0;
   }, []);
 
   // Scrubbing sends setScale at most once per animation frame, without camera animation.
@@ -140,6 +191,7 @@ export function CosmicRuler({ className }: { className?: string }) {
       d.moved = true;
       e.currentTarget.setPointerCapture(e.pointerId);
       setScrubbing(true);
+      activity.hold('drag', true);
     }
     sendScale(clampScale(d.startScale + dy / ppdRef.current));
   };
@@ -152,6 +204,7 @@ export function CosmicRuler({ className }: { className?: string }) {
     }
     drag.current = null;
     setScrubbing(false);
+    activity.hold('drag', false);
   };
 
   const wheelIdle = useRef(0);
@@ -248,7 +301,7 @@ export function CosmicRuler({ className }: { className?: string }) {
   return (
     <div
       ref={rootRef}
-      className={cx('cx-ruler', big && 'cx-ruler--big', className)}
+      className={cx('cx-ruler', (activity.active || big) && 'is-active', big && 'cx-ruler--big', reducedMotion && 'is-still', className)}
       role="group"
       aria-label="Cosmic Ruler"
       onPointerDown={onPointerDown}
@@ -256,6 +309,12 @@ export function CosmicRuler({ className }: { className?: string }) {
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
       onWheel={onWheel}
+      onPointerEnter={e => e.pointerType === 'mouse' && activity.hold('hover', true)}
+      onPointerLeave={() => activity.hold('hover', false)}
+      onFocus={() => activity.hold('focus', true)}
+      onBlur={e => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) activity.hold('focus', false);
+      }}
     >
       <div className="cx-ruler__window">
         <div ref={slideRef} className="cx-ruler__slide" style={{ transform: `translate3d(0, ${display.current * ppd}px, 0)` }}>

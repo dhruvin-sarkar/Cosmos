@@ -223,24 +223,64 @@
   box-shadow: inset 0 0 0 1px oklch(0.85 0.1 88 / 0.45);
 }
 
-/* ── Time capsule (top-left, under the breadcrumb) ──────────────────────────────────────── */
-.cx-time {
+/* ── Time status chip (under the breadcrumb, only while the sky is not "now") ─────────────── */
+.cx-timechip {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  height: var(--timebar-h);
-  padding: 3px 4px 3px 3px;
+  gap: 7px;
+  height: 28px;
+  padding: 0 11px 0 9px;
   border-radius: var(--r-pill);
-  background: var(--capsule);
-  box-shadow: var(--edge);
+  background: oklch(0.13 0 0 / 0.66);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  font: 450 12.5px/1 var(--font-ui);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  animation: cx-chip-in var(--dur-base) var(--ease-out);
+  transition: color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+.cx-timechip:hover {
+  color: var(--text-primary);
+  box-shadow: inset 0 0 0 1px var(--hairline-bold);
+}
+.cx-timechip__icon {
+  flex: none;
+  color: var(--accent);
+}
+.cx-timechip__state {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.cx-timechip__sep {
+  color: var(--text-tertiary);
+}
+.cx-timechip__when {
   font-variant-numeric: tabular-nums;
+}
+@keyframes cx-chip-in {
+  from {
+    opacity: 0;
+    translate: 0 -3px;
+  }
+}
+
+/* ── Time controls (Settings → Time) ────────────────────────────────────────────────────── */
+.cx-time {
+  display: grid;
+  gap: var(--sp-3);
+  font-variant-numeric: tabular-nums;
+}
+.cx-time__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
 }
 .cx-time__play {
   flex: none;
   display: grid;
   place-items: center;
-  width: calc(var(--timebar-h) - 6px);
-  height: calc(var(--timebar-h) - 6px);
+  width: 40px;
+  height: 40px;
   border-radius: var(--r-round);
   background: oklch(1 0 0 / 0.09);
   color: var(--text-primary);
@@ -261,42 +301,34 @@
   transform: translateX(1px); /* optical centre of the triangle */
 }
 .cx-time__date {
+  flex: 1;
   display: inline-flex;
   align-items: baseline;
   gap: 9px;
-  height: calc(var(--timebar-h) - 6px);
-  padding: 0 12px;
-  border-radius: var(--r-pill);
-  font: 500 14px/calc(var(--timebar-h) - 6px) var(--font-ui);
+  min-width: 0;
+  font: 500 15px/1.2 var(--font-ui);
   color: var(--text-primary);
   white-space: nowrap;
-  transition: background-color var(--dur-fast) var(--ease-out);
-}
-.cx-time__date:hover,
-.cx-time__date[aria-expanded='true'] {
-  background: var(--surface-hover);
 }
 .cx-time__clock {
   color: var(--text-secondary);
   font-weight: 450;
-  font-size: 13px;
-}
-.cx-time__sep {
-  flex: none;
-  width: 1px;
-  height: 18px;
-  margin: 0 2px;
-  background: var(--hairline-strong);
+  font-size: 13.5px;
 }
 .cx-time__rate {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  border-radius: var(--r-pill);
+  background: oklch(1 0 0 / 0.05);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  padding: 2px;
 }
 .cx-time .cx-time__step {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   border-radius: var(--r-round);
   color: var(--text-secondary);
 }
@@ -304,30 +336,29 @@
   color: var(--text-primary);
 }
 .cx-time__words {
-  min-width: 18ch;
-  padding: 0 2px;
+  flex: 1;
   text-align: center;
-  font: 450 13px/1 var(--font-ui);
-  color: var(--text-secondary);
+  font: 450 13.5px/1 var(--font-ui);
+  color: var(--text-primary);
   white-space: nowrap;
 }
 .cx-time.is-paused .cx-time__words {
   color: var(--accent);
 }
 .cx-time__now.cx-btn {
+  flex: none;
   height: 32px;
   min-height: 32px;
   padding: 0 12px 0 10px;
-  margin-left: 2px;
   border-radius: var(--r-pill);
 }
 .cx-time__live {
+  flex: none;
   display: inline-flex;
   align-items: center;
   gap: 7px;
   height: 32px;
-  padding: 0 12px 0 10px;
-  margin-left: 2px;
+  padding: 0 4px 0 10px;
   font: 500 12.5px/1 var(--font-ui);
   color: var(--text-secondary);
   cursor: default;
@@ -338,6 +369,32 @@
   border-radius: 50%;
   background: var(--success);
   box-shadow: 0 0 0 3px oklch(0.8 0.1 155 / 0.18);
+}
+.cx-time .cx-datejump {
+  width: auto;
+}
+.cx-time .cx-datejump__row {
+  grid-template-columns: 1.35fr 1fr auto;
+  align-items: end;
+}
+.cx-datejump__go.cx-btn {
+  min-height: 40px;
+}
+/* The section the time chip asked for draws the eye once. */
+.cx-settings__group.is-flash {
+  animation: cx-settings-flash 1.4s var(--ease-out);
+}
+@keyframes cx-settings-flash {
+  from {
+    box-shadow: -12px 0 0 -10px var(--accent);
+  }
+  to {
+    box-shadow: -12px 0 0 -10px transparent;
+  }
+}
+[data-reduced-motion='true'] .cx-timechip,
+[data-reduced-motion='true'] .cx-settings__group.is-flash {
+  animation: none;
 }
 
 /* ── Bottom band: the planet rail and the satellite strip ───────────────────────────────── */
@@ -619,6 +676,10 @@
 }
 [data-exhibition='true'] .cx-time .cx-time__step {
   width: 44px;
+}
+[data-exhibition='true'] .cx-timechip {
+  height: 36px;
+  font-size: 15px;
 }
 [data-exhibition='true'] .cx-rail {
   height: 84px;

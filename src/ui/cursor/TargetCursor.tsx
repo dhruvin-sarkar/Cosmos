@@ -8,6 +8,13 @@
  * - the spin winds down after a short idle and the animation loop stops completely when nothing moves;
  * - reduced motion (OS or in-app) removes the spin and makes every snap instant;
  * - engine DOM labels (.cosmos-label) are targets too, followed every frame while the camera moves.
+ *
+ * Main-thread budget (it shares the thread with the WebGL loop): the per-frame work only writes transforms and
+ * opacity. No blend modes or filters (the dark outline is a second bracket drawn behind, see TargetCursor.css), no
+ * layout reads per frame: a static target's rect is cached and refreshed on scroll, resize, size changes and the end
+ * of CSS transitions/animations; a moving 3D label is tracked by reading its inline translate3d (written by the
+ * engine) as an offset from the rect measured at lock time. The pointer position comes from pointerrawupdate where
+ * available, so the reticle uses the freshest position at each frame.
  */
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
@@ -24,9 +31,11 @@ interface SpringState {
   v: number;
 }
 
+/** Semi-implicit Euler with enough substeps to stay stable for stiff springs and long frames. */
 function spring(state: SpringState, goal: number, stiffness: number, damping: number, dt: number): void {
-  const h = dt / 2;
-  for (let i = 0; i < 2; i++) {
+  const n = Math.max(2, Math.ceil((dt * Math.sqrt(stiffness)) / 0.35));
+  const h = dt / n;
+  for (let i = 0; i < n; i++) {
     state.v += (stiffness * (goal - state.x) - damping * state.v) * h;
     state.x += state.v * h;
   }
@@ -35,6 +44,22 @@ function spring(state: SpringState, goal: number, stiffness: number, damping: nu
 function settle(state: SpringState, goal: number): void {
   state.x = goal;
   state.v = 0;
+}
+
+/** Parses "translate3d(12.3px, 45.6px, 0)" (or translate(...)) without allocating arrays; NaN when absent. */
+function readTranslate(transform: string, out: { x: number; y: number }): boolean {
+  const open = transform.indexOf('(');
+  if (open < 0 || !transform.startsWith('translate')) return false;
+  const comma = transform.indexOf(',', open);
+  if (comma < 0) return false;
+  const comma2 = transform.indexOf(',', comma + 1);
+  const close = transform.indexOf(')', comma);
+  const x = parseFloat(transform.slice(open + 1, comma));
+  const y = parseFloat(transform.slice(comma + 1, comma2 > 0 && comma2 < close ? comma2 : close));
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+  out.x = x;
+  out.y = y;
+  return true;
 }
 
 type ElementSource = RefObject<HTMLElement | null> | HTMLElement | null | undefined;
@@ -55,6 +80,8 @@ export interface TargetCursorProps {
   liveSelector?: string;
   cursorColor?: string;
   cursorColorOnTarget?: string;
+  /** Outline drawn behind the brackets so they stay legible over bright surfaces. */
+  outlineColor?: string;
   /** Seconds per turn while roaming; 0 stops the spin. */
   spinDuration?: number;
   /** Seconds the brackets take to snap onto a target. */
@@ -70,7 +97,6 @@ export interface TargetCursorProps {
   padding?: number;
   matchRadius?: boolean;
   dotSize?: number;
-  blendMode?: React.CSSProperties['mixBlendMode'];
   showLabel?: boolean;
   clickEffect?: boolean;
   /** Limits the cursor to one element (default: the whole page). */
@@ -84,6 +110,7 @@ export function TargetCursor({
   liveSelector,
   cursorColor = '#ffffff',
   cursorColorOnTarget,
+  outlineColor = 'oklch(0 0 0 / 0.55)',
   spinDuration = 2,
   hoverDuration = 0.2,
   parallaxOn = true,
@@ -95,7 +122,6 @@ export function TargetCursor({
   padding = 6,
   matchRadius = true,
   dotSize = 4,
-  blendMode = 'difference',
   showLabel = true,
   clickEffect = true,
   container,
@@ -111,8 +137,6 @@ export function TargetCursor({
     dragSurfaceSelector,
     labelFor,
     liveSelector,
-    cursorColor,
-    cursorColorOnTarget,
     spinDuration,
     hoverDuration: Math.max(0.05, hoverDuration),
     parallaxOn,
@@ -154,25 +178,55 @@ export function TargetCursor({
     const centerY: SpringState = { x: 0, v: 0 };
     const halfW: SpringState = { x: 0, v: 0 };
     const halfH: SpringState = { x: 0, v: 0 };
-    const radius: SpringState = { x: 0, v: 0 };
     const turn: SpringState = { x: 0, v: 0 };
     const lock: SpringState = { x: 0, v: 0 };
     const press: SpringState = { x: 0, v: 0 };
     const presence: SpringState = { x: 0, v: 0 };
     let target: Element | null = null;
-    let targetLive = false;
     let targetRadius = 0;
     let quarter = 0;
     let spinSpeed = 0;
     let raf = 0;
     let last = 0;
     let lastLabel = '';
-    let lastColor = '';
     let lastOpacity = '';
     let lastScope: HTMLElement | null = null;
     let lastGeometry = '';
+    let wasLocked = false;
+    // Cached target rect (viewport px). Static targets: refreshed only when marked dirty. Live targets: the rect at
+    // lock time plus the change in the mover's inline translate since then.
+    const rect = { left: 0, top: 0, width: 0, height: 0 };
+    let rectX = 0;
+    let rectY = 0;
+    let rectDirty = true;
+    let mover: HTMLElement | null = null;
+    const moverAt = { x: 0, y: 0 };
+    const moverNow = { x: 0, y: 0 };
+    // Observing fires once immediately; only a real size change (vs. the cached rect) needs a re-measure.
+    const resize = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(entries => {
+        const box = entries[entries.length - 1]?.borderBoxSize?.[0];
+        if (!box || Math.abs(box.inlineSize - rect.width) > 0.5 || Math.abs(box.blockSize - rect.height) > 0.5) markDirty();
+      })
+      : null;
 
     const scopeOf = (): HTMLElement | null => resolveElement(settingsRef.current.container);
+
+    function markDirty(): void {
+      rectDirty = true;
+      if (target) wake();
+    }
+
+    const measure = (): void => {
+      if (!target) return;
+      const r = target.getBoundingClientRect();
+      rect.left = r.left;
+      rect.top = r.top;
+      rect.width = r.width;
+      rect.height = r.height;
+      rectDirty = false;
+      if (mover && !readTranslate(mover.style.transform, moverAt)) mover = null;
+    };
 
     const hideCursor = (): void => {
       const s = settingsRef.current;
@@ -199,13 +253,28 @@ export function TargetCursor({
 
     const lockOn = (next: Element | null): void => {
       if (next === target) return;
+      if (target) resize?.unobserve(target);
       target = next;
+      mover = null;
+      rectDirty = true;
       if (target) {
         const s = settingsRef.current;
         quarter = Math.round(turn.x / QUARTER);
         targetRadius = parseFloat(getComputedStyle(target).borderTopLeftRadius) || 0;
-        targetLive = !!s.liveSelector && target.matches(s.liveSelector);
+        if (s.liveSelector && target.matches(s.liveSelector)) {
+          // The element the engine moves: the nearest ancestor (or self) with an inline translate.
+          for (let el: HTMLElement | null = target as HTMLElement; el; el = el.parentElement) {
+            if (el.style.transform.startsWith('translate')) {
+              mover = el;
+              break;
+            }
+          }
+        }
+        resize?.observe(target);
         spinSpeed = 0;
+        // Measure now, inside the input event (style is usually clean here), not in the frame after the engine's
+        // label writes, where it would force an extra style and layout pass.
+        measure();
       }
     };
 
@@ -222,9 +291,26 @@ export function TargetCursor({
       last = now;
       const instant = reduced();
 
-      if (target && !target.isConnected) lockOn(null);
-      const rect = target && !pointer.dragging ? target.getBoundingClientRect() : null;
-      const locked = !!rect && rect.width > 0 && pointer.inside && !pointer.native;
+      if (target && (!target.isConnected || !target.matches(s.targetSelector))) lockOn(null);
+      let hasRect = false;
+      if (target && !pointer.dragging) {
+        if (rectDirty) measure();
+        let dx = 0;
+        let dy = 0;
+        if (mover) {
+          if (readTranslate(mover.style.transform, moverNow)) {
+            dx = moverNow.x - moverAt.x;
+            dy = moverNow.y - moverAt.y;
+          } else {
+            mover = null;
+            measure();
+          }
+        }
+        hasRect = rect.width > 0;
+        rectX = rect.left + dx;
+        rectY = rect.top + dy;
+      }
+      const locked = hasRect && pointer.inside && !pointer.native;
       const snapW = 4.6 / s.hoverDuration;
       const snapK = snapW * snapW;
       const snapC = 2 * 0.62 * snapW;
@@ -239,10 +325,9 @@ export function TargetCursor({
       const roam = pointer.dragging ? s.dragSize : s.size;
       let goalW = roam / 2;
       let goalH = roam / 2;
-      let goalR = Math.min(2, s.cornerSize / 4);
-      if (locked && rect) {
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
+      if (locked) {
+        const cx = rectX + rect.width / 2;
+        const cy = rectY + rect.height / 2;
         const lean = s.parallaxOn && !instant ? 0.08 : 0;
         goalX = cx + (pointer.x - cx) * lean;
         goalY = cy + (pointer.y - cy) * lean;
@@ -251,7 +336,6 @@ export function TargetCursor({
         const h = rect.height / 2 + s.padding;
         goalW = odd ? h : w;
         goalH = odd ? w : h;
-        goalR = s.matchRadius ? Math.min(targetRadius + Math.max(0, s.padding), s.cornerSize) : 0;
       }
 
       if (!shown && presence.x < 0.01) pointer.seen = false;
@@ -260,7 +344,6 @@ export function TargetCursor({
         settle(centerY, goalY);
         settle(halfW, goalW);
         settle(halfH, goalH);
-        settle(radius, goalR);
         pointer.seen = shown;
       }
       if (instant) {
@@ -268,13 +351,20 @@ export function TargetCursor({
         settle(presence, shown ? 1 : 0);
       }
 
-      const follow = locked ? snapK : 2200;
-      const followC = locked ? snapC : 2 * Math.sqrt(2200);
-      spring(centerX, goalX, follow, followC, dt);
-      spring(centerY, goalY, follow, followC, dt);
+      if (locked) {
+        spring(centerX, goalX, snapK, snapC, dt);
+        spring(centerY, goalY, snapK, snapC, dt);
+      } else if (lock.x > 0.02) {
+        // Leaving a target: a quick (40 ms) critically damped catch-up to the pointer.
+        spring(centerX, goalX, 6400, 160, dt);
+        spring(centerY, goalY, 6400, 160, dt);
+      } else {
+        // Roaming: glued to the pointer, like the system cursor it replaces.
+        settle(centerX, goalX);
+        settle(centerY, goalY);
+      }
       spring(halfW, goalW, snapK, snapC, dt);
       spring(halfH, goalH, snapK, snapC, dt);
-      spring(radius, goalR, snapK, 2 * snapW, dt);
 
       const idle = (now - pointer.movedAt) / 1000 > IDLE_SPIN_S;
       if (locked || pointer.dragging || instant) {
@@ -292,16 +382,27 @@ export function TargetCursor({
         if (turn.x > Math.PI * 64) turn.x -= Math.PI * 64;
       }
 
+      // Bracket geometry and lock colour change only when the lock state flips: one style write, not one per frame.
+      if (locked !== wasLocked) {
+        wasLocked = locked;
+        root.classList.toggle('is-locked', locked);
+      }
+      const r = locked && s.matchRadius ? Math.min(targetRadius + Math.max(0, s.padding), s.cornerSize) : Math.min(2, s.cornerSize / 4);
+      const geometry = `${s.cornerSize}|${s.thickness}|${r.toFixed(1)}|${s.dotSize}`;
+      if (geometry !== lastGeometry) {
+        lastGeometry = geometry;
+        root.style.setProperty('--tc-size', `${s.cornerSize}px`);
+        root.style.setProperty('--tc-thick', `${s.thickness}px`);
+        root.style.setProperty('--tc-radius', `${r.toFixed(1)}px`);
+        root.style.setProperty('--tc-dot', `${s.dotSize}px`);
+      }
+
       const squeeze = 1 - press.x * 0.14;
       const cos = Math.cos(turn.x);
       const sin = Math.sin(turn.x);
       const w = Math.max(0, halfW.x) * squeeze;
       const h = Math.max(0, halfH.x) * squeeze;
-      const r = Math.max(0, Math.min(radius.x, s.cornerSize));
       const degrees = (turn.x * 180) / Math.PI;
-      const geometry = `${s.cornerSize}|${s.thickness}|${r.toFixed(1)}`;
-      const restyle = geometry !== lastGeometry;
-      lastGeometry = geometry;
       let left = Infinity;
       let top = Infinity;
       for (let i = 0; i < 4; i++) {
@@ -314,22 +415,12 @@ export function TargetCursor({
         if (x < left) left = x;
         if (y < top) top = y;
         corner.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) rotate(${(CORNER_ANGLES[i] + degrees).toFixed(2)}deg)`;
-        if (restyle) {
-          corner.style.width = `${s.cornerSize}px`;
-          corner.style.height = `${s.cornerSize}px`;
-          corner.style.borderWidth = `${s.thickness}px 0 0 ${s.thickness}px`;
-          corner.style.borderTopLeftRadius = `${r.toFixed(1)}px`;
-        }
       }
 
       const dot = dotRef.current;
       if (dot) {
         const dotScale = 1 - press.x * 0.35;
         dot.style.transform = `translate3d(${pointer.x}px, ${pointer.y}px, 0) translate(-50%, -50%) scale(${dotScale.toFixed(3)})`;
-        if (restyle) {
-          dot.style.width = `${s.dotSize}px`;
-          dot.style.height = `${s.dotSize}px`;
-        }
       }
 
       const label = labelRef.current;
@@ -347,12 +438,6 @@ export function TargetCursor({
         }
       }
 
-      const mix = s.cursorColorOnTarget ? Math.round(Math.max(0, Math.min(1, lock.x)) * 100) : 0;
-      const color = mix ? `color-mix(in oklab, ${s.cursorColorOnTarget} ${mix}%, ${s.cursorColor})` : s.cursorColor;
-      if (color !== lastColor) {
-        root.style.setProperty('--target-cursor-color', color);
-        lastColor = color;
-      }
       const opacity = Math.max(0, Math.min(1, presence.x)).toFixed(3);
       if (opacity !== lastOpacity) {
         root.style.opacity = opacity;
@@ -362,18 +447,18 @@ export function TargetCursor({
       const resting = !shown && presence.x < 0.002 && Math.abs(presence.v) < 0.002 && Math.abs(lock.x) < 0.002 && Math.abs(press.x) < 0.002;
       const spinning = shown && spinSpeed > 0.0001;
       const moving =
-        Math.abs(centerX.v) + Math.abs(centerY.v) + Math.abs(halfW.v) + Math.abs(halfH.v) + Math.abs(turn.v) + Math.abs(radius.v) > 0.01 ||
+        Math.abs(centerX.v) + Math.abs(centerY.v) + Math.abs(halfW.v) + Math.abs(halfH.v) + Math.abs(turn.v) > 0.01 ||
         Math.abs(goalX - centerX.x) + Math.abs(goalY - centerY.x) + Math.abs(goalW - halfW.x) + Math.abs(goalH - halfH.x) > 0.05 ||
         Math.abs(lock.v) + Math.abs(press.v) + Math.abs(presence.v) > 0.001;
       // Still roaming before the idle wind-down: wake once more when the spin is due to stop.
       const awaitingIdle = shown && !idle && !locked && !pointer.dragging && s.spinDuration > 0 && !instant;
-      if (!resting && (spinning || moving || (locked && targetLive) || awaitingIdle)) raf = requestAnimationFrame(frame);
+      if (!resting && (spinning || moving || (locked && mover != null) || awaitingIdle)) raf = requestAnimationFrame(frame);
       else last = 0;
     };
 
-    const wake = (): void => {
+    function wake(): void {
       if (!raf) raf = requestAnimationFrame(frame);
-    };
+    }
     wakeRef.current = () => {
       hideCursor();
       wake();
@@ -385,6 +470,16 @@ export function TargetCursor({
       if (element && scope.contains(element)) return true;
       const box = scope.getBoundingClientRect();
       return x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
+    };
+
+    // pointerrawupdate (secure contexts, Chromium) arrives as soon as the OS reports motion, not once per frame: the
+    // frame then reads the freshest position. It only stores coordinates; targeting stays on pointermove.
+    const onRaw = (event: PointerEvent): void => {
+      if (event.pointerType && event.pointerType !== 'mouse') return;
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+      pointer.movedAt = event.timeStamp || performance.now();
+      if (pointer.inside) wake();
     };
 
     const onPointerMove = (event: PointerEvent): void => {
@@ -436,27 +531,45 @@ export function TargetCursor({
     };
 
     const onScroll = (): void => {
+      rectDirty = true;
       if (!pointer.inside || pointer.dragging) return;
       lockOn(findTarget(pointer.x, pointer.y));
       wake();
     };
 
+    // A locked target may slide or grow (popovers, sheets, hover styles): re-measure when its motion ends.
+    const onSettled = (event: Event): void => {
+      if (!target) return;
+      const el = event.target;
+      if (el instanceof Node && (el === target || el.contains(target))) markDirty();
+    };
+
+    const hasRaw = 'onpointerrawupdate' in window;
+    if (hasRaw) window.addEventListener('pointerrawupdate', onRaw as EventListener, { passive: true });
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     window.addEventListener('pointerdown', onPointerDown, { passive: true, capture: true });
     window.addEventListener('pointerup', onPointerUp, { passive: true, capture: true });
     window.addEventListener('pointercancel', onLeave, { passive: true });
     window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    window.addEventListener('resize', markDirty, { passive: true });
+    document.addEventListener('transitionend', onSettled, { passive: true, capture: true });
+    document.addEventListener('animationend', onSettled, { passive: true, capture: true });
     document.documentElement.addEventListener('pointerleave', onLeave);
     window.addEventListener('blur', onLeave);
 
     return () => {
       cancelAnimationFrame(raf);
       wakeRef.current = null;
+      resize?.disconnect();
+      if (hasRaw) window.removeEventListener('pointerrawupdate', onRaw as EventListener);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown, { capture: true });
       window.removeEventListener('pointerup', onPointerUp, { capture: true });
       window.removeEventListener('pointercancel', onLeave);
       window.removeEventListener('scroll', onScroll, { capture: true });
+      window.removeEventListener('resize', markDirty);
+      document.removeEventListener('transitionend', onSettled, { capture: true });
+      document.removeEventListener('animationend', onSettled, { capture: true });
       document.documentElement.removeEventListener('pointerleave', onLeave);
       window.removeEventListener('blur', onLeave);
       lastScope?.removeAttribute('data-target-cursor-scope');
@@ -470,8 +583,15 @@ export function TargetCursor({
 
   if (!host) return null;
 
+  const colors = {
+    opacity: 0,
+    '--target-cursor-color': cursorColor,
+    '--target-cursor-color-on': cursorColorOnTarget ?? cursorColor,
+    '--target-cursor-outline': outlineColor,
+  } as React.CSSProperties;
+
   return createPortal(
-    <div ref={rootRef} className="target-cursor" style={{ mixBlendMode: blendMode, opacity: 0 }} aria-hidden="true">
+    <div ref={rootRef} className="target-cursor" style={colors} aria-hidden="true">
       {CORNER_ANGLES.map((angle, i) => (
         <span
           key={angle}

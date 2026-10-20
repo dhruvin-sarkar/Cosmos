@@ -47,7 +47,23 @@ function loadImage(url: string): Promise<HTMLImageElement> {
   });
 }
 
-function pixels(img: HTMLImageElement, w: number, h: number): Uint8ClampedArray | null {
+/**
+ * Decode + downscale off the main thread when createImageBitmap can resize (a map without a low tier is 4-8K: decoding
+ * it in drawImage blocked ~100 ms); otherwise the plain image element.
+ */
+async function loadSmall(url: string, w: number, h: number): Promise<CanvasImageSource> {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return await createImageBitmap(await res.blob(), { resizeWidth: w, resizeHeight: h, resizeQuality: 'medium' });
+    } catch {
+      /* fall back to the image element */
+    }
+  }
+  return loadImage(url);
+}
+
+function pixels(img: CanvasImageSource, w: number, h: number): Uint8ClampedArray | null {
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
@@ -63,9 +79,15 @@ for (let i = 0; i < 256; i++) {
   const c = i / 255;
   TO_LIN[i] = c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
 }
+// linear -> sRGB 8-bit through a 4096-entry table (a pow() per channel per pixel was most of the render time).
+const SRGB_N = 4096;
+const TO_SRGB = new Uint8Array(SRGB_N + 1);
+for (let i = 0; i <= SRGB_N; i++) {
+  const l = i / SRGB_N;
+  TO_SRGB[i] = Math.round((l <= 0.0031308 ? l * 12.92 : 1.055 * l ** (1 / 2.4) - 0.055) * 255);
+}
 function toSrgb(l: number): number {
-  const c = l <= 0 ? 0 : l >= 1 ? 1 : l <= 0.0031308 ? l * 12.92 : 1.055 * l ** (1 / 2.4) - 0.055;
-  return Math.round(c * 255);
+  return l <= 0 ? 0 : l >= 1 ? 255 : TO_SRGB[(l * SRGB_N + 0.5) | 0];
 }
 
 const LX = -0.62, LY = 0.3, LZ = 0.72; // unit-ish light direction (view space, y up, z toward viewer)
@@ -90,7 +112,8 @@ function render(map: Uint8ClampedArray | null, style: Style, ring: RingStrip | n
   const c = document.createElement('canvas');
   c.width = SIZE;
   c.height = SIZE;
-  const g = c.getContext('2d');
+  // CPU-backed: an accelerated canvas makes toDataURL a synchronous GPU readback (10-30 ms each mid-travel, perf).
+  const g = c.getContext('2d', { willReadFrequently: true });
   if (!g) return null;
   const img = g.createImageData(SIZE, SIZE);
   const out = img.data;
@@ -173,34 +196,43 @@ function render(map: Uint8ClampedArray | null, style: Style, ring: RingStrip | n
   return c.toDataURL('image/png');
 }
 
+// Thumbnails build one at a time in idle slices: the navigator requests dozens at once, and resolving them in one task
+// was a 350-420 ms main-thread block at boot (perf).
+let queue: Promise<unknown> = Promise.resolve();
+const idle = (): Promise<void> =>
+  new Promise(resolve => {
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(() => resolve(), { timeout: 400 });
+    else setTimeout(resolve, 0);
+  });
+function enqueue<T>(job: () => Promise<T>): Promise<T> {
+  const p = queue.then(idle).then(job);
+  queue = p.catch(() => undefined);
+  return p;
+}
+
 async function build(entity: Entity): Promise<string | null> {
   const style = styleOf(entity);
-  if (style === 'sun') return render(null, 'sun', null);
+  if (style === 'sun') return enqueue(async () => render(null, 'sun', null));
   const key = textureKey(entity);
   const index = await loadIndex();
   const maps = key ? index?.bodies?.[key] : undefined;
   const path = lowTier(maps?.day) ?? lowTier(maps?.atmosphere) ?? lowTier(maps?.color);
-  let map: Uint8ClampedArray | null = null;
-  if (path) {
-    try {
-      map = pixels(await loadImage(BASE + path.replace(/^\//, '')), SAMPLE_W, SAMPLE_H);
-    } catch {
-      map = null;
-    }
-  }
-  let ring: RingStrip | null = null;
   const ringPath = lowTier(maps?.rings);
-  if (ringPath) {
-    try {
-      const img = await loadImage(BASE + ringPath.replace(/^\//, ''));
+  // Downloads run in parallel; the pixel work (draw + read back + shade) is queued.
+  const [mapImg, ringImg] = await Promise.all([
+    path ? loadSmall(BASE + path.replace(/^\//, ''), SAMPLE_W, SAMPLE_H).catch(() => null) : null,
+    ringPath ? loadSmall(BASE + ringPath.replace(/^\//, ''), 256, 1).catch(() => null) : null,
+  ]);
+  return enqueue(async () => {
+    const map = mapImg ? pixels(mapImg, SAMPLE_W, SAMPLE_H) : null;
+    let ring: RingStrip | null = null;
+    if (ringImg) {
       const w = 256;
-      const px = pixels(img, w, 1);
+      const px = pixels(ringImg, w, 1);
       if (px) ring = { rgba: px, width: w };
-    } catch {
-      ring = null;
     }
-  }
-  return render(map, map ? style : 'plain', ring);
+    return render(map, map ? style : 'plain', ring);
+  });
 }
 
 /** Cached thumbnail URL if already rendered (synchronous; undefined while pending or not requested). */

@@ -44,6 +44,8 @@ export interface SystemTree {
   spacecraft: Entity[];
   /** Notable named small bodies. */
   smallBodies: Entity[];
+  /** Black holes (stellar, supermassive, mergers), most important first. */
+  blackHoles: Entity[];
   /** Every navigable id → its entity (for neighbour lookups). */
   index: Map<string, Entity>;
 }
@@ -95,7 +97,7 @@ export function candidateEntities(registry: EntityRegistry): Entity[] {
       const wanted =
         PRIMARY_KINDS.has(rec.kind) || rec.kind === 'moon' || rec.kind === 'space-station' ||
         (ARTIFICIAL_KINDS.has(rec.kind) && rec.importance >= MIN_ARTIFICIAL_IMPORTANCE) ||
-        (SMALL_KINDS.has(rec.kind) && rec.importance >= MIN_SMALL_BODY_IMPORTANCE);
+        (SMALL_KINDS.has(rec.kind) && rec.importance >= MIN_SMALL_BODY_IMPORTANCE) || rec.kind === 'black-hole';
       if (wanted) push(safeGet(registry, rec.id));
     }
   }
@@ -164,8 +166,20 @@ export function buildSystemTree(entities: readonly Entity[], tMs: number): Syste
     for (const s of b.satellites) index.set(s.id, s);
   }
   for (const e of spacecraft) index.set(e.id, e);
+  // Most important first; one chip per name (the Milky Way landmark markers repeat some catalogue black holes).
+  const bhNames = new Set<string>();
+  const blackHoles = entities
+    .filter(e => e.kind === 'black-hole')
+    .sort((a, b) => b.importance - a.importance || a.name.localeCompare(b.name))
+    .filter(e => {
+      const k = e.name.toLowerCase();
+      if (bhNames.has(k)) return false;
+      bhNames.add(k);
+      return true;
+    });
   for (const e of smallBodies) index.set(e.id, e);
-  return { sun, bodies, spacecraft, smallBodies, index };
+  for (const e of blackHoles) index.set(e.id, e);
+  return { sun, bodies, spacecraft, smallBodies, blackHoles, index };
 }
 
 /** The planet / dwarf planet whose system `id` belongs to (itself, or its parent for a moon or spacecraft). */

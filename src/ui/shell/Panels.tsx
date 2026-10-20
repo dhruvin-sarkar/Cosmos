@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { QualityPreset } from '../../core/types';
 import { listDatasets } from '../../data/manifest';
 import { useCommands, useCosmos, useManifest, setUi, useStoreApi } from '../hooks';
@@ -9,6 +9,15 @@ import { Toggle } from '../components/Toggle';
 import { EmptyState } from '../components/Misc';
 import { ProvenanceBadge, ProvenanceLegend } from '../components/Provenance';
 import { formatIsoAge, formatIsoDate } from '../format';
+import { setVisualScale } from '../../state/store';
+import type { VisualScaleMode } from '../../core/visualScale';
+import { TimeSettings } from './TimeControls';
+import { revealPendingSection } from './settingsNav';
+
+const SCALE_NOTES: Record<VisualScaleMode, string> = {
+  exhibition: 'Planets, moons and the Sun are drawn larger so they can be seen across the Solar System; each shrinks to its true size as you approach. Distances never change.',
+  true: 'Everything is drawn at its real size. From afar most bodies are smaller than a pixel: space is mostly empty.',
+};
 
 /** Interface software and type that ship inside the app (all offline). */
 const INTERFACE_CREDITS: ReadonlyArray<{ name: string; by: string; licence: string; url: string }> = [
@@ -146,7 +155,7 @@ export function SourcesPanel() {
   );
 }
 
-/** Quality, motion, sound and label density. */
+/** View scale, time, quality, labels, motion, sound and kiosk sizing. */
 export function SettingsPanel({ exhibition, onExhibitionChange, labelDensity, onLabelDensityChange }: {
   exhibition: boolean;
   onExhibitionChange(on: boolean): void;
@@ -158,12 +167,33 @@ export function SettingsPanel({ exhibition, onExhibitionChange, labelDensity, on
   const effective = useCosmos(s => s.quality.effective);
   const reduced = useCosmos(s => s.ui.reducedMotion);
   const sound = useCosmos(s => s.ui.sound);
+  const scaleMode = useCosmos(s => s.visualScale);
   const store = useStoreApi();
   const commands = useCommands();
+  useEffect(() => {
+    if (open) revealPendingSection();
+  }, [open]);
   return (
     <Sheet open={open} onClose={() => setUi(store, { settingsOpen: false })} title="Settings" side="right" width="min(460px, calc(100vw - 32px))">
       <div className="cx-settings">
-        <section className="cx-settings__group">
+        <section className="cx-settings__group" id="cx-settings-scale" aria-labelledby="cx-settings-scale-title">
+          <h3 className="cx-settings__title" id="cx-settings-scale-title" tabIndex={-1}>View scale</h3>
+          <SegmentedControl<VisualScaleMode>
+            label="View scale"
+            value={scaleMode}
+            onChange={v => setVisualScale(store, v)}
+            options={[
+              { value: 'exhibition', label: 'Enlarged for visibility' },
+              { value: 'true', label: 'True scale' },
+            ]}
+          />
+          <p className="cx-settings__note">{SCALE_NOTES[scaleMode]}</p>
+        </section>
+        <section className="cx-settings__group" id="cx-settings-time" aria-labelledby="cx-settings-time-title">
+          <h3 className="cx-settings__title" id="cx-settings-time-title" tabIndex={-1}>Time</h3>
+          <TimeSettings />
+        </section>
+        <section className="cx-settings__group" id="cx-settings-quality">
           <h3 className="cx-settings__title">Graphics quality</h3>
           <SegmentedControl<QualityPreset>
             label="Graphics quality"
@@ -194,7 +224,7 @@ export function SettingsPanel({ exhibition, onExhibitionChange, labelDensity, on
         <section className="cx-settings__group">
           <Toggle checked={reduced} onCheckedChange={on => setUi(store, { reducedMotion: on })} label="Reduce motion" description="Camera travel becomes a short crossfade; no animated counters." />
           <Toggle checked={sound} onCheckedChange={on => setUi(store, { sound: on })} label="Sound" description="Quiet interface sounds." />
-          <Toggle checked={exhibition} onCheckedChange={onExhibitionChange} label="Exhibition mode" description="Larger type and touch targets for a standing audience." />
+          <Toggle checked={exhibition} onCheckedChange={onExhibitionChange} label="Kiosk sizing" description="Larger type and touch targets for a standing audience." />
         </section>
       </div>
     </Sheet>

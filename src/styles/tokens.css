@@ -244,8 +244,8 @@
 
   /* ── Layout ────────────────────────────────────────────────────────────────────────────── */
   --topbar-h: 64px;
-  --timebar-h: 44px; /* the time capsule under the breadcrumb */
-  /* Where left-column content (inspector, labs, tour, navigator) starts: under the time capsule. */
+  --timebar-h: 34px; /* room for the time status chip under the breadcrumb (shown only when time is not live) */
+  /* Where left-column content (inspector, labs, tour, navigator) starts: under the time status chip. */
   --hud-top: calc(var(--topbar-h) + var(--timebar-h) + 8px);
   --bottom-h: 84px;
   --inspector-w: var(--column-w);
@@ -269,7 +269,7 @@
   --hit: 56px;
   --control-md: 56px;
   --topbar-h: 76px;
-  --timebar-h: 56px;
+  --timebar-h: 42px;
   --bottom-h: 100px;
   --cosmos-label-size: 16px;
 }
@@ -279,6 +279,7 @@
     --column-w: 380px;
     --ruler-w: 132px;
     --hud-gutter: 20px;
+    --lab-w: 460px; /* leaves the lab viewport room for a four-way mode switch on one line at 1366 px */
   }
 }
 
@@ -287,6 +288,7 @@
     --column-w: 340px;
     --ruler-w: 112px;
     --hud-gutter: 16px;
+    --lab-w: 420px;
     --type-atlas-xl: 400 64px / 0.95 var(--font-atlas);
     --type-atlas-l: 400 48px / 1 var(--font-atlas);
     --type-ruler: 400 84px / 1 var(--font-atlas);

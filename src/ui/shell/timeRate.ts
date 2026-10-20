@@ -37,3 +37,13 @@ export function rateInWords(rate: number, paused = false): string {
   if (rate < 0) return step?.rate === 1 ? 'Real time, backwards' : `${words}, backwards`;
   return words;
 }
+
+/** Within two minutes of the wall clock, running forwards at real time: the sky on screen is "now". */
+export function isLive(ms: number, rate: number, paused: boolean, now = Date.now()): boolean {
+  return !paused && rate === 1 && Math.abs(ms - now) < 120_000;
+}
+
+/** Compact rate for the time status chip: "1 day/s", "1 hour/s reversed". */
+export function compactRate(rate: number): string {
+  return rateInWords(rate).replace(' per second', '/s').replace(', backwards', ' reversed');
+}

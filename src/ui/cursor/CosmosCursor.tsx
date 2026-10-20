@@ -16,10 +16,10 @@ function labelFor(el: Element): string {
 }
 
 /**
- * The Cosmos configuration of the lock-on cursor (docs/design/UI_SYSTEM.md, "Cursor"): thin brass brackets, a calm
- * six-second spin while roaming, a quick 0.18 s snap, a plain reticle while the visitor drags the 3D view.
- * Brass stays legible over black space and over a bright planet thanks to its night-hairline halo, so the blend mode
- * is normal (difference would turn brass blue over a sunlit limb).
+ * The Cosmos configuration of the lock-on cursor (docs/design/UI_SYSTEM.md, "Cursor"): thin white brackets glued to the
+ * pointer, a calm six-second spin while roaming, a quick 0.16 s snap, a plain reticle while the visitor drags the 3D view.
+ * White stays legible over black space and over a bright planet thanks to a one-pixel dark outline drawn behind each
+ * bracket; blending is normal (a blend mode over the full-screen WebGL canvas costs a composite every frame).
  */
 export function CosmosCursor() {
   return (
@@ -28,10 +28,11 @@ export function CosmosCursor() {
       liveSelector={LIVE}
       dragSurfaceSelector=".cx-viewport"
       labelFor={labelFor}
-      cursorColor="oklch(0.85 0.1 88 / 0.78)"
-      cursorColorOnTarget="oklch(0.88 0.1 88)"
+      cursorColor="oklch(1 0 0 / 0.9)"
+      cursorColorOnTarget="oklch(1 0 0)"
+      outlineColor="oklch(0 0 0 / 0.5)"
       spinDuration={6}
-      hoverDuration={0.18}
+      hoverDuration={0.16}
       parallaxOn
       hideDefaultCursor
       size={28}
@@ -41,7 +42,6 @@ export function CosmosCursor() {
       padding={6}
       matchRadius
       dotSize={3}
-      blendMode="normal"
       showLabel
       clickEffect
     />

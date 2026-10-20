@@ -67,15 +67,23 @@ Brass on black is 11.9 : 1; secondary text on `--capsule` over a sunlit limb sta
 
 4 px grid (`--sp-1` … `--sp-16`). HUD gutter 24 px (20 below 1440, 16 below 1200).
 
-- **Top band** (`--topbar-h` 64 / 76): breadcrumb top-left, search field top-centre, exhibition-scale disclosure,
-  then one toolbar capsule top-right in three groups (travel: Planets, What's up · view: Layers, Light, Tour ·
+- **Top band** (`--topbar-h` 64 / 76): breadcrumb top-left, search field top-centre, then one toolbar capsule
+  top-right in three groups (travel: Planets, What's up · view: Layers, Light, Tour ·
   utilities: Sources, Settings, Help).
-- **Time capsule** (`--timebar-h` 44 / 56) top-left directly under the breadcrumb: play/pause, date + UTC clock (opens
-  "Go to a date"), rate stepper in words, Live/Now. Time is context for "where am I", so it lives with the breadcrumb,
-  far from the bottom rails it used to collide with.
-- **Left column** (`--column-w` 440 / 380 / 340) starts at `--hud-top`, under the time capsule: inspector, tour card,
-  lab panels, navigator. Sits on an edge scrim, not a box.
-- **Right edge**: the Cosmic Ruler (`--ruler-w`).
+- **Settings** holds the view scale ("View scale": Enlarged for visibility / True scale, with a one-line explanation)
+  and the full time controls ("Time": play/pause, the UTC date and clock, the rate stepper in words with reverse,
+  Live/Now, Go to a date). Keyboard shortcuts (Space, comma, full stop, N) work everywhere; tours still drive time.
+- **Time status chip** (`--timebar-h` 34 / 42 reserved) top-left under the breadcrumb, shown ONLY while the sky is
+  not "now": paused ("Paused · 1990-02-14 06:17 UTC"), sped up or reversed ("1 day/s · 2027-03-02") or jumped. Clicking
+  it opens Settings at Time (`openSettingsAt(store, 'time')`, src/ui/shell/settingsNav.ts). When live, nothing
+  time-related is on screen.
+- **Left column** (`--column-w` 440 / 380 / 340; labs `--lab-w` 520 / 460 / 420) starts at `--hud-top`: inspector,
+  tour card, lab panels, navigator. Sits on an edge scrim, not a box. At < 1440 px the inspector's two long tab names
+  set on two balanced lines so all five tabs stay visible; segmented-control labels never wrap.
+- **Right edge**: the Cosmic Ruler (`--ruler-w`). Discreet when idle (dim, slim ticks, decade numbers only, small
+  quiet readout, lighter scrim); bright with every landmark and the emphasised readout while the visitor zooms, hovers,
+  drags or focuses it or the camera travels, easing back 1.5 s (`RULER_IDLE_MS`) after activity stops. Opacity and
+  transform only; reduced motion swaps the states without easing.
 - **Bottom band**: the planet rail (Sun excluded, prev/next steps naming the neighbours) and, centred above it, the
   satellite strip for the focused system. Both are bounded between the left column and the ruler, so nothing overlaps
   from 1280 to 3840 px; the toolbar sheds labels at < 1680 px and the rail sheds step names at < 1440 px.
@@ -140,8 +148,8 @@ Astronomy glyphs lucide lacks (asteroid, comet, debris, galaxy, black hole, stat
 ## Density
 
 - **Desktop** (default): 44 px hit targets, 14 px controls, 15 px body.
-- **Exhibition** (`[data-exhibition='true']`, Settings → Exhibition mode, or the kiosk URL flag): Instrument sizes × 1.25,
-  body ≥ 18 px, 56 px targets, taller top band, time capsule and rail. Designed to be read from 1–2 m.
+- **Exhibition** (`[data-exhibition='true']`, Settings → Kiosk sizing, or the kiosk URL flag): Instrument sizes × 1.25,
+  body ≥ 18 px, 56 px targets, taller top band, time chip and rail. Designed to be read from 1–2 m.
 - Touch kiosks keep native pointer behaviour (no custom cursor, see below).
 
 ## Lock-on cursor
@@ -150,12 +158,20 @@ Astronomy glyphs lucide lacks (asteroid, comet, debris, galaxy, black hole, stat
 reactbits.dev, MIT + Commons Clause; credited in Sources → Interface credits). `CosmosCursor.tsx` configures it once
 in the app shell:
 
-- Thin brass corner brackets (`thickness 1.5`, `cornerSize 8`, `size 28`, `padding 6`, `dotSize 3`) with a night
-  hairline drop-shadow so they read over black space and over a sunlit limb; blend mode `normal` (difference turned
-  brass blue over bright planets).
-- Calm 6 s spin while roaming, 0.18 s snap onto targets, parallax, `matchRadius` (brackets follow the target's radius),
+- Thin WHITE corner brackets (`thickness 1.5`, `cornerSize 8`, `size 28`, `padding 6`, `dotSize 3`), each drawn
+  twice: a 1 px dark outline (::before) under the white stroke (::after), so they read over black space and over a
+  sunlit limb. No blend modes and no CSS filters: over a full-screen WebGL canvas either forces an extra composite every
+  frame.
+- Main-thread budget < 0.2 ms per frame (measured with .work/ui/cursor-trace.mjs: mean ≈ 0.11-0.14 ms including the
+  pointer handlers, no forced layout inside the frame, updated on every displayed frame). The frame only writes
+  transforms and opacity; bracket geometry and lock colour are custom properties/classes written when the lock state
+  flips. A static target's rect is cached (re-measured on lock, scroll, resize, ResizeObserver size change, and the
+  end of its CSS transitions/animations); a moving 3D label is followed by reading the engine's inline translate3d as
+  an offset from the rect measured at lock time. Pointer coordinates come from `pointerrawupdate` where available.
+- Roaming brackets are glued to the pointer (no follow lag); a 40 ms critically damped catch-up after leaving a
+  target. Calm 6 s spin while roaming, 0.16 s snap onto targets, parallax, `matchRadius` (brackets follow the target's radius),
   click squeeze, and a label above locked targets ("Fly to Mars").
-- Targets: any element with class `cursor-target` (all `Button`/`IconButton`s, toolbar, breadcrumb, time controls,
+- Targets: any element with class `cursor-target` (all `Button`/`IconButton`s, toolbar, breadcrumb, time chip,
   rail and strip items, search rows, navigator rows) plus the engine's DOM body labels. `data-cursor-label` overrides
   the label; 3D labels get "Fly to <name>" unless they only name a region.
 - Only for fine pointers with hover (`(hover: hover) and (pointer: fine)`); touch keeps native behaviour. Reduced
@@ -165,6 +181,6 @@ in the app shell:
 ## Accessibility floor
 
 Visible keyboard focus everywhere; every control reachable by keyboard (Tab order follows the visual bands:
-breadcrumb → time → search → toolbar → column → strips); dialogs trap focus and return it to their trigger; contrast
+breadcrumb → time chip (when shown) → search → toolbar → column → strips); dialogs trap focus and return it to their trigger; contrast
 AA for all text; reduced motion honoured; targets ≥ 44 px (56 px in exhibition mode); live regions for the tour and
 toasts; the custom cursor is decorative (`aria-hidden`) and never replaces focus indication.

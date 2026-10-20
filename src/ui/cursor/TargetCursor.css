@@ -1,32 +1,70 @@
-/* Lock-on cursor (port of React Bits TargetCursor). Fixed, pointer-transparent, above every HUD layer. */
+/* Lock-on cursor (port of React Bits TargetCursor). Fixed, pointer-transparent, above every HUD layer.
+   Cheap to composite over the WebGL canvas: normal blending, no filters. Each bracket is two borders: a dark outline
+   one pixel wider on every side (::before) under the white stroke (::after), so white stays legible over a sunlit
+   limb or the Sun itself. Geometry comes from custom properties written only when the lock state changes. */
 .target-cursor {
   position: fixed;
   inset: 0;
   z-index: var(--z-cursor, 90);
   pointer-events: none;
-  contain: layout style;
+  contain: strict;
+  --tc-size: 8px;
+  --tc-thick: 1.5px;
+  --tc-radius: 2px;
+  --tc-dot: 3px;
 }
 
 .target-cursor__corner {
   position: absolute;
   top: 0;
   left: 0;
-  box-sizing: border-box;
-  border-style: solid;
-  border-color: var(--target-cursor-color, #ffffff);
+  width: var(--tc-size);
+  height: var(--tc-size);
   transform-origin: 0 0;
   will-change: transform;
-  /* A hairline of night around each bracket keeps it legible over a sunlit limb or the Sun itself. */
-  filter: drop-shadow(0 0 1px oklch(0 0 0 / 0.85)) drop-shadow(0 0 3px oklch(0 0 0 / 0.45));
+  opacity: 0.86;
+  transition: opacity 120ms linear;
+}
+.target-cursor.is-locked .target-cursor__corner {
+  opacity: 1;
+}
+
+.target-cursor__corner::before,
+.target-cursor__corner::after {
+  content: '';
+  position: absolute;
+  box-sizing: border-box;
+  border-style: solid;
+  border-right-width: 0;
+  border-bottom-width: 0;
+}
+.target-cursor__corner::before {
+  inset: -1px;
+  border-color: var(--target-cursor-outline, oklch(0 0 0 / 0.55));
+  border-top-width: calc(var(--tc-thick) + 2px);
+  border-left-width: calc(var(--tc-thick) + 2px);
+  border-top-left-radius: calc(var(--tc-radius) + 1px);
+}
+.target-cursor__corner::after {
+  inset: 0;
+  border-color: var(--target-cursor-color, #ffffff);
+  border-top-width: var(--tc-thick);
+  border-left-width: var(--tc-thick);
+  border-top-left-radius: var(--tc-radius);
+}
+.target-cursor.is-locked .target-cursor__corner::after {
+  border-color: var(--target-cursor-color-on, var(--target-cursor-color, #ffffff));
 }
 
 .target-cursor__dot {
   position: absolute;
   top: 0;
   left: 0;
+  width: var(--tc-dot);
+  height: var(--tc-dot);
   border-radius: 50%;
   background: var(--target-cursor-color, #ffffff);
-  box-shadow: 0 0 0 1px oklch(0 0 0 / 0.6);
+  box-shadow: 0 0 0 1px var(--target-cursor-outline, oklch(0 0 0 / 0.55));
   will-change: transform;
 }
 
@@ -37,8 +75,8 @@
   padding: 3px 8px 4px;
   border-radius: var(--r-pill, 999px);
   background: oklch(0.12 0 0 / 0.86);
-  box-shadow: inset 0 0 0 1px oklch(0.85 0.1 88 / 0.35);
-  color: var(--target-cursor-color, #ffffff);
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.22);
+  color: var(--target-cursor-color-on, #ffffff);
   font: 500 12px/1.2 var(--font-ui, system-ui, sans-serif);
   letter-spacing: 0.01em;
   white-space: nowrap;
@@ -47,4 +85,8 @@
 
 [data-exhibition='true'] .target-cursor__label {
   font-size: 14px;
+}
+
+[data-reduced-motion='true'] .target-cursor__corner {
+  transition: none;
 }

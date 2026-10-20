@@ -233,6 +233,16 @@ function OpenNavigatorPanel() {
             </ul>
           </section>
         )}
+        {tree.blackHoles.length > 0 && (
+          <section className="cx-nav__group" data-testid="nav-blackholes">
+            <h3 className="cx-nav__group-title">Black holes</h3>
+            <ul className="cx-nav-chips">
+              {tree.blackHoles.map(e => (
+                <SatelliteChip key={e.id} entity={e} focusId={focusId} onGo={go} />
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
       <p className="cx-nav__hint" aria-hidden="true">
         <span><Kbd keys="0" size="sm" />–<Kbd keys="9" size="sm" /> planets</span>

@@ -93,7 +93,7 @@ async function main() {
       try {
         await Promise.race([
           page.evaluate(action.fn, action.arg),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('action timeout')), config.travelTimeoutMs)),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('action timeout')), action.timeoutMs ?? config.travelTimeoutMs)),
         ]);
       } catch (e) { fatal = true; notes.push(String(e.message).split('\n')[0]); }
       await page.waitForTimeout(config.settleMs);
@@ -183,6 +183,44 @@ async function main() {
           for (let i = 1; i < Math.min(st.stepCount, 6); i++) { c.tourNext(); await new Promise(r => setTimeout(r, 1200)); }
           c.exitTour(); }, arg: tour });
       }
+      // The golden journey end to end: every step, with time for each cinematic travel to land.
+      await stop('tour:golden-journey:full', { fn: async () => {
+        const c = window.__cosmos.commands; c.startTour('golden-journey'); await new Promise(r => setTimeout(r, 600));
+        const st = window.__cosmos.store.getState().tour;
+        if (st.activeId !== 'golden-journey') throw new Error('tour did not start');
+        for (let i = 1; i < st.stepCount; i++) {
+          await new Promise(r => setTimeout(r, 11000));
+          c.tourNext();
+          if (window.__cosmos.store.getState().tour.step !== i) throw new Error(`tour stuck at step ${i - 1}`);
+        }
+        await new Promise(r => setTimeout(r, 12000));
+        c.exitTour(); }, timeoutMs: 400000 });
+      // Beyond the Solar System: exoplanet systems, the Milky Way, Sgr A*, the Local Group, the cosmic web, the CMB.
+      const regions = ['sys:TRAPPIST-1', 'exo:TRAPPIST-1 e', 'sys:Proxima Cen', 'sys:Kepler-16', 'sys:HR 8799', 'mw:galaxy', 'mw:m42',
+        'mw:m13', 'mw:sgr-a*', 'mw:s2', 'bh:cygnus-x1', 'bh:gaia-bh1', 'gal:lmc', 'gal:m31', 'gal:m33', 'struct:local-group',
+        'struct:virgo-cluster', 'struct:laniakea', 'bh:m87', 'cosmo:cmb', 'cosmo:observable-universe'];
+      for (const id of regions) {
+        // Region entities register lazily (their catalogues load after boot): ask the live registry, waiting up to 20 s.
+        const live = has(id) || await page.evaluate(async i => {
+          for (let k = 0; k < 80 && !window.__cosmos.registry.get(i); k++) await new Promise(r => setTimeout(r, 250));
+          return !!window.__cosmos.registry.get(i); }, id);
+        if (!live) { rows.push({ name: id, errors: 1, warns: 0, p50: NaN, p95: NaN, notes: 'entity not registered', severity: 'high', detail: [] }); continue; }
+        await go(id);
+      }
+      // Search finds the new entities and their FactSheets resolve.
+      await stop('search:regions', { fn: async () => {
+        const R = window.__cosmos.registry; const miss = [];
+        const want = { 'TRAPPIST-1 e': 'exo:TRAPPIST-1 e', 'Proxima Cen': 'sys:Proxima Cen', 'Sgr A*': 'mw:sgr-a*', 'S2': 'mw:s2',
+          'Omega Centauri': 'mw:gc-ngc-5139', 'Orion Nebula': 'mw:m42', 'Andromeda': 'gal:m31', 'LMC': 'gal:lmc', 'Virgo Cluster': 'struct:virgo-cluster',
+          'Laniakea': 'struct:laniakea', 'CMB': 'cosmo:cmb', 'Cygnus X-1': 'bh:cygnus-x1', 'Vesta': 'sb:vesta', 'ISS': 'sc:iss' };
+        for (const [q, id] of Object.entries(want)) {
+          const hit = R.search(q, 5).find(r => r.record.id === id);
+          const e = hit && R.get(id);
+          if (!e) { miss.push(q); continue; }
+          const f = await e.facts(); if (!f) miss.push(q + ' (no facts)');
+        }
+        if (miss.length) throw new Error('search misses: ' + miss.join(', ')); } });
+      await page.evaluate(() => window.__cosmos.commands.home());
       for (const mode of ['true', 'exhibition']) {
         await stop(`scale:${mode}`, { fn: async m => {
           window.__cosmos.store.setState({ visualScale: m }); await window.__cosmos.commands.focus('sol:earth'); }, arg: mode });

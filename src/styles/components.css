@@ -206,6 +206,7 @@
   font: var(--type-control);
   font-size: 13.5px;
   color: var(--text-secondary);
+  white-space: nowrap; /* a segment label never breaks across lines */
   transition: background-color var(--dur-fast), color var(--dur-fast);
 }
 .cx-seg--sm .cx-seg__item {

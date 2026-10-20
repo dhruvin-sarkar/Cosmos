@@ -10,9 +10,8 @@ import { LayersPanel, LightPanel } from './ViewPanels';
 import { bandInfo } from './spectral';
 import { NavigatorButton, NavigatorHost } from '../navigator/Navigator';
 import { useFocusFramed } from '../navigator/framing';
-import { ScaleToggle } from './ScaleToggle';
 import { SkyEvents } from '../events/SkyEvents';
-import { TimeControls } from './TimeControls';
+import { TimeStatusChip } from './TimeControls';
 
 /** Default guided tour started by the Tour button (the tours module registers it under this id). */
 export const DEFAULT_TOUR_ID = 'golden-journey';
@@ -96,8 +95,8 @@ export function BarButton({
 }
 
 /**
- * Top band. Left: where you are (breadcrumb) and when (the time capsule beneath it). Centre: search. Right: the
- * always-visible scale disclosure and one toolbar grouped as travel (Planets, What's up), view (Layers, Light, Tour)
+ * Top band. Left: where you are (breadcrumb) and, only while the sky is not "now", one time status chip beneath it
+ * (time and view scale live in Settings). Centre: search. Right: one toolbar grouped as travel (Planets, What's up), view (Layers, Light, Tour)
  * and utilities (Sources, Settings, Help as icons with tooltips).
  */
 export function TopBar({ tourId = DEFAULT_TOUR_ID }: { tourId?: string }) {
@@ -114,7 +113,7 @@ export function TopBar({ tourId = DEFAULT_TOUR_ID }: { tourId?: string }) {
     <header className="cx-topbar">
       <div className="cx-topbar__lead">
         <Breadcrumb />
-        <TimeControls />
+        <TimeStatusChip />
       </div>
       <button
         type="button"
@@ -128,7 +127,6 @@ export function TopBar({ tourId = DEFAULT_TOUR_ID }: { tourId?: string }) {
         <Kbd keys="Ctrl+K" size="sm" />
       </button>
       <div className="cx-topbar__right">
-        <ScaleToggle />
         <div className="cx-toolbar" role="group" aria-label="Explore and view">
           <NavigatorButton />
           <SkyEvents />

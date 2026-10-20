@@ -95,7 +95,7 @@ export function LabShell({
     <>
       <section className={cx('cx-lab', modified && 'cx-lab--modified', className)} aria-label={title}>
         <header className="cx-lab__head">
-          <p className="cx-lab__title">
+          <p className="cx-lab__title" title={subject ? `${title} / ${subject}` : title}>
             {title}
             {subject && <span className="cx-lab__crumb"> / {subject}</span>}
           </p>
