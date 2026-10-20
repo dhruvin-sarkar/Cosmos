@@ -20,6 +20,7 @@ import { createRingGeometry, SolarRingMaterial } from './ringMaterial';
 import { resolveBodyTexture } from './textures';
 import { createWindTexture, VENUS_CLOUD_PERIOD_DAYS, WindClock } from './winds';
 import { registerScaledBody, renderTransform } from '../../core/visualScale';
+import { PSF_GLSL } from '../../render/glsl/psf';
 
 /** Venus: CO₂ Rayleigh at the ~30 mbar cloud-top level plus the upper sulfuric-acid haze (Mie, forward scattering). */
 const VENUS_HAZE: AtmosphereParams = {
@@ -110,8 +111,10 @@ attribute vec3 aColor;
 attribute float aSize;
 uniform float uPixelRatio;
 varying vec3 vColor;
+varying float vSizePx;
 void main() {
   vColor = aColor;
+  vSizePx = aSize;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   gl_PointSize = aSize * uPixelRatio;
   ${LOGDEPTH_VERTEX}
@@ -119,10 +122,14 @@ void main() {
 
 const POINT_FRAGMENT = /* glsl */ `
 ${FRAGMENT_PRELUDE}
+uniform float uPixelRatio;
 varying vec3 vColor;
+varying float vSizePx;
+${PSF_GLSL}
 void main() {
   vec2 d = gl_PointCoord - 0.5;
-  float a = exp(-dot(d, d) * 16.0);
+  // Same Gaussian as before (σ = size/√32), averaged over each pixel: no sampling twinkle while the dot moves.
+  float a = psfPixelGauss(d * vSizePx, vSizePx * 0.1767767, 0.5 / uPixelRatio);
   if (a < 0.01) discard;
   gl_FragColor = vec4(vColor * a, 1.0);
   ${LOGDEPTH_FRAGMENT}
@@ -211,12 +218,14 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
       // HD maps from hd.json are albedo-calibrated already: they take their own (hue-only) tint.
       void resolveBodyTexture(svc.assets, svc.renderer, def.key, def.colorMap, quality, 'srgb', (t, info) => v.material.setMap(t, info.hd && def.hdTint ? def.hdTint : def.tint), {
         isCancelled: () => !isLive(),
+        screenPx: () => v.shownPx,
       });
     }
     if (def.surface === 'rocky' || def.surface === 'ice' || def.hasNormalMap) {
       if (def.hasNormalMap || quality !== 'low') {
         void resolveBodyTexture(svc.assets, svc.renderer, def.key, 'normal', quality, 'linear', (t) => v.material.setNormalMap(t, NORMAL_STRENGTH[def.key] ?? 0.5), {
           isCancelled: () => !isLive(),
+          screenPx: () => v.shownPx,
         }).catch(() => undefined);
       }
     }
@@ -300,9 +309,13 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
           material.uniforms.uRingThinGain.value = ringDef.thinGain ?? 1;
           if (ringDef.strip === 'saturn') {
             const r = ring;
-            void resolveBodyTexture(svc.assets, svc.renderer, 'saturn', 'rings', 'ultra', 'srgb', (t) => {
+            void resolveBodyTexture(svc.assets, svc.renderer, 'saturn', 'rings', 'ultra', 'srgb', (t, info) => {
               r.material.uniforms.uStrip.value = t;
               material.uniforms.uRingStrip.value = t;
+              // hd.json strip = measured Cassini optical depth: no thin-ring gain (that compensates the illustrative strip).
+              const gain = info.hd ? 1 : (ringDef.thinGain ?? 1);
+              r.material.uniforms.uThinGain.value = gain;
+              material.uniforms.uRingThinGain.value = gain;
             }, { strip: true });
           }
         }
@@ -391,7 +404,10 @@ export function createBodiesLayer(bodies: SolarEntity[], registryForMoons?: () =
         if (v.lod.point > 0.001) {
           // Physical disc radiance × area, spread over the dot; floored so planets stay findable as points.
           tmp2.subVectors(ctx.cameraPosition, v.world).normalize();
-          const phase = 0.5 * (1 + tmp2.dot(sunDir));
+          // Lambert-sphere phase function (sin α + (π − α) cos α)/π: matches the disc's integrated flux at the cross-fade.
+          const cosA = Math.min(1, Math.max(-1, tmp2.dot(sunDir)));
+          const alpha = Math.acos(cosA);
+          const phase = (Math.sin(alpha) + (Math.PI - alpha) * cosA) / Math.PI;
           const L = (def.geometricAlbedo ?? 0.3) * E0 / Math.PI * phase;
           const areaPx = Math.PI * 0.25 * v.shownPx * v.shownPx;
           const phys = (L * areaPx) / 4.5;

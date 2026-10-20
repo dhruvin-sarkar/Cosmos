@@ -9,6 +9,7 @@
  */
 import * as THREE from 'three';
 import type { AssetLoader, QualityProfile } from '../../core/types';
+import { getTextureManager } from '../../core/textures';
 
 /** 'max' = the 16K tier (Ultra preset only, and only while the body fills the screen at close range; ~700 MB VRAM). */
 export type Tier = 'low' | 'high' | 'ultra' | 'max';
@@ -163,7 +164,7 @@ export class ProgressiveMap {
         const prev = this.current;
         this.current = tex;
         this.currentTier = target.tier;
-        this.apply(tex, target.tier);
+        this.applyTex(tex, target.tier);
         if (prev && prev !== tex) prev.dispose();
       })
       .finally(() => { this.loading = false; void this.pump(); });
@@ -171,6 +172,9 @@ export class ProgressiveMap {
 
   private async load(p: string): Promise<THREE.Texture | null> {
     try {
+      // GPU-compressed KTX2 twin when converted (src/core/textures; keys include the '@<width>' downscales).
+      const k = await getTextureManager(this.assets).loadKtx2(p, { colorSpace: this.colorSpace, anisotropy: this.anisotropy });
+      if (k) return k;
       const { path, maxWidth } = parseTexturePath(p);
       return maxWidth
         ? await this.loadDownscaled(path, maxWidth)
@@ -182,6 +186,13 @@ export class ProgressiveMap {
 
   get available(): boolean {
     return (this.table[this.body]?.[this.map] ?? null) !== null;
+  }
+
+  /** apply() without a second GPU upload when the texture was already uploaded with the same sampler state. */
+  private applyTex(tex: THREE.Texture, tier: Tier): void {
+    const v = tex.version, ws = tex.wrapS, wt = tex.wrapT;
+    this.apply(tex, tier);
+    if ((tex as THREE.CompressedTexture).isCompressedTexture && tex.wrapS === ws && tex.wrapT === wt) tex.version = v;
   }
 
   private async pump(): Promise<void> {
@@ -203,7 +214,7 @@ export class ProgressiveMap {
         const prev = this.current;
         this.current = tex;
         this.currentTier = next.tier;
-        this.apply(tex, next.tier);
+        this.applyTex(tex, next.tier);
         if (prev && prev !== tex) prev.dispose();
       }
     } finally {

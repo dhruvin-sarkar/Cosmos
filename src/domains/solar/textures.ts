@@ -7,7 +7,7 @@
  */
 import * as THREE from 'three';
 import type { AssetLoader, QualityProfile } from '../../core/types';
-import { configureEquirect } from '../../render/textures';
+import { getTextureManager } from '../../core/textures';
 
 type Tier = 'low' | 'high' | 'ultra';
 type TierPaths = Partial<Record<string, string>>;
@@ -48,7 +48,9 @@ export async function texturePlanInfo(assets: AssetLoader, body: string, role: s
   }
   const rank: Tier[] = quality === 'ultra' ? ['ultra', 'high', 'low'] : quality === 'high' ? ['high', 'low'] : ['low'];
   if (idx) for (const t of rank) if (idx[t]) best.push(idx[t]!);
-  let preview = idx?.low ?? idx?.high;
+  // Preview: the index's low tier, else hd.json's own small tier (fast first frame; JPEG, so pixel reads work).
+  const hdSmall = hdRole && typeof hdRole === 'object' ? (typeof hdRole['1k'] === 'string' ? hdRole['1k'] : typeof hdRole['2k'] === 'string' ? hdRole['2k'] : undefined) : undefined;
+  let preview = idx?.low ?? hdSmall ?? idx?.high;
   if (!index) {
     // No index: the documented file convention.
     const ext = role === 'normal' || role === 'rings' || role === 'coverage' ? 'png' : 'jpg';
@@ -61,9 +63,16 @@ export async function texturePlanInfo(assets: AssetLoader, body: string, role: s
   return { paths: plan, hd: hdPaths };
 }
 
+/** The texture currently bound per (body, role, owner) slot: an older tier that was superseded is never re-applied. */
+const currentBySlot = new Map<string, THREE.Texture>();
+
 /**
  * Resolve a body map. `apply` is called with the preview texture and again with the full-resolution one.
  * Returns a promise that settles when loading has finished (true if any image arrived).
+ *
+ * Loads go through the shared texture manager (src/core/textures): GPU-compressed KTX2 when converted, else the
+ * image; uploads are spread across frames. The full-resolution tier is registered for VRAM-budget eviction (it drops
+ * back to the preview while unused or tiny on screen, `opts.screenPx`, and is restored when wanted).
  */
 export async function resolveBodyTexture(
   assets: AssetLoader,
@@ -73,28 +82,59 @@ export async function resolveBodyTexture(
   quality: QualityProfile['textureQuality'],
   colorSpace: 'srgb' | 'linear',
   apply: (tex: THREE.Texture, info: { path: string; hd: boolean }) => void,
-  opts: { strip?: boolean; isCancelled?: () => boolean } = {},
+  opts: { strip?: boolean; isCancelled?: () => boolean; screenPx?: () => number; slot?: string } = {},
 ): Promise<boolean> {
   const { paths: plan, hd } = await texturePlanInfo(assets, body, role, quality);
+  const mgr = getTextureManager(assets, renderer);
+  const slot = `${body}|${role}|${opts.slot ?? 'default'}`;
   let any = false;
-  for (const path of plan) {
+  let skippedPreview = false;
+  let preview: { tex: THREE.Texture; path: string } | null = null;
+  for (let i = 0; i < plan.length; i++) {
+    const path = plan[i];
     try {
-      const t = await assets.textureAsync(path, { colorSpace, anisotropy: 16 });
+      const t = await mgr.load(path, { colorSpace, anisotropy: 16, wrap: opts.strip ? 'clamp' : 'equirect', priority: i === 0 ? 1 : 0, wanted: opts.screenPx });
       if (opts.isCancelled?.()) return any;
-      if (opts.strip) {
-        t.wrapS = THREE.ClampToEdgeWrapping;
-        t.wrapT = THREE.ClampToEdgeWrapping;
-        t.anisotropy = 1;
-      } else {
-        const flipY = t.flipY;
-        configureEquirect(t, renderer, { colorSpace, anisotropy: 16 });
-        t.flipY = flipY;
-      }
-      apply(t, { path, hd: hd.has(path) });
+      const info = { path, hd: hd.has(path) };
+      // Upgrading a slot that already shows a texture: keep it up until the better tier lands (no blurry flash).
+      if (i === 0 && plan.length > 1 && currentBySlot.has(slot)) { preview = { tex: t, path }; skippedPreview = true; continue; }
+      apply(t, info);
+      currentBySlot.set(slot, t);
       any = true;
+      skippedPreview = false;
+      if (i === 0) {
+        preview = { tex: t, path };
+      } else if (preview && preview.tex !== t) {
+        const pv = preview;
+        let shown = t;
+        const isCurrent = (): boolean => currentBySlot.get(slot) === shown || currentBySlot.get(slot) === pv.tex;
+        mgr.register(t, {
+          preview: pv.tex,
+          label: path,
+          screenPx: opts.screenPx,
+          alive: () => !opts.isCancelled?.() && isCurrent(),
+          evict: () => {
+            apply(pv.tex, { path: pv.path, hd: hd.has(pv.path) });
+            currentBySlot.set(slot, pv.tex);
+          },
+          restore: async () => {
+            const r = await mgr.load(path, { colorSpace, anisotropy: 16, wrap: opts.strip ? 'clamp' : 'equirect' });
+            if (opts.isCancelled?.() || currentBySlot.get(slot) !== pv.tex) return null;
+            apply(r, info);
+            currentBySlot.set(slot, r);
+            shown = r;
+            return r;
+          },
+        });
+      }
     } catch {
       // Missing tier: keep the previous one.
     }
+  }
+  if (skippedPreview && preview && !opts.isCancelled?.()) {
+    apply(preview.tex, { path: preview.path, hd: hd.has(preview.path) });
+    currentBySlot.set(slot, preview.tex);
+    any = true;
   }
   return any;
 }
