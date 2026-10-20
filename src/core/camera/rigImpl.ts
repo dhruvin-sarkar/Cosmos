@@ -46,6 +46,15 @@ const COAST_MAX_RAD_PER_SEC = 6;
 /** Camera never closer to the focused body's centre than this × its radius. */
 export const SURFACE_CLAMP_FACTOR = 1.02;
 const OBSTACLE_CLAMP_FACTOR = 1.01;
+/**
+ * Extended volumes the camera may (and must) be inside: galaxies, groups, superclusters, regions and reference
+ * spheres such as the observable universe sit in the focus chain of every Solar System body, so treating them as
+ * solid obstacles pushed the camera ~1e26 m away from the focus.
+ */
+const NON_SOLID_KINDS: ReadonlySet<string> = new Set([
+  'stellar-system', 'nebula', 'star-cluster', 'constellation', 'galaxy', 'galaxy-group', 'galaxy-cluster',
+  'supercluster', 'void', 'region', 'cosmic-structure', 'reference',
+]);
 /** Polar limit of the orbit (keeps the camera off the exact pole → no gimbal flip). */
 const ORBIT_POLAR_MIN_RAD = 3 * DEG;
 const LOOK_PITCH_MAX_RAD = 85 * DEG;
@@ -932,6 +941,7 @@ export class CosmosCameraRig implements CameraRig {
     const light = this.lightSourcePosition(target, t, SCRATCH.f);
     const pref = SCRATCH.g.subVectors(this.state.position, P1);
     if (this.needsInitialPose || !(pref.lengthSq() > 0) || !isFiniteVec(pref)) pref.set(0.3, -0.8, 0.5);
+    if (target.approachDir) pref.set(target.approachDir[0], target.approachDir[1], target.approachDir[2]);
     pref.normalize();
     // Up at arrival: evaluate the target's chain at the end scale for the preferred up.
     const savedScale = this.scale;
@@ -993,7 +1003,7 @@ export class CosmosCameraRig implements CameraRig {
     const cs = this.chainState;
     for (let i = includeFocus ? 0 : 1; i < cs.length; i++) {
       const link = cs.links[i];
-      const r = link.entity ? renderRadius(link.entity, timeMs) : 0;
+      const r = link.entity && !NON_SOLID_KINDS.has(link.entity.kind) ? renderRadius(link.entity, timeMs) : 0;
       if (!(r > 0)) continue;
       const min = r * OBSTACLE_CLAMP_FACTOR;
       const c = link.position;

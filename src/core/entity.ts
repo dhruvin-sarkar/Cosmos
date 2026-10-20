@@ -62,6 +62,12 @@ export interface Entity {
   /** Recommended camera distances for focusing, meters. */
   viewDistance?: { min: number; default: number; max?: number };
   /**
+   * Optional preferred arrival direction (unit vector, ICRS, pointing from the entity toward the camera) for travel. Used
+   * by extended structures whose default approach from Earth would be degenerate (e.g. the Local Group seen along the
+   * Milky Way-Andromeda line). When omitted the camera approaches from its current position.
+   */
+  approachDir?: readonly [number, number, number];
+  /**
    * Cosmic Ruler focus chain: the minimum view scale (log10 m) at which this entity may become the focus
    * context when the user zooms out from one of its descendants (e.g. the Galactic Center only takes over
    * the focus beyond ~10^21 m). When omitted the engine uses log10(separation from the child) + 0.6.

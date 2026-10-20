@@ -1,0 +1,1252 @@
+{
+ "schemaVersion": 1,
+ "generated": "2026-10-20T04:55:05Z",
+ "script": "scripts/data/galaxies/build-impostors.py",
+ "projection": "TAN (gnomonic), north up, east left, centred on raDeg/decDeg; fovDeg = full image width",
+ "atlas": {
+  "files": {
+   "4k": "textures/galaxies/atlas_4k.jpg",
+   "2k": "textures/galaxies/atlas_2k.jpg"
+  },
+  "grid": 8
+ },
+ "processing": "sRGB->linear, sky background subtracted (median outside 1.35 a), foreground stars replaced by a smoothed local opening (two scales, feathered), elliptical window at 1.12 a (smooth to 1.42 a), normalised to the 99.8th percentile inside the ellipse, linear->sRGB JPEG",
+ "source": "DSS2 colour HiPS (CDS/P/DSS2/color) via CDS hips2fits",
+ "license": "DSS: free for educational/non-commercial use with acknowledgement (STScI); HiPS/hips2fits: CDS",
+ "credit": "The Digitized Sky Surveys were produced at the Space Telescope Science Institute under U.S. Government grant NAG W-2166 (POSS-II: Caltech/Palomar; UKSTU: AAO/ROE). HiPS and hips2fits by CDS, Strasbourg.",
+ "entries": [
+  {
+   "raDeg": 10.68542,
+   "decDeg": 41.26917,
+   "fovDeg": 4.922542,
+   "semiMajorArcmin": 95.275,
+   "positionAngleDeg": 38,
+   "inclinationDeg": 77,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.9614,
+    0.9361
+   ],
+   "fillFraction": 0.00835,
+   "id": "gal:m31",
+   "file": "textures/galaxies/hero_m31.jpg",
+   "fileLow": "textures/galaxies/hero_m31_512.jpg",
+   "fileMid": "textures/galaxies/hero_m31_2k.jpg",
+   "masked": "foreground/companion objects replaced by the point-mirrored disc: (RA 10.674, Dec 40.865, r 4.5 arcmin)"
+  },
+  {
+   "raDeg": 23.46167,
+   "decDeg": 30.66028,
+   "fovDeg": 1.78715,
+   "semiMajorArcmin": 34.59,
+   "positionAngleDeg": 23,
+   "inclinationDeg": 56,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.9835,
+    0.9736
+   ],
+   "fillFraction": 0.00684,
+   "id": "gal:m33",
+   "file": "textures/galaxies/hero_m33.jpg",
+   "fileLow": "textures/galaxies/hero_m33_512.jpg",
+   "fileMid": "textures/galaxies/hero_m33_2k.jpg"
+  },
+  {
+   "raDeg": 80.89417,
+   "decDeg": -69.75611,
+   "fovDeg": 11.702406,
+   "semiMajorArcmin": 242.11874999999998,
+   "positionAngleDeg": 129.9,
+   "inclinationDeg": 34.7,
+   "positionAngleSource": "catalogue (line of nodes)",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.6665,
+    0.8001,
+    1.0
+   ],
+   "fillFraction": 0.00646,
+   "id": "gal:lmc",
+   "file": "textures/galaxies/hero_lmc.jpg",
+   "fileLow": "textures/galaxies/hero_lmc_512.jpg",
+   "note": "line of nodes PA 129.9 deg (famous.json); bar/disc image major axis ~170 deg used for the window"
+  },
+  {
+   "raDeg": 13.15833,
+   "decDeg": -72.80028,
+   "fovDeg": 6.890944,
+   "semiMajorArcmin": 142.57125,
+   "positionAngleDeg": 45.0,
+   "inclinationDeg": 58.0,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.1834,
+    0.4918,
+    1.0
+   ],
+   "fillFraction": 0.00526,
+   "id": "gal:smc",
+   "file": "textures/galaxies/hero_smc.jpg",
+   "fileLow": "textures/galaxies/hero_smc_512.jpg",
+   "masked": "foreground/companion objects replaced by the point-mirrored disc: (RA 6.024, Dec -72.081, r 16.0 arcmin), (RA 15.809, Dec -70.849, r 6.0 arcmin)"
+  },
+  {
+   "raDeg": 10.67542,
+   "decDeg": 40.86639,
+   "fovDeg": 0.230175,
+   "semiMajorArcmin": 4.455,
+   "positionAngleDeg": 153.58,
+   "inclinationDeg": 53,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.9459,
+    0.9085
+   ],
+   "fillFraction": 0.04209,
+   "id": "gal:m32",
+   "atlasSlot": 0
+  },
+  {
+   "raDeg": 148.88958,
+   "decDeg": 69.06667,
+   "fovDeg": 0.727983,
+   "semiMajorArcmin": 14.09,
+   "positionAngleDeg": 157,
+   "inclinationDeg": 59,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.9413,
+    0.9679,
+    1.0
+   ],
+   "fillFraction": 0.01103,
+   "id": "gal:m81",
+   "atlasSlot": 1
+  },
+  {
+   "raDeg": 148.97458,
+   "decDeg": 69.6825,
+   "fovDeg": 0.296567,
+   "semiMajorArcmin": 5.74,
+   "positionAngleDeg": 65,
+   "inclinationDeg": 77,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.9885,
+    0.9905,
+    1.0
+   ],
+   "fillFraction": 0.01932,
+   "id": "gal:m82",
+   "atlasSlot": 2
+  },
+  {
+   "raDeg": 187.70593,
+   "decDeg": 12.39112,
+   "fovDeg": 0.214417,
+   "semiMajorArcmin": 4.15,
+   "positionAngleDeg": 156.81,
+   "inclinationDeg": 32.95,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "image-moments",
+   "meanColorLinear": [
+    1.0,
+    0.827,
+    0.6819
+   ],
+   "fillFraction": 0.0267,
+   "id": "gal:m87",
+   "atlasSlot": 3
+  },
+  {
+   "raDeg": 201.37042,
+   "decDeg": -43.01667,
+   "fovDeg": 0.895642,
+   "semiMajorArcmin": 17.335,
+   "positionAngleDeg": 35,
+   "inclinationDeg": 45,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.8622,
+    0.7426
+   ],
+   "fillFraction": 0.01501,
+   "id": "gal:cena",
+   "atlasSlot": 4
+  },
+  {
+   "raDeg": 202.46958,
+   "decDeg": 47.23444,
+   "fovDeg": 0.409458,
+   "semiMajorArcmin": 7.925,
+   "positionAngleDeg": 173,
+   "inclinationDeg": 22,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.932,
+    0.8701
+   ],
+   "fillFraction": 0.02475,
+   "id": "gal:m51",
+   "atlasSlot": 5
+  },
+  {
+   "raDeg": 189.99625,
+   "decDeg": -11.62306,
+   "fovDeg": 0.303542,
+   "semiMajorArcmin": 5.875,
+   "positionAngleDeg": 89,
+   "inclinationDeg": 84,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.7681,
+    0.575
+   ],
+   "fillFraction": 0.02728,
+   "id": "gal:m104",
+   "atlasSlot": 6
+  },
+  {
+   "raDeg": 210.80333,
+   "decDeg": 54.35056,
+   "fovDeg": 0.780167,
+   "semiMajorArcmin": 15.1,
+   "positionAngleDeg": 39,
+   "inclinationDeg": 18,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.7778,
+    0.8764,
+    1.0
+   ],
+   "fillFraction": 0.00555,
+   "id": "gal:m101",
+   "atlasSlot": 7
+  },
+  {
+   "raDeg": 49.9208,
+   "decDeg": -19.4111,
+   "fovDeg": 0.160167,
+   "semiMajorArcmin": 3.1,
+   "positionAngleDeg": 98.26,
+   "inclinationDeg": 57.09,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "image-moments",
+   "meanColorLinear": [
+    1.0,
+    0.7835,
+    0.6124
+   ],
+   "fillFraction": 0.02051,
+   "id": "gal:ngc1300",
+   "atlasSlot": 8
+  },
+  {
+   "raDeg": 194.18417,
+   "decDeg": 21.68472,
+   "fovDeg": 0.3565,
+   "semiMajorArcmin": 6.9,
+   "positionAngleDeg": 121,
+   "inclinationDeg": 60,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.9994,
+    0.9979,
+    1.0
+   ],
+   "fillFraction": 0.02235,
+   "id": "gal:m64",
+   "atlasSlot": 9
+  },
+  {
+   "raDeg": 185.7287,
+   "decDeg": 15.8223,
+   "fovDeg": 0.191167,
+   "semiMajorArcmin": 3.7,
+   "positionAngleDeg": 153,
+   "inclinationDeg": 30,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.5378,
+    0.7376,
+    1.0
+   ],
+   "fillFraction": 0.01704,
+   "id": "gal:m100",
+   "atlasSlot": 10
+  },
+  {
+   "raDeg": 11.89292,
+   "decDeg": -25.29222,
+   "fovDeg": 0.959708,
+   "semiMajorArcmin": 18.575,
+   "positionAngleDeg": 45,
+   "inclinationDeg": 78,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.7172,
+    0.8348,
+    1.0
+   ],
+   "fillFraction": 0.01093,
+   "id": "gal:ngc253",
+   "atlasSlot": 11
+  },
+  {
+   "raDeg": 56.70375,
+   "decDeg": 68.09583,
+   "fovDeg": 0.552317,
+   "semiMajorArcmin": 10.69,
+   "positionAngleDeg": 37,
+   "inclinationDeg": 31,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.8188,
+    0.5993
+   ],
+   "fillFraction": 0.01195,
+   "id": "gal:ic342",
+   "atlasSlot": 12
+  },
+  {
+   "raDeg": 39.14792,
+   "decDeg": 59.655,
+   "fovDeg": 0.069492,
+   "semiMajorArcmin": 1.345,
+   "positionAngleDeg": 114.34,
+   "inclinationDeg": 39,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.5518,
+    0.2798
+   ],
+   "fillFraction": 0.01281,
+   "id": "gal:maffei1",
+   "atlasSlot": 13
+  },
+  {
+   "raDeg": 40.47708,
+   "decDeg": 59.60306,
+   "fovDeg": 0.098167,
+   "semiMajorArcmin": 1.9,
+   "positionAngleDeg": 52.11,
+   "inclinationDeg": 63,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.4822,
+    0.1847
+   ],
+   "fillFraction": 0.00979,
+   "id": "gal:maffei2",
+   "atlasSlot": 14
+  },
+  {
+   "raDeg": 180.4713,
+   "decDeg": -18.8689,
+   "fovDeg": 0.134333,
+   "semiMajorArcmin": 2.6,
+   "positionAngleDeg": 179.13,
+   "inclinationDeg": 37.62,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "image-moments",
+   "meanColorLinear": [
+    1.0,
+    0.7842,
+    0.6088
+   ],
+   "fillFraction": 0.04853,
+   "id": "gal:antennae",
+   "atlasSlot": 15
+  },
+  {
+   "raDeg": 204.25042,
+   "decDeg": -29.86778,
+   "fovDeg": 0.481017,
+   "semiMajorArcmin": 9.31,
+   "positionAngleDeg": 45,
+   "inclinationDeg": 24,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.9735,
+    0.968
+   ],
+   "fillFraction": 0.04241,
+   "id": "gal:m83",
+   "atlasSlot": 16
+  },
+  {
+   "raDeg": 184.73958,
+   "decDeg": 47.30389,
+   "fovDeg": 0.481017,
+   "semiMajorArcmin": 9.31,
+   "positionAngleDeg": 150,
+   "inclinationDeg": 72,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.8187,
+    0.662
+   ],
+   "fillFraction": 0.01337,
+   "id": "gal:m106",
+   "atlasSlot": 17
+  },
+  {
+   "raDeg": 35.63667,
+   "decDeg": 42.34667,
+   "fovDeg": 0.340483,
+   "semiMajorArcmin": 6.59,
+   "positionAngleDeg": 22,
+   "inclinationDeg": 90,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.613,
+    0.3315
+   ],
+   "fillFraction": 0.00566,
+   "id": "gal:ngc891",
+   "atlasSlot": 18
+  },
+  {
+   "raDeg": 308.71292,
+   "decDeg": 60.15417,
+   "fovDeg": 0.382075,
+   "semiMajorArcmin": 7.395,
+   "positionAngleDeg": 69.43,
+   "inclinationDeg": 32,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.7659,
+    0.5685
+   ],
+   "fillFraction": 0.00816,
+   "id": "gal:ngc6946",
+   "atlasSlot": 19
+  },
+  {
+   "raDeg": 114.21417,
+   "decDeg": 65.59944,
+   "fovDeg": 0.727983,
+   "semiMajorArcmin": 14.09,
+   "positionAngleDeg": 121.91,
+   "inclinationDeg": 57,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.9257,
+    0.8812
+   ],
+   "fillFraction": 0.00407,
+   "id": "gal:ngc2403",
+   "atlasSlot": 20
+  },
+  {
+   "raDeg": 3.78542,
+   "decDeg": -39.22028,
+   "fovDeg": 0.959708,
+   "semiMajorArcmin": 18.575,
+   "positionAngleDeg": 107.72,
+   "inclinationDeg": 84,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.8537,
+    0.9126,
+    1.0
+   ],
+   "fillFraction": 0.0066,
+   "id": "gal:ngc55",
+   "atlasSlot": 21
+  },
+  {
+   "raDeg": 13.72292,
+   "decDeg": -37.6825,
+   "fovDeg": 0.663917,
+   "semiMajorArcmin": 12.85,
+   "positionAngleDeg": 112.73,
+   "inclinationDeg": 45,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.3999,
+    0.6512,
+    1.0
+   ],
+   "fillFraction": 0.00654,
+   "id": "gal:ngc300",
+   "atlasSlot": 22
+  },
+  {
+   "raDeg": 359.45583,
+   "decDeg": -32.59,
+   "fovDeg": 0.365025,
+   "semiMajorArcmin": 7.065,
+   "positionAngleDeg": 98.69,
+   "inclinationDeg": 48,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.908,
+    0.8249
+   ],
+   "fillFraction": 0.01764,
+   "id": "gal:ngc7793",
+   "atlasSlot": 23
+  },
+  {
+   "raDeg": 5.10208,
+   "decDeg": 59.29167,
+   "fovDeg": 0.174633,
+   "semiMajorArcmin": 3.38,
+   "positionAngleDeg": 147.5,
+   "inclinationDeg": 33,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.6808,
+    0.4138
+   ],
+   "fillFraction": 0.0161,
+   "id": "gal:ic10",
+   "atlasSlot": 24
+  },
+  {
+   "raDeg": 192.72292,
+   "decDeg": 41.11944,
+   "fovDeg": 0.391117,
+   "semiMajorArcmin": 7.57,
+   "positionAngleDeg": 105,
+   "inclinationDeg": 35,
+   "positionAngleSource": "catalogue",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.8315,
+    0.6868
+   ],
+   "fillFraction": 0.01536,
+   "id": "gal:m94",
+   "atlasSlot": 25
+  },
+  {
+   "raDeg": 196.35875,
+   "decDeg": -49.47111,
+   "fovDeg": 0.727983,
+   "semiMajorArcmin": 14.09,
+   "positionAngleDeg": 46.85,
+   "inclinationDeg": 86,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.9693,
+    0.945
+   ],
+   "fillFraction": 0.00564,
+   "id": "gal:ungc:ngc-4945",
+   "atlasSlot": 26
+  },
+  {
+   "raDeg": 11.78458,
+   "decDeg": -20.76,
+   "fovDeg": 0.648933,
+   "semiMajorArcmin": 12.56,
+   "positionAngleDeg": 171.56,
+   "inclinationDeg": 74,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.7855,
+    0.613
+   ],
+   "fillFraction": 0.00696,
+   "id": "gal:ungc:ngc-247",
+   "atlasSlot": 27
+  },
+  {
+   "raDeg": 184.18042,
+   "decDeg": 69.46556,
+   "fovDeg": 0.565233,
+   "semiMajorArcmin": 10.94,
+   "positionAngleDeg": 159.41,
+   "inclinationDeg": 73,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.3878,
+    0.6502,
+    1.0
+   ],
+   "fillFraction": 0.00887,
+   "id": "gal:ungc:ngc-4236",
+   "atlasSlot": 28
+  },
+  {
+   "raDeg": 287.44125,
+   "decDeg": -63.85778,
+   "fovDeg": 0.552317,
+   "semiMajorArcmin": 10.69,
+   "positionAngleDeg": 13.87,
+   "inclinationDeg": 51,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.827,
+    0.6737
+   ],
+   "fillFraction": 0.01031,
+   "id": "gal:ungc:ngc-6744",
+   "atlasSlot": 29
+  },
+  {
+   "raDeg": 150.78,
+   "decDeg": -26.16,
+   "fovDeg": 0.515375,
+   "semiMajorArcmin": 9.975,
+   "positionAngleDeg": 92.02,
+   "inclinationDeg": 83,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.9327,
+    0.8688
+   ],
+   "fillFraction": 0.00543,
+   "id": "gal:ungc:ngc-3109",
+   "atlasSlot": 30
+  },
+  {
+   "raDeg": 10.09375,
+   "decDeg": 41.68639,
+   "fovDeg": 0.50375,
+   "semiMajorArcmin": 9.75,
+   "positionAngleDeg": 160.05,
+   "inclinationDeg": 64,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.9396,
+    0.8946
+   ],
+   "fillFraction": 0.01473,
+   "id": "gal:ungc:ngc-205",
+   "atlasSlot": 31
+  },
+  {
+   "raDeg": 184.37458,
+   "decDeg": 37.8075,
+   "fovDeg": 0.50375,
+   "semiMajorArcmin": 9.75,
+   "positionAngleDeg": 47.68,
+   "inclinationDeg": 90,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.7602,
+    0.8705,
+    1.0
+   ],
+   "fillFraction": 0.0042,
+   "id": "gal:ungc:ngc-4244",
+   "atlasSlot": 32
+  },
+  {
+   "raDeg": 190.53333,
+   "decDeg": 32.54139,
+   "fovDeg": 0.428833,
+   "semiMajorArcmin": 8.3,
+   "positionAngleDeg": 86.53,
+   "inclinationDeg": 86,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.77,
+    0.8682,
+    1.0
+   ],
+   "fillFraction": 0.00632,
+   "id": "gal:ungc:ngc-4631",
+   "atlasSlot": 33
+  },
+  {
+   "raDeg": 198.95542,
+   "decDeg": 42.02917,
+   "fovDeg": 0.419017,
+   "semiMajorArcmin": 8.11,
+   "positionAngleDeg": 101.67,
+   "inclinationDeg": 58,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.9438,
+    0.8881
+   ],
+   "fillFraction": 0.01229,
+   "id": "gal:ungc:ngc-5055",
+   "atlasSlot": 34
+  },
+  {
+   "raDeg": 203.69708,
+   "decDeg": -45.5475,
+   "fovDeg": 0.409458,
+   "semiMajorArcmin": 7.925,
+   "positionAngleDeg": 109.21,
+   "inclinationDeg": 90,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.1766,
+    0.5025,
+    1.0
+   ],
+   "fillFraction": 0.00481,
+   "id": "gal:ungc:eso-270-017",
+   "atlasSlot": 35
+  },
+  {
+   "raDeg": 49.3275,
+   "decDeg": -41.10806,
+   "fovDeg": 0.373292,
+   "semiMajorArcmin": 7.225,
+   "positionAngleDeg": 157.3,
+   "inclinationDeg": 25,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.9012,
+    0.9369,
+    1.0
+   ],
+   "fillFraction": 0.01318,
+   "id": "gal:ungc:ngc-1291",
+   "atlasSlot": 36
+  },
+  {
+   "raDeg": 133.17042,
+   "decDeg": 33.41722,
+   "fovDeg": 0.348492,
+   "semiMajorArcmin": 6.745,
+   "positionAngleDeg": 42.65,
+   "inclinationDeg": 90,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.8443,
+    0.708
+   ],
+   "fillFraction": 0.00594,
+   "id": "gal:ungc:ngc-2683",
+   "atlasSlot": 37
+  },
+  {
+   "raDeg": 200.49083,
+   "decDeg": -36.62972,
+   "fovDeg": 0.348492,
+   "semiMajorArcmin": 6.745,
+   "positionAngleDeg": 62.22,
+   "inclinationDeg": 90,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.3538,
+    0.5711,
+    1.0
+   ],
+   "fillFraction": 0.00914,
+   "id": "gal:ungc:ngc-5102",
+   "atlasSlot": 38
+  },
+  {
+   "raDeg": 228.55625,
+   "decDeg": -46.8125,
+   "fovDeg": 0.348492,
+   "semiMajorArcmin": 6.745,
+   "positionAngleDeg": 37.64,
+   "inclinationDeg": 90,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.9547,
+    0.8712
+   ],
+   "fillFraction": 0.0041,
+   "id": "gal:ungc:eso-274-001",
+   "atlasSlot": 39
+  },
+  {
+   "raDeg": 157.09333,
+   "decDeg": 68.41611,
+   "fovDeg": 0.340483,
+   "semiMajorArcmin": 6.59,
+   "positionAngleDeg": 42.72,
+   "inclinationDeg": 67,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.481,
+    0.7244,
+    1.0
+   ],
+   "fillFraction": 0.01097,
+   "id": "gal:ungc:ic-2574",
+   "atlasSlot": 40
+  },
+  {
+   "raDeg": 186.4575,
+   "decDeg": 33.54611,
+   "fovDeg": 0.340483,
+   "semiMajorArcmin": 6.59,
+   "positionAngleDeg": 142.97,
+   "inclinationDeg": 34,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.347,
+    0.5886,
+    1.0
+   ],
+   "fillFraction": 0.01256,
+   "id": "gal:ungc:ngc-4395",
+   "atlasSlot": 41
+  },
+  {
+   "raDeg": 190.99,
+   "decDeg": 32.17028,
+   "fovDeg": 0.332733,
+   "semiMajorArcmin": 6.44,
+   "positionAngleDeg": 37.34,
+   "inclinationDeg": 87,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.4148,
+    0.655,
+    1.0
+   ],
+   "fillFraction": 0.00341,
+   "id": "gal:ungc:ngc-4656",
+   "atlasSlot": 42
+  },
+  {
+   "raDeg": 49.56417,
+   "decDeg": -66.4975,
+   "fovDeg": 0.325242,
+   "semiMajorArcmin": 6.295,
+   "positionAngleDeg": 3.74,
+   "inclinationDeg": 37,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.9783,
+    0.9844,
+    1.0
+   ],
+   "fillFraction": 0.01158,
+   "id": "gal:ungc:ngc-1313",
+   "atlasSlot": 43
+  },
+  {
+   "raDeg": 143.04,
+   "decDeg": 21.50056,
+   "fovDeg": 0.325242,
+   "semiMajorArcmin": 6.295,
+   "positionAngleDeg": 17.25,
+   "inclinationDeg": 64,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.7167,
+    0.8461,
+    1.0
+   ],
+   "fillFraction": 0.01182,
+   "id": "gal:ungc:ngc-2903",
+   "atlasSlot": 44
+  },
+  {
+   "raDeg": 169.56708,
+   "decDeg": -32.81167,
+   "fovDeg": 0.31775,
+   "semiMajorArcmin": 6.15,
+   "positionAngleDeg": 163.5,
+   "inclinationDeg": 65,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.9292,
+    0.9546,
+    1.0
+   ],
+   "fillFraction": 0.0127,
+   "id": "gal:ungc:ngc-3621",
+   "atlasSlot": 45
+  },
+  {
+   "raDeg": 188.18958,
+   "decDeg": 0.115,
+   "fovDeg": 0.310517,
+   "semiMajorArcmin": 6.01,
+   "positionAngleDeg": 82.16,
+   "inclinationDeg": 90,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.9178,
+    0.8609
+   ],
+   "fillFraction": 0.00635,
+   "id": "gal:ungc:ngc-4517",
+   "atlasSlot": 46
+  },
+  {
+   "raDeg": 36.81667,
+   "decDeg": 33.57806,
+   "fovDeg": 0.303542,
+   "semiMajorArcmin": 5.875,
+   "positionAngleDeg": 113.63,
+   "inclinationDeg": 57,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.4629,
+    0.691,
+    1.0
+   ],
+   "fillFraction": 0.00456,
+   "id": "gal:ungc:ngc-925",
+   "atlasSlot": 47
+  },
+  {
+   "raDeg": 24.17208,
+   "decDeg": 15.78667,
+   "fovDeg": 0.28985,
+   "semiMajorArcmin": 5.61,
+   "positionAngleDeg": 125.47,
+   "inclinationDeg": 20,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.7754,
+    0.6018
+   ],
+   "fillFraction": 0.01037,
+   "id": "gal:ungc:ngc-628",
+   "atlasSlot": 48
+  },
+  {
+   "raDeg": 166.4525,
+   "decDeg": -0.03583,
+   "fovDeg": 0.283133,
+   "semiMajorArcmin": 5.48,
+   "positionAngleDeg": 161.49,
+   "inclinationDeg": 66,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.7761,
+    0.5947
+   ],
+   "fillFraction": 0.02109,
+   "id": "gal:ungc:ngc-3521",
+   "atlasSlot": 49
+  },
+  {
+   "raDeg": 188.99042,
+   "decDeg": 27.95972,
+   "fovDeg": 0.283133,
+   "semiMajorArcmin": 5.48,
+   "positionAngleDeg": 144.7,
+   "inclinationDeg": 68,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.8095,
+    0.8863,
+    1.0
+   ],
+   "fillFraction": 0.00596,
+   "id": "gal:ungc:ngc-4559",
+   "atlasSlot": 50
+  },
+  {
+   "raDeg": 350.5275,
+   "decDeg": 40.84556,
+   "fovDeg": 0.270475,
+   "semiMajorArcmin": 5.235,
+   "positionAngleDeg": 168.06,
+   "inclinationDeg": 90,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.5918,
+    0.765,
+    1.0
+   ],
+   "fillFraction": 0.00488,
+   "id": "gal:ungc:ngc-7640",
+   "atlasSlot": 51
+  },
+  {
+   "raDeg": 170.0625,
+   "decDeg": 12.99139,
+   "fovDeg": 0.264275,
+   "semiMajorArcmin": 5.115,
+   "positionAngleDeg": 176.69,
+   "inclinationDeg": 66,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.9374,
+    0.8819
+   ],
+   "fillFraction": 0.02402,
+   "id": "gal:ungc:ngc-3627",
+   "atlasSlot": 52
+  },
+  {
+   "raDeg": 324.11917,
+   "decDeg": -54.55722,
+   "fovDeg": 0.264275,
+   "semiMajorArcmin": 5.115,
+   "positionAngleDeg": 127.68,
+   "inclinationDeg": 89,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.4787,
+    0.7021,
+    1.0
+   ],
+   "fillFraction": 0.00369,
+   "id": "gal:ungc:ngc-7090",
+   "atlasSlot": 53
+  },
+  {
+   "raDeg": 199.73042,
+   "decDeg": -21.03917,
+   "fovDeg": 0.258333,
+   "semiMajorArcmin": 5.0,
+   "positionAngleDeg": 77.63,
+   "inclinationDeg": 29,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.6557,
+    0.8046,
+    1.0
+   ],
+   "fillFraction": 0.01058,
+   "id": "gal:ungc:ngc-5068",
+   "atlasSlot": 54
+  },
+  {
+   "raDeg": 68.20792,
+   "decDeg": 71.88111,
+   "fovDeg": 0.252392,
+   "semiMajorArcmin": 4.885,
+   "positionAngleDeg": 22.05,
+   "inclinationDeg": 90,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.8434,
+    0.6946
+   ],
+   "fillFraction": 0.00559,
+   "id": "gal:ungc:ngc-1560",
+   "atlasSlot": 55
+  },
+  {
+   "raDeg": 124.76667,
+   "decDeg": 70.71417,
+   "fovDeg": 0.230175,
+   "semiMajorArcmin": 4.455,
+   "positionAngleDeg": 30.32,
+   "inclinationDeg": 34,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.4924,
+    0.7399,
+    1.0
+   ],
+   "fillFraction": 0.01677,
+   "id": "gal:ungc:holmii",
+   "atlasSlot": 56
+  },
+  {
+   "raDeg": 139.47042,
+   "decDeg": -22.35528,
+   "fovDeg": 0.230175,
+   "semiMajorArcmin": 4.455,
+   "positionAngleDeg": 156.75,
+   "inclinationDeg": 49,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.8364,
+    0.9102,
+    1.0
+   ],
+   "fillFraction": 0.0076,
+   "id": "gal:ungc:ngc-2835",
+   "atlasSlot": 57
+  },
+  {
+   "raDeg": 161.69083,
+   "decDeg": 11.81972,
+   "fovDeg": 0.230175,
+   "semiMajorArcmin": 4.455,
+   "positionAngleDeg": 156.8,
+   "inclinationDeg": 49,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.7836,
+    0.6052
+   ],
+   "fillFraction": 0.0165,
+   "id": "gal:ungc:ngc-3368",
+   "atlasSlot": 58
+  },
+  {
+   "raDeg": 335.23917,
+   "decDeg": -46.03417,
+   "fovDeg": 0.225008,
+   "semiMajorArcmin": 4.355,
+   "positionAngleDeg": 28.07,
+   "inclinationDeg": 64,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.3254,
+    0.599,
+    1.0
+   ],
+   "fillFraction": 0.00737,
+   "id": "gal:ungc:ic-5201",
+   "atlasSlot": 59
+  },
+  {
+   "raDeg": 3.51625,
+   "decDeg": -23.18222,
+   "fovDeg": 0.219842,
+   "semiMajorArcmin": 4.255,
+   "positionAngleDeg": 122.19,
+   "inclinationDeg": 47,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.8464,
+    0.9061,
+    1.0
+   ],
+   "fillFraction": 0.01002,
+   "id": "gal:ungc:ngc-45",
+   "atlasSlot": 60
+  },
+  {
+   "raDeg": 151.30833,
+   "decDeg": -7.71861,
+   "fovDeg": 0.219842,
+   "semiMajorArcmin": 4.255,
+   "positionAngleDeg": 43.56,
+   "inclinationDeg": 90,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    1.0,
+    0.7701,
+    0.5828
+   ],
+   "fillFraction": 0.0299,
+   "id": "gal:ungc:ngc-3115",
+   "atlasSlot": 61
+  },
+  {
+   "raDeg": 183.91208,
+   "decDeg": 36.3275,
+   "fovDeg": 0.219842,
+   "semiMajorArcmin": 4.255,
+   "positionAngleDeg": 143.02,
+   "inclinationDeg": 39,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.8348,
+    0.9077,
+    1.0
+   ],
+   "fillFraction": 0.01381,
+   "id": "gal:ungc:ngc-4214",
+   "atlasSlot": 62
+  },
+  {
+   "raDeg": 44.21,
+   "decDeg": -54.57306,
+   "fovDeg": 0.214933,
+   "semiMajorArcmin": 4.16,
+   "positionAngleDeg": 39.81,
+   "inclinationDeg": 83,
+   "positionAngleSource": "image-moments",
+   "inclinationSource": "catalogue",
+   "meanColorLinear": [
+    0.6206,
+    0.791,
+    1.0
+   ],
+   "fillFraction": 0.00603,
+   "id": "gal:ungc:eso-154-023",
+   "atlasSlot": 63
+  }
+ ]
+}
