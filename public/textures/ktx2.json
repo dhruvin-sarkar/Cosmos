@@ -503,10 +503,10 @@
    "colorSpace": "srgb",
    "width": 8192,
    "height": 4096,
-   "bytes": 10940320,
+   "bytes": 12553164,
    "vramBytes": 44739280,
-   "srcBytes": 2064408,
-   "srcMtimeMs": 1792386137177
+   "srcBytes": 2383022,
+   "srcMtimeMs": 1792510344766
   },
   "textures/triton/color_4k.jpg": {
    "ktx2": "textures/triton/color_4k.ktx2",
@@ -514,10 +514,10 @@
    "colorSpace": "srgb",
    "width": 4096,
    "height": 2048,
-   "bytes": 3418804,
+   "bytes": 4111751,
    "vramBytes": 11184848,
-   "srcBytes": 546859,
-   "srcMtimeMs": 1792338282150
+   "srcBytes": 762872,
+   "srcMtimeMs": 1792510355362
   },
   "textures/titan/color_8k.jpg": {
    "ktx2": "textures/titan/color_8k.ktx2",
@@ -740,6 +740,6 @@
    "srcMtimeMs": 1792429900960
   }
  },
- "generated": "2026-10-20T13:50:26.108Z",
+ "generated": "2026-10-20T15:43:47.468Z",
  "tool": "KTX-Software ktx create (Apache-2.0); scripts/data/textures-ktx2/convert.mjs"
 }

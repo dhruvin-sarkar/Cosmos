@@ -1,10 +1,10 @@
-import { useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Vector3 } from 'three';
 import type { Entity, EntityRegistry } from '../../core/entity';
 import { useCosmos, useRegistry, useRegistryVersion, safeGetEntity } from '../hooks';
 import { useFocusFramed } from '../navigator/framing';
 import { useUiExtensions } from '../context';
-import { cx, useElementWidth } from '../lib/dom';
+import { cx } from '../lib/dom';
 import { MoonStrip } from '../navigator/MoonStrip';
 import { Thumb } from '../navigator/Navigator';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -44,6 +44,29 @@ function scratchDistance(a: Entity, b: Entity, tMs: number, pa: Vector3, pb: Vec
   }
 }
 
+/**
+ * Width of the rail track, measured through a callback ref so it re-attaches whenever the <ol> remounts (the strip
+ * renders empty at galactic scales; a mount-once observer kept width 0 afterwards and stacked every body at the left).
+ */
+function useTrackWidth(): [(el: HTMLOListElement | null) => void, number] {
+  const [width, setWidth] = useState(0);
+  const roRef = useRef<ResizeObserver | null>(null);
+  const ref = useCallback((el: HTMLOListElement | null) => {
+    roRef.current?.disconnect();
+    roRef.current = null;
+    if (!el) return;
+    setWidth(el.clientWidth);
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(entries => {
+      const w = entries[0]?.contentRect.width;
+      if (w != null && w > 0) setWidth(w);
+    });
+    ro.observe(el);
+    roRef.current = ro;
+  }, []);
+  return [ref, width];
+}
+
 /** Bodies of the current system on a log-distance axis; focused body in a pill, named previous / next. */
 export function BodyStrip() {
   const registry = useRegistry();
@@ -52,8 +75,7 @@ export function BodyStrip() {
   const focus = useFocusFramed();
   const focusId = useCosmos(s => s.selection.id ?? s.camera.focusId);
   const dayMs = useCosmos(s => Math.floor(s.time.simTimeMs / DAY_MS) * DAY_MS);
-  const trackRef = useRef<HTMLOListElement | null>(null);
-  const width = useElementWidth(trackRef);
+  const [trackRef, width] = useTrackWidth();
 
   const { bodies, focusIndex } = useMemo(() => {
     const focus = focusId ? safeGetEntity(registry, focusId) : undefined;
@@ -76,10 +98,11 @@ export function BodyStrip() {
 
   const positions = useMemo(() => {
     const n = bodies.length;
-    if (n === 0 || width <= 0) return [];
+    if (n === 0) return [];
+    const even = bodies.map((_, i) => (n === 1 ? 0.5 : i / (n - 1)));
+    if (width <= 0) return even;
     const logs = bodies.map(b => (b.distanceM ? Math.log10(b.distanceM) : NaN));
     const finite = logs.filter(Number.isFinite);
-    const even = bodies.map((_, i) => (n === 1 ? 0.5 : i / (n - 1)));
     if (finite.length !== n) return even;
     const lo = Math.min(...finite);
     const hi = Math.max(...finite);

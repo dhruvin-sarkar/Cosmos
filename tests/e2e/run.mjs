@@ -75,6 +75,13 @@ async function main() {
     });
     page.on('pageerror', e => note('error', `pageerror: ${e.message}`));
     page.on('response', r => { if (r.status() >= 400) note('http', `${r.status()} ${r.url()}`); });
+    // COSMOS_E2E_OFFLINE=1: the booth may have no network. Block every non-local request and report it as an error.
+    if (process.env.COSMOS_E2E_OFFLINE === '1') {
+      await page.route(u => !/^(https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/|data:|blob:)/.test(u.href), route => {
+        note('http', `offline: blocked remote fetch ${route.request().url()}`);
+        return route.abort('internetdisconnected');
+      });
+    }
     page.on('requestfailed', r => {
       const f = r.failure()?.errorText ?? '';
       if (!f.includes('ERR_ABORTED')) note('http', `requestfailed ${r.url()} ${f}`);
@@ -160,7 +167,7 @@ async function main() {
       const planets = ['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'].map(n => 'sol:' + n);
       const dwarfs = ['ceres', 'pluto', 'eris', 'haumea', 'makemake'].map(n => 'sol:' + n);
       const known = new Set(['sol:sun', ...planets, ...dwarfs]);
-      const moons = entities.filter(e => e.id.startsWith('sol:') && !known.has(e.id)).map(e => e.id);
+      const moons = entities.filter(e => e.id.startsWith('sol:') && !known.has(e.id)).map(e => e.id).slice(0, Number(process.env.COSMOS_E2E_MOONS ?? Infinity));
       const sc = entities.filter(e => e.id.startsWith('sc:')).map(e => e.id);
       const iss = sc.filter(i => /iss|zarya/i.test(i));
       const sb = entities.filter(e => e.id.startsWith('sb:')).map(e => e.id).slice(0, Number(process.env.COSMOS_E2E_SB ?? 60));

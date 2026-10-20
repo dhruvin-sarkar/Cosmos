@@ -4,40 +4,41 @@
 
 Space is hard to picture because it covers too many scales. A satellite is metres across; Neptune is 4.5 billion kilometres away. Textbook diagrams give up and squash both onto one page.
 
-Cosmos lets a visitor fly through those scales in one continuous move, with no cuts, in a browser. The positions are real: planets, moons, asteroids, spacecraft and about 31,800 satellites and pieces of debris are placed where they are today, from public NASA, JPL and CelesTrak data. Every number can be traced: click an object and each value carries a mark saying whether it was observed, derived, reconstructed or illustrative, with its source.
+Cosmos lets a visitor fly through those scales in one continuous move, with no cuts, in a browser: from the International Space Station to the edge of the observable universe. The positions are real: planets, moons, asteroids, spacecraft and about 31,800 satellites and pieces of debris are placed where they are today, from public NASA, JPL and CelesTrak data. Every number can be traced: click an object and each value carries a mark saying whether it was observed, derived, reconstructed or illustrative, with its source.
 
-Two labs turn the picture into experiments:
+Four labs turn the picture into experiments:
 
 - **Orbital debris lab**: how crowded low Earth orbit is, and how launch and removal policies change the next 100 years.
 - **Asteroid deflection lab**: replay NASA's DART impact, then try to deflect a hypothetical asteroid.
+- **Habitability lab**: could a planet keep liquid water? Change its star, orbit, size and climate, or explore the 6,451 confirmed exoplanets.
+- **Black hole lab**: drop a clock towards Sagittarius A*, see time dilation, and follow the star S2 around it.
 
 Honesty about scale is part of the design. By default the planets are drawn larger than life so you can see them, and a label in the top bar says "Enlarged for visibility". One click switches to true scale.
 
 ## What is in the build
 
-The Solar System journey is complete and tested. Exoplanet, Milky Way, galaxy and cosmic-web datasets are prepared in `public/data/` but not drawn yet, so the stand does not claim to visit them. Current content: Earth and the Moon, the Sun, 8 planets, 5 dwarf planets and their moons, 75,855 asteroids, 3,449 near-Earth objects, 12 spacecraft, 7,301 trans-Neptunian objects, the heliosphere, 109,389 stars, 88 constellations and 14 all-sky maps from radio to gamma rays.
+The whole golden journey is built and tested, from Earth to the cosmic microwave background. Content: Earth and the Moon, the Sun, 8 planets, 5 dwarf planets and their moons, about 31,800 tracked satellites and debris, 75,855 asteroids, 3,449 near-Earth objects, 12 spacecraft, 7,301 trans-Neptunian objects, the heliosphere and Oort cloud, 109,389 stars, 88 constellations, 14 all-sky maps from radio to gamma rays, 6,451 exoplanets around 4,847 stars, a reconstructed Milky Way with 157 globular clusters and Sagittarius A* with the S-stars, 13 measured black holes, 869 nearby galaxies, the Local Group, Virgo and Laniakea, about 2.2 million galaxies of the cosmic web (2MRS and DESI DR1), and the Planck map of the cosmic microwave background.
 
 ## The journey
 
-Planned golden route: Earth, orbital debris, the Solar System, asteroid deflection, nearby stars, exoplanets, the Milky Way, Sagittarius A*, galaxies, the cosmic web, the cosmic microwave background.
-
-Status in this build:
+Golden route: Earth, orbital debris, the Solar System, asteroid deflection, nearby stars, exoplanets, the Milky Way, Sagittarius A*, galaxies, the cosmic web, the cosmic microwave background.
 
 | Stage | Status |
 | --- | --- |
 | Earth, ISS, orbital debris | Done, with the debris lab |
 | Solar System, planets, moons | Done |
 | Asteroid deflection | Done: DART replay and Defend Earth |
-| Outer Solar System, Voyager 1 | Done |
-| Nearby stars (star field, nearest stars) | Star field and constellations done; no guided chapter yet |
-| Exoplanets, Milky Way, Sgr A*, galaxies, cosmic web | Data only, not yet drawn |
-| CMB | Shown as an all-sky band (Light menu), not as a separate chapter |
+| Outer Solar System, Oort cloud | Done (Oort cloud illustrative) |
+| Nearest stars, exoplanets | Done: Proxima Centauri, TRAPPIST-1 and other showcase systems, with the habitability lab |
+| Milky Way, Sagittarius A*, black holes | Done, with the black hole lab |
+| Galaxies, cosmic web | Done: Andromeda, the Local Group, Virgo, Laniakea, 2MRS and DESI galaxies |
+| CMB | Done: Planck map as the last chapter, and as a sky band in the Light menu |
 
-The built-in tours cover the done parts: the 20-chapter **golden journey** tour (Earth to Voyager 1) and a 6-chapter **quick tour**.
+Built-in tours: the 23-chapter **golden journey** (Earth, ISS, debris lab, Moon, Sun, the planets, Jupiter, Saturn, DART lab, looking back, Oort cloud, Proxima, TRAPPIST-1, the Orion Arm, the Milky Way, Sgr A*, a black hole, Andromeda, the Local Group, Laniakea, the cosmic web, the CMB, home), the 20-chapter **Solar System** tour and the 6-chapter **quick tour**. `T` starts the golden journey.
 
 ## How the stand runs
 
-**Hardware.** A laptop with an RTX 3050 (4 GB video memory) and 16 GB RAM, running `npm run preview` on the built app, in full-screen Chrome or Edge. Target: 60 frames per second on the Balanced preset.
+**Hardware.** A laptop with an RTX 3050 (4 GB video memory) and 16 GB RAM, plugged in to mains power, running `npm run preview` on the built app, in full-screen Chrome or Edge. Target: 60 frames per second on the Balanced preset. Check that the browser runs on the discrete GPU (Windows Settings, Display, Graphics: set Chrome or Edge to High performance).
 
 **Set-up (before doors open).**
 1. `npm install` once, then `npm run build`.
@@ -49,7 +50,7 @@ The built-in tours cover the done parts: the 20-chapter **golden journey** tour 
 **Visitor flow.**
 1. Visitors start at Earth. The presenter shows drag (rotate), scroll (zoom) and click (select); `?` opens the Help panel.
 2. Visitors free-explore, or press **Tour** for a guided flight. Arrow keys move between chapters.
-3. In the inspector, a button opens a lab for related objects (satellites for the debris lab; Didymos, Dimorphos, Apophis or 2024 YR4 for the deflection lab).
+3. In the inspector, a button opens a lab for related objects (satellites for the debris lab; Didymos, Dimorphos, Apophis or 2024 YR4 for the deflection lab; exoplanet systems for the habitability lab; Sagittarius A* and black holes for the black hole lab).
 4. `H` returns home to Earth, so the next visitor starts fresh. `Esc` closes whatever is open.
 
 **Presenter shortcuts.** `T` tour, `Left`/`Right` chapters, `B` navigator, `1` to `8` planets, `[` and `]` moons, `Ctrl+K` search, `Shift+H` hide the interface for a clean screen, `?` help. The full list is in [USER_GUIDE.md](USER_GUIDE.md).
@@ -59,9 +60,9 @@ The built-in tours cover the done parts: the 20-chapter **golden journey** tour 
 ## Offline operation
 
 Cosmos does not need the internet at the stand.
-- Every dataset is a versioned snapshot in `public/data/` (130 MB), listed in `public/data/manifest.json` with retrieval date, licence and citation (70 datasets).
-- Textures are in `public/textures/` (227 MB). Fonts are installed from npm packages and bundled.
-- The app source code makes no calls to outside servers.
+- Every dataset is a versioned snapshot in `public/data/`, listed in `public/data/manifest.json` with retrieval date, licence and citation (76 datasets). Textures (including 8K maps and KTX2 compressed copies) are in `public/textures/`. The built `dist/` folder is about 1.1 GB. Fonts and the KTX2 transcoder are bundled.
+- The app makes no calls to outside servers. This is tested: `COSMOS_E2E_OFFLINE=1 COSMOS_E2E_FULL=1 COSMOS_URL=http://localhost:4173/ node tests/e2e/run.mjs` blocks every non-local request while visiting every region, lab and tour.
+- Binary data files are served with a `.cbin` extension so download managers (IDM) do not hijack them.
 - Because the data are snapshots, the satellite positions are propagated from the elements retrieved on 2026-10-16 to 2026-10-17. Satellite accuracy declines by a few kilometres per day away from those epochs (see [SCIENCE.md](SCIENCE.md) section 12). The planets and moons come from formulas and are good for any date near today.
 - To refresh the data, run the scripts in `scripts/data/` while online, then `npm run data:manifest`, and rebuild. Do this at home, never at the stand.
 
@@ -95,13 +96,13 @@ Before starting: the app is at Earth, time is "now", Exhibition mode is on, the 
 | 1:00 | In the inspector, open the **Orbital debris lab**. Pick business as usual, then no further launches. Show Growth. | "Our model shows what policy does: business as usual reaches about 583,000 objects by 2126; stopping launches gives about 25,000. It is a simplified teaching model, and the lab says so." Press `Esc`. |
 | 1:30 | Press `5` (Jupiter), then `]` once or twice to step through moons. | "Every planet and moon is reachable by a key. Bodies are drawn bigger than life to be visible; this pill says so, and you can switch to true scale." Click the scale pill, then back. |
 | 2:00 | Search "Dimorphos". Open the **Asteroid deflection lab**. Play the DART replay. | "In 2022 NASA hit the asteroid Dimorphos and changed its orbit around Didymos. Our model gives a change of 33.3 minutes; NASA measured 33.0, plus or minus 1." |
-| 2:30 | Press `Esc`, then `T` to start the tour. | "Twenty chapters take you from Earth to Voyager 1, with sources for the narration." |
+| 2:20 | Press `Esc`, then `T`, and jump with the right arrow to the Milky Way and Sagittarius A* chapters. | "The golden journey goes on for 23 chapters: the nearest stars and their planets, the black hole at the centre of our Galaxy, Andromeda, the cosmic web of millions of real galaxies, and finally the oldest light in the universe." |
 | 2:50 | Press `Shift+H` to hide the interface, hold on the view. | "Everything you saw comes from open data shared by NASA, ESA, USGS, NOAA, CelesTrak and others. Check Sources for the licence of every dataset." |
 
 Likely judge questions and short answers:
 
 - *Is it to scale?* Distances are exact. Sizes are enlarged by default and shrink to true size on approach; the pill says so and "True scale" shows real proportions.
 - *How accurate are the positions?* Planets and Moon to about an arcminute; satellites to about a kilometre near the data epoch, getting worse by a few kilometres a day; see [SCIENCE.md](SCIENCE.md).
-- *What is not real?* Marked illustrative: aurora shapes, Enceladus and Io plumes, comet tails, the Oort cloud, spacecraft models, irregular moon shapes without surveys, fine surface detail close up.
+- *What is not real?* Marked illustrative: aurora shapes, Enceladus and Io plumes, comet tails, the Oort cloud, spacecraft models, irregular moon shapes without surveys, unimaged hemispheres of moons such as Triton, fine surface detail close up, the appearance of black-hole disks and jets, and exoplanet surfaces. The Milky Way's shape seen from outside is a reconstruction: nobody has photographed our Galaxy from outside.
 - *Does it need internet?* No.
-- *What did you not finish?* Exoplanets, the Milky Way, galaxies and the cosmic web have data prepared but are not drawn yet.
+- *Why is the sky behind the galaxies dark?* Beyond the Milky Way we show galaxies at their measured positions; the gaps are real voids of the cosmic web, plus regions no survey has covered (the Zone of Avoidance behind the Milky Way's disc).

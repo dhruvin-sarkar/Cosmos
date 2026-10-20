@@ -16,6 +16,7 @@ import { NOISE_GLSL } from '../../render/glsl/noise';
 import { PC_M, KPC_M, MPC_M } from '../../core/units';
 import { ARMS, BAR_ANGLE_DEG, DEG, armRadiusKpc, type GalacticFrame } from './model';
 import { galaxyRuntime } from './runtime';
+import { precompileOffscreen } from '../../core/perf';
 
 /** Half-size of the baked face-on map (kpc). */
 export const MAP_EXTENT_KPC = 20;
@@ -307,6 +308,8 @@ export function createGalaxyVolumeLayer(): Layer & GalaxyVolumeHandle {
   let marchScene: THREE.Scene | null = null;
   let compMat: THREE.ShaderMaterial | null = null;
   const marchCam = new THREE.Camera();
+  /** True once the off-screen march program has linked (precompiled at init; never linked on first use). */
+  let marchReady: () => boolean = () => true;
   const bufSize = new THREE.Vector2();
   const savedClear = new THREE.Color();
   let opacity = 0;
@@ -358,6 +361,7 @@ export function createGalaxyVolumeLayer(): Layer & GalaxyVolumeHandle {
       marchScene = new THREE.Scene();
       marchScene.add(march);
       marchRt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, depthBuffer: false, generateMipmaps: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+      marchReady = precompileOffscreen(svc.renderer, marchScene, marchCam, marchRt);
       // Composite: (glow, transmittance) from the march → dst · alpha + glow.
       compMat = new THREE.ShaderMaterial({
         vertexShader: COMP_VERT,
@@ -393,7 +397,8 @@ export function createGalaxyVolumeLayer(): Layer & GalaxyVolumeHandle {
       // close-ups read against the resolved cluster stars instead of a smooth wash - and the costly march is skipped.
       const lgc = Math.log10(Math.max(dGc, 1) / KPC_M);
       const deepFade = THREE.MathUtils.smoothstep(lgc, -4.0, -2.7);
-      mesh.visible = opacity * deepFade > 0.002;
+      // Held back until the march program has linked (its first draw would otherwise link it synchronously: ~130 ms).
+      mesh.visible = opacity * deepFade > 0.002 && marchReady();
       if (!mesh.visible) return;
       const tq = ctx.quality.textureQuality;
       if (tq !== mapQuality && svcRef && map && (MAP_SIZE[tq] ?? 2048) !== map.width) {

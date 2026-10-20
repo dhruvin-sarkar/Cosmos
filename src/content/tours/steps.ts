@@ -31,7 +31,7 @@ export const EARTH: TourStep = {
   scaleLog10: 7.4,
   waitForTravel: true,
   actions: [
-    { type: 'view-phase', anchorId: 'sol:earth', distanceM: 2.6e7, phaseDeg: 62, elevationDeg: 14 },
+    { type: 'view-phase', anchorId: 'sol:earth', distanceM: 2.6e7, phaseDeg: 62, elevationDeg: 12, durationSec: 4 },
   ],
 };
 
@@ -82,8 +82,9 @@ export const MOON: TourStep = {
   scaleLog10: 6.8,
   waitForTravel: true,
   actions: [
-    // The near side, which always faces Earth, turned toward the Sun so the maria are lit.
-    { type: 'view-toward', anchorId: 'sol:moon', towardId: 'sol:earth', sunwardDeg: 40, distanceM: 6.4e6, elevationOffsetDeg: 4 },
+    // The near side, which always faces Earth, seen at a 60° Sun–Moon–camera angle whatever today's lunar phase:
+    // a lit gibbous with the terminator crossing the disc, so crater relief shows (never a flat full Moon).
+    { type: 'view-toward', anchorId: 'sol:moon', towardId: 'sol:earth', phaseDeg: 60, distanceM: 7.0e6, elevationOffsetDeg: 6, durationSec: 4 },
   ],
 };
 

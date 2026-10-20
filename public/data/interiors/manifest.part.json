@@ -1,0 +1,44 @@
+{
+  "domain": "interiors",
+  "datasets": [
+    {
+      "id": "interiors-structure",
+      "name": "Planetary interior-structure layers for the cutaway view (18 bodies)",
+      "organization": "Published literature (seismology, gravity and geodesy papers); curated by the Cosmos project",
+      "purpose": "Layer radii, composition and 'how we know' evidence for the interiors cutaway (src/ui/interiors)",
+      "mechanism": "Hand-curated from the cited literature in scripts/data/interiors/source.mjs; scripts/data/interiors/build.mjs adds radius fractions from public/data/solar/bodies.json and writes the JSON; no network access",
+      "endpoint": "n/a",
+      "query": null,
+      "version": "schemaVersion 1; generated 2026-10-20; 50 references (e.g. PREM, Dziewonski & Anderson 1981; Stahler et al. 2021; Militzer et al. 2022)",
+      "retrieved": "2026-10-20",
+      "license": "Facts and model values transcribed from published papers; no third-party text or figures are redistributed. Individual papers keep their own licences. Not recorded: per-paper licence terms.",
+      "licenseUrl": null,
+      "citation": "See the 'references' object in interiors.json (each entry has a citation and DOI), e.g. Dziewonski & Anderson 1981, Phys. Earth Planet. Inter. 25, 297 (PREM); Anzellini et al. 2013, Science 340, 464; Weber et al. 2011, Science 331, 309; Stahler et al. 2021, Science 373, 443; Wahl et al. 2017, GRL 44, 4649; Militzer et al. 2022, PSJ 3, 185; Bahcall et al. 2005, ApJ 621, L85.",
+      "rateLimits": "n/a (no network access; static transcription from papers)",
+      "fieldsUsed": [
+        "body",
+        "id",
+        "name",
+        "classification",
+        "texture",
+        "lede",
+        "howWeKnow",
+        "compareWith",
+        "layers",
+        "radiusKm"
+      ],
+      "updateCadence": "manual; revisit when new seismic or gravity results change a body's accepted structure",
+      "cachePolicy": "versioned offline snapshot",
+      "normalization": "Layer outer radii (km) from the source tables; fraction = outerKm / mean radius from public/data/solar/bodies.json; outerRangeKm / fractionRange give the spread of published models, not formal error bars; build.mjs fails if radii are not increasing, a source is unknown, or the outer layer differs from the body radius by more than 0.1%.",
+      "fallback": "The interiors view is unavailable for a body whose entry is missing.",
+      "files": [
+        {
+          "path": "data/interiors/interiors.json",
+          "records": 18
+        }
+      ],
+      "limitations": "Temperatures inside every body are model estimates except Earth's inner-core boundary (iron melting experiments) and the Sun's photosphere (observed). Layers flagged model: true depend on an interior model rather than a direct measurement. Per the file notes, provenance is observed (seismology, helioseismology), derived (gravity, moment of inertia, induction) or model-dependent.",
+      "provenanceClass": "reconstructed"
+    }
+  ]
+}

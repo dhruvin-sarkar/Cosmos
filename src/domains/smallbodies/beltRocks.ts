@@ -21,6 +21,7 @@ import { solarSceneIrradianceAt } from '../solar/ephemeris';
 import { jdTdbFromMs } from './orbits';
 import type { ShapeSpec } from './shape';
 import { buildSmallBodyGeometryAsync } from './shapeAsync';
+import { buildOrbitsAsync, CLASS_COLOR, CLASS_NAMES, hashU, type Orbits } from './beltOrbits';
 import { sunSource } from './sources';
 
 /** Max rocks drawn. */
@@ -38,42 +39,15 @@ const HI_LOD_PX = 28;
 const REF_RADIUS_M = 2500;
 /** Distance where the target size starts to fall off (≈ the typical spacing of H < 15 asteroids in the belt). */
 const FALLOFF_M = 8e9;
-const MIN_PX = 1.4;
-const FULL_PX = 3.5;
+const MIN_PX = 2;
+const FULL_PX = 4;
+/** Beyond this distance from the camera rocks are not drawn at all: the GPU point layer already covers them. */
+const FAR_M = 3e10;
+/** Max speed (m/s) of a belt rock, used to bound how far the cached nearest distance can have shrunk. */
+const MAX_REL_SPEED = 4e4;
+/** While the nearest rock is far away the background scan only runs every this many frames. */
+const FAR_SCAN_EVERY = 12;
 
-const GAUSS_K = 0.01720209895;
-
-/** Geometric albedo (V) and linear reflectance colour per illustrative class. Sources: DeMeo & Carry 2013/2014; Mainzer et al. 2011 (NEOWISE). */
-const CLASS_COLOR: Record<'C' | 'S' | 'X' | 'V' | 'D' | 'B', { pV: number; rgb: [number, number, number] }> = {
-  C: { pV: 0.06, rgb: [0.058, 0.055, 0.051] },
-  S: { pV: 0.25, rgb: [0.27, 0.225, 0.17] },
-  X: { pV: 0.16, rgb: [0.16, 0.152, 0.145] },
-  V: { pV: 0.38, rgb: [0.42, 0.39, 0.33] },
-  D: { pV: 0.06, rgb: [0.074, 0.056, 0.044] },
-  B: { pV: 0.07, rgb: [0.066, 0.07, 0.078] },
-};
-type RockClass = keyof typeof CLASS_COLOR;
-const CLASS_NAMES = Object.keys(CLASS_COLOR) as RockClass[];
-
-/** Taxonomic mix (by mass/number of bright objects) as a function of semi-major axis — DeMeo & Carry 2014, Fig. 4 (simplified). */
-function classFor(aAU: number, u: number): RockClass {
-  const pick = (t: [RockClass, number][]): RockClass => {
-    let acc = 0;
-    for (const [c, p] of t) { acc += p; if (u < acc) return c; }
-    return t[t.length - 1][0];
-  };
-  if (aAU < 2.5) return pick([['S', 0.58], ['V', 0.1], ['X', 0.14], ['C', 0.18]]);
-  if (aAU < 2.82) return pick([['S', 0.4], ['C', 0.36], ['X', 0.19], ['B', 0.05]]);
-  if (aAU < 3.3) return pick([['C', 0.56], ['S', 0.18], ['X', 0.16], ['B', 0.1]]);
-  if (aAU < 4.6) return pick([['D', 0.42], ['C', 0.38], ['X', 0.2]]);
-  return pick([['D', 0.72], ['C', 0.18], ['X', 0.1]]);
-}
-
-function hashU(i: number, salt: number): number {
-  let h = Math.imul(i ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(salt + 0x27d4eb2f, 0xc2b2ae35);
-  h ^= h >>> 15; h = Math.imul(h, 0x2c1b3c6d); h ^= h >>> 12; h = Math.imul(h, 0x297a2d39); h ^= h >>> 15;
-  return (h >>> 0) / 4294967296;
-}
 
 const VERTEX = /* glsl */ `
 ${VERTEX_PRELUDE}
@@ -150,61 +124,6 @@ void main() {
   gl_FragColor = vec4(vAlbedo * variation * (uIrradiance / 3.14159265) * brdf * surge, 1.0);
 }`;
 
-interface Orbits {
-  n: number;
-  a: Float64Array;
-  e: Float64Array;
-  mm: Float64Array; // mean motion rad/day
-  m0: Float64Array;
-  ep: Float64Array; // epoch offset, days
-  pq: Float64Array; // P (3) and Q·b/a (3), ICRS
-  qA: Float32Array; // perihelion AU
-  varpi: Float32Array; // ecliptic longitude of perihelion Ω+ω, rad (mean longitude = varpi + M)
-  lonTol: Float32Array; // bound on |true ecliptic longitude − mean longitude|, rad (> π: no longitude prefilter)
-  QA: Float32Array; // aphelion AU
-  zA: Float32Array; // max |ecliptic z|, AU
-  rM: Float32Array; // radius from H, m
-  cls: Uint8Array;
-}
-
-function buildOrbits(f: Float32Array, count: number, stride: number): Orbits {
-  const o: Orbits = {
-    n: count, a: new Float64Array(count), e: new Float64Array(count), mm: new Float64Array(count), m0: new Float64Array(count),
-    ep: new Float64Array(count), pq: new Float64Array(count * 6), qA: new Float32Array(count),
-    varpi: new Float32Array(count), lonTol: new Float32Array(count), QA: new Float32Array(count), zA: new Float32Array(count),
-    rM: new Float32Array(count), cls: new Uint8Array(count),
-  };
-  const eps = 23.4392911 * DEG, ce = Math.cos(eps), se = Math.sin(eps);
-  for (let i = 0; i < count; i++) {
-    const r = i * stride;
-    const a = f[r], e = Math.min(f[r + 1], 0.97), inc = f[r + 2] * DEG, node = f[r + 3] * DEG, w = f[r + 4] * DEG;
-    o.a[i] = a; o.e[i] = e;
-    o.mm[i] = GAUSS_K / (a * Math.sqrt(a));
-    o.m0[i] = f[r + 5] * DEG;
-    o.ep[i] = f[r + 6];
-    const cO = Math.cos(node), sO = Math.sin(node), cw = Math.cos(w), sw = Math.sin(w), ci = Math.cos(inc), si = Math.sin(inc);
-    // Perifocal → ecliptic.
-    const px = cO * cw - sO * sw * ci, py = sO * cw + cO * sw * ci, pz = sw * si;
-    const qx = -cO * sw - sO * cw * ci, qy = -sO * sw + cO * cw * ci, qz = cw * si;
-    const b = Math.sqrt(1 - e * e);
-    const k = i * 6;
-    // Ecliptic → ICRS (rotate about x by +ε).
-    o.pq[k] = px; o.pq[k + 1] = ce * py - se * pz; o.pq[k + 2] = se * py + ce * pz;
-    o.pq[k + 3] = qx * b; o.pq[k + 4] = (ce * qy - se * qz) * b; o.pq[k + 5] = (se * qy + ce * qz) * b;
-    o.qA[i] = a * (1 - e);
-    o.varpi[i] = node + w;
-    // Equation of centre (≤ 2e + 1.5e², a safe over-bound for e < 0.4) + inclination reduction (≤ tan²(i/2)) + margin.
-    const ti = Math.tan(inc / 2);
-    o.lonTol[i] = e < 0.4 && inc < 1.2 ? 2 * e + 1.5 * e * e + ti * ti * 1.05 + 0.01 : 10;
-    o.QA[i] = a * (1 + e);
-    o.zA[i] = a * (1 + e) * si;
-    const c = classFor(a, hashU(i, 7));
-    o.cls[i] = CLASS_NAMES.indexOf(c);
-    const H = f[r + 7];
-    o.rM[i] = ((1329 / Math.sqrt(CLASS_COLOR[c].pV)) * Math.pow(10, -H / 5) * 1000) / 2;
-  }
-  return o;
-}
 
 /** Heliocentric ICRS position (m) of row i at `days` (JD TDB − epochBase). */
 function rowPosition(o: Orbits, i: number, days: number, out: THREE.Vector3): THREE.Vector3 {
@@ -269,6 +188,12 @@ export function createBeltRocksLayer(registry: Pick<EntityRegistry, 'get'>): Bel
   const labelPos = new THREE.Vector3();
   let labelPx = 0;
   let active = false;
+  let lastTimeMs = 0;
+  // Nearest-candidate distance at the end of the last scan pass, with the camera / time it was measured at.
+  let nearestAtPass = 0;
+  const camAtPass = new THREE.Vector3();
+  let timeAtPass = 0;
+  let farFrame = 0;
 
   const finishPass = (): void => {
     // Keep the K nearest candidates.
@@ -276,6 +201,9 @@ export function createBeltRocksLayer(registry: Pick<EntityRegistry, 'get'>): Bel
     const ord = order.subarray(0, candN);
     ord.sort((x, y) => candD[x] - candD[y]);
     selN = Math.min(K, candN);
+    nearestAtPass = candN > 0 ? candD[ord[0]] : selR;
+    camAtPass.copy(camHelio);
+    timeAtPass = lastTimeMs;
     for (let i = 0; i < selN; i++) sel[i] = candIdx[ord[i]];
     // Adapt the selection radius so a pass yields ≈ 2K candidates.
     if (candN < K) selR = Math.min(selR * 1.6, 1.2 * AU_M);
@@ -334,7 +262,10 @@ export function createBeltRocksLayer(registry: Pick<EntityRegistry, 'get'>): Bel
       if (disposed) return;
       epochBase = header.epochBaseJD;
       const f = new Float32Array(buf);
-      orbits = buildOrbits(f, Math.min(header.count, Math.floor(f.length / header.stride)), header.stride);
+      // Built in a worker (was a ~130 ms main-thread task on the first belt approach).
+      const built = await buildOrbitsAsync(f, Math.min(header.count, Math.floor(f.length / header.stride)), header.stride);
+      if (disposed) return;
+      orbits = built;
       material = new THREE.ShaderMaterial({
         vertexShader: VERTEX,
         fragmentShader: FRAGMENT,
@@ -380,6 +311,7 @@ export function createBeltRocksLayer(registry: Pick<EntityRegistry, 'get'>): Bel
           selN = 0;
           candN = 0;
           cursor = 0;
+          nearestAtPass = 0;
           active = false;
         }
         return;
@@ -390,8 +322,16 @@ export function createBeltRocksLayer(registry: Pick<EntityRegistry, 'get'>): Bel
         candN = 0;
       }
       const days = jdTdbFromMs(ctx.timeMs) - epochBase;
+      lastTimeMs = ctx.timeMs;
+      // Far from every rock: hide all instances (the point layer draws them) and scan at a reduced cadence.
+      const lower = nearestAtPass - camHelio.distanceTo(camAtPass) - MAX_REL_SPEED * Math.abs(ctx.timeMs - timeAtPass) / 1000;
+      const far = (selN === 0 && nearestAtPass > 0) || lower > FAR_M;
+      if (far) {
+        for (const m of meshes) { m.count = 0; m.visible = false; }
+        if (nearestAtPass === 0 || farFrame++ % FAR_SCAN_EVERY === 0) scan(days);
+        return;
+      }
       scan(days);
-      if (selN === 0) return;
 
       const view = getScaleView();
       const weight = view.weight; // eased exhibition weight (0 in true scale)
@@ -406,6 +346,7 @@ export function createBeltRocksLayer(registry: Pick<EntityRegistry, 'get'>): Bel
         const i = sel[s];
         rowPosition(o, i, days, tmpR).add(sunWorld);
         const d = Math.max(tmpR.distanceTo(ctx.cameraPosition), 1);
+        if (d > FAR_M) continue;
         const R = o.rM[i];
         const p = (2 * R / d) * pxPerRad;
         // Exhibition size: smooth max of true and target apparent diameter, target falling off with distance; gate → true within 40 R.

@@ -14,6 +14,9 @@ export interface ExoViewState {
   yearMax: number;
   /** Highlight only the showcase systems. */
   showcaseOnly: boolean;
+  /** The exoplanet explorer is open: every host gets its full ring marker (otherwise only the prominent ones do at
+   * stellar-neighbourhood scales and beyond). */
+  explorer: boolean;
   /** Host index of the open system (−1 = none). */
   openHost: number;
   /** Bumped on every change. */
@@ -29,6 +32,7 @@ export const exoView: ExoViewState = {
   yearMin: DISCOVERY_YEAR_MIN,
   yearMax: DISCOVERY_YEAR_MAX,
   showcaseOnly: false,
+  explorer: false,
   openHost: -1,
   version: 0,
 };
@@ -55,4 +59,10 @@ export function subscribeExoView(l: () => void): () => void {
 
 export function resetExoFilters(): void {
   setExoView({ methodMask: METHOD_ALL_MASK, yearMin: DISCOVERY_YEAR_MIN, yearMax: DISCOVERY_YEAR_MAX, showcaseOnly: false });
+}
+
+/** True when the explorer is open or a filter differs from its default (the user is looking at the marker field). */
+export function exoOverlayActive(): boolean {
+  const v = exoView;
+  return v.explorer || v.showcaseOnly || v.methodMask !== METHOD_ALL_MASK || v.yearMin !== DISCOVERY_YEAR_MIN || v.yearMax !== DISCOVERY_YEAR_MAX;
 }

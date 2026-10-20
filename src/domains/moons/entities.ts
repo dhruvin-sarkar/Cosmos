@@ -7,6 +7,7 @@ import type { Entity, EntityRegistry } from '../../core/entity';
 import { G_SI } from '../../core/units';
 import { derived, observed, type Fact, type FactSheet, type SourceRef } from '../../data/provenance';
 import { MOON_LOOKS, MOON_RECORDS, PARENT_ENTITY, PARENT_INFO, moonEntityId, type MoonRecord } from './data';
+import { IMAGED_FRACTION, coverageClock, hasPartialCoverage, southPoleDirection } from './coverage';
 import { fallbackParentPosition, moonOffset, moonRelativeVelocity } from './ephemeris';
 
 const SRC_PHYS: SourceRef = { datasetId: 'jpl-ssd-satellite-phys-par', note: 'JPL SSD Planetary Satellite Physical Parameters' };
@@ -30,6 +31,25 @@ function rotationFact(rec: MoonRecord): Fact {
   }
   if (look.spin) return { key: 'rotation', label: 'Rotation', text: look.spin.note, provenance: look.spin.kind === 'sync' ? 'derived' : 'illustrative' };
   return { key: 'rotation', label: 'Rotation', text: 'Assumed tidally locked (no published rotation model)', provenance: 'derived' };
+}
+
+/** Voyager 2 saw only the southern hemisphere; say what the Sun lights today (sub-solar latitude of the latest frame). */
+function coverageFact(id: string): Fact {
+  const pct = Math.round((IMAGED_FRACTION[id] ?? 0) * 100);
+  const lat = coverageClock.sunLatDeg;
+  const now = !Number.isFinite(lat)
+    ? ''
+    : lat > 5
+      ? `The Sun is now over the northern hemisphere (sub-solar latitude ${lat.toFixed(0)}° N), which Voyager 2 never imaged: the sunlit face you see is illustrative fill.`
+      : lat < -5
+        ? `The Sun is now over the southern hemisphere (sub-solar latitude ${Math.abs(lat).toFixed(0)}° S), the one Voyager 2 imaged.`
+        : 'The Sun is near the equator, lighting both hemispheres.';
+  return {
+    key: 'coverage',
+    label: 'Imaged by Voyager 2',
+    text: `About ${pct} % of the surface (the southern hemisphere, January 1986); the rest is an albedo-matched procedural fill (illustrative). ${now}`.trim(),
+    provenance: 'reconstructed',
+  };
 }
 
 function buildFacts(rec: MoonRecord): FactSheet {
@@ -71,13 +91,15 @@ function buildFacts(rec: MoonRecord): FactSheet {
       ? 'Position from the L1.2 Galilean-satellite theory (via astronomy-engine), relative to Jupiter’s position; accurate to about an arcminute.'
       : 'Position from JPL mean orbital elements (epoch J2000) propagated linearly, with precession: good for the orbit’s shape and approximate phase, not a precision ephemeris (errors of several degrees over decades).',
   ];
+  const sections: FactSheet['sections'] = [
+    { id: 'properties', title: 'Properties', facts: props },
+    { id: 'orbit', title: 'Orbit & rotation', facts: orbit },
+  ];
+  if (hasPartialCoverage(rec.id)) sections.push({ id: 'coverage', title: 'Imagery coverage', facts: [coverageFact(rec.id)] });
   return {
     entityId: moonEntityId(rec.id),
     summary: rec.summary,
-    sections: [
-      { id: 'properties', title: 'Properties', facts: props },
-      { id: 'orbit', title: 'Orbit & rotation', facts: orbit },
-    ],
+    sections,
     representation: { provenance: look.representation, description: look.imagery },
     sources: look.texture ? [SRC_PHYS, SRC_ELEM, SRC_DISC, SRC_ROT, SRC_TEX] : [SRC_PHYS, SRC_ELEM, SRC_DISC, SRC_ROT],
     epoch: { label: 'Mean orbital elements', iso: o.epochJD === 2451545 ? '2000-01-01T12:00:00Z' : '2020-01-01T00:00:00Z', jd: o.epochJD },
@@ -118,6 +140,8 @@ export function createMoonEntities(registry: Pick<EntityRegistry, 'get'>): Entit
         return out.add(moonRelativeVelocity(rec, tMs, off, scratch));
       },
       viewDistance: { min: rMax * 1.15, default: rMax * 3.6 },
+      // Approach from the imaged (south) side so the Voyager 2 terrain is the part in view.
+      ...(hasPartialCoverage(rec.id) ? { approachDir: southPoleDirection(rec) } : {}),
       tagline: look.tagline,
       capabilities: ['focus', 'orbit', 'follow', 'travel', 'show-orbit', 'sources', 'related'],
       importance: look.importance,

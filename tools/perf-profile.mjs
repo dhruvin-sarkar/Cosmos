@@ -9,7 +9,8 @@
  * settle, then sample N frames: main-thread ms of the engine frame (phases: rig, layers, labels, post), GPU ms
  * (EXT_disjoint_timer_query_webgl2), real frame interval (uncapped), renderer.info, JS heap, long tasks and
  * per-layer update/collectLabels CPU. --breakdown hides each render-group child in turn and reports its GPU cost.
- * --cpuprofile samples the JS profiler (CDP) during each travel and prints the top self-time functions.
+ * --cpuprofile samples the JS profiler (CDP) during each travel and prints the top self-time functions, plus each long
+ * task (>= LONGTASK_MS, default 60) with its dominant call path.
  */
 import { createRequire } from 'node:module';
 import { existsSync, readFileSync, mkdirSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
@@ -115,6 +116,44 @@ function topSelf(profile, n = +(process.env.TOPN ?? 14)) {
     self.set(key, (self.get(key) ?? 0) + (dt[i] ?? 0) / 1000);
   }
   return [...self.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${k}=${Math.round(v)}`);
+}
+
+/**
+ * Long tasks inside a CPU profile: runs of consecutive non-idle samples >= minMs, each with its dominant call path
+ * (frames carrying >= 45 % of the run, root -> leaf, source-mapped) and top self functions. Attributes LoAF stalls.
+ */
+function longTasks(profile, minMs = +(process.env.LONGTASK_MS ?? 60)) {
+  const byId = new Map(profile.nodes.map(nd => [nd.id, nd]));
+  const parent = new Map();
+  for (const nd of profile.nodes) for (const c of nd.children ?? []) parent.set(c, nd.id);
+  const label = (nd) => { const cf = nd.callFrame; const file = (cf.url || '').split('/').pop().split('?')[0]; return mapFrame(file, cf.lineNumber, cf.columnNumber) ?? `${cf.functionName || '(anon)'}@${file}:${cf.lineNumber + 1}`; };
+  const idle = (nd) => nd.callFrame.functionName === '(idle)' || nd.callFrame.functionName === '(program)';
+  const out = [];
+  let run = [];
+  const flush = () => {
+    const ms = run.reduce((a, [, d]) => a + d, 0) / 1000;
+    if (ms >= minMs) {
+      const incl = new Map(), self = new Map();
+      for (const [id, d] of run) {
+        const sk = label(byId.get(id)); self.set(sk, (self.get(sk) ?? 0) + d);
+        const seen = new Set();
+        for (let x = id; x !== undefined; x = parent.get(x)) { const nd = byId.get(x); if (nd.callFrame.functionName === '(root)') break; const k = label(nd); if (seen.has(k)) continue; seen.add(k); incl.set(k, (incl.get(k) ?? 0) + d); }
+      }
+      // Dominant path: from the deepest sample stacks, keep frames whose inclusive share >= 45 %, ordered root -> leaf.
+      const total = ms * 1000;
+      const path = [...incl.entries()].filter(([, v]) => v >= 0.45 * total).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}(${Math.round(v / 1000)})`);
+      const top = [...self.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => `${k}=${Math.round(v / 1000)}`);
+      out.push(`${Math.round(ms)}ms path: ${path.slice(-6).join(' > ')} | self: ${top.join(' ')}`);
+    }
+    run = [];
+  };
+  const dt = profile.timeDeltas;
+  for (let i = 0; i < profile.samples.length; i++) {
+    const nd = byId.get(profile.samples[i]);
+    if (idle(nd)) flush(); else run.push([nd.id, dt[i + 1] ?? dt[i] ?? 0]);
+  }
+  flush();
+  return out.sort((a, b) => parseInt(b) - parseInt(a)).slice(0, 8);
 }
 
 // Share the machine-wide GPU slots with tools/shot.mjs so parallel agents do not distort each other's timings.
@@ -301,7 +340,7 @@ async function main() {
         phases: [...P.phase.entries()].map(([k, v]) => `${k}=${Math.round(v)}`).join(' ') };
     }, recipe);
     if (tracing) { const buf = await browser.stopTracing(); const p = `.work/perf/trace-${name}.json`; (await import('node:fs')).writeFileSync(p, buf); console.log('   trace -> ' + p); }
-    if (cdp && opts.cpuprofile) { const { profile } = await cdp.send('Profiler.stop'); travel.top = topSelf(profile); }
+    if (cdp && opts.cpuprofile) { const { profile } = await cdp.send('Profiler.stop'); travel.top = topSelf(profile); travel.longTasks = longTasks(profile); }
     if (opts.stalls) travel.stalls = await page.evaluate(() => { const R0 = window.__cosmos.engine.services.renderer; const owner = new Map(); window.__cosmos.engine.services.groups.main.parent.traverse(o => { if (!o.material) return; for (const m of [].concat(o.material)) { const pid = R0.properties.get(m).currentProgram?.id; if (pid !== undefined && !owner.has(pid)) owner.set(pid, (o.name || o.parent?.name || o.type) + '/' + (m.name || m.type)); } }); return window.__stalls.splice(0).map(x => (x.pid !== undefined ? { ...x, obj: 'prog' + x.pid + ':' + (owner.get(x.pid) ?? ('not-in-scene:' + x.pn + ' drawing=' + x.obj)) + ' pname=' + x.pname + ' gated=' + x.gated } : x)); });
     await page.waitForTimeout(1200);
     if (cdp && opts.steadyprofile) await cdp.send('Profiler.start');
@@ -361,6 +400,7 @@ async function main() {
     if (t.slow?.length) console.log(`   slow frames (cpu:top phases): ${t.slow.join(' | ')}`);
     if (t.stalls) for (const x of t.stalls.slice(0, 12)) console.log(`   stall ${x.name} ${x.ms}ms ${x.dims} ${x.url ?? ''} obj=${x.obj} :: ${x.stack.slice(0, Number(process.env.STACKLEN ?? 160))}`);
     if (t.top) console.log(`   travel self-time ms: ${t.top.join(' ')}`);
+    if (t.longTasks) for (const x of t.longTasks) console.log(`   longtask ${x}`);
     if (row.steadyTop) console.log(`   steady self-time ms: ${row.steadyTop.join(' ')}`);
     if (row.drawlist) console.log(`   scene objects: ${(await page.evaluate(() => window.__drawCensus)).map(([k, n, a]) => `${k}=${n}/${a}`).join(' ')}`);
     if (row.drawlist) console.log(`   draws (${row.drawlist.reduce((a, x) => a + x[1], 0)}): ${row.drawlist.map(([k, v]) => `${k}=${v}`).join(' ')}`);

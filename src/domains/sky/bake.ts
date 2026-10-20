@@ -9,6 +9,7 @@
  * bright and passes untouched. At 4K one pixel is 0.088°, so this removes stars but not the Magellanic Clouds.
  */
 import * as THREE from 'three';
+import { precompileOffscreen } from '../../core/perf';
 import { SKY_TAP_GLSL } from './skyTap';
 
 export interface BakeOptions {
@@ -107,6 +108,25 @@ let quad: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial> | null = null;
 let quadScene: THREE.Scene | null = null;
 const quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
+/**
+ * Sampler setup for a survey image the bake reads (mipmapped sRGB, RA wraps). Call it BEFORE sliceUpload: the sliced
+ * copy inherits these settings and is never re-uploaded.
+ */
+export function configureSkySource(t: THREE.Texture, anisotropy: number): void {
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.ClampToEdgeWrapping;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.magFilter = THREE.LinearFilter;
+  t.generateMipmaps = true;
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = anisotropy;
+}
+
+/** Queue an upload, except for a sliceUpload() copy: its storage was filled slice by slice and has no data to re-upload (it would turn black). */
+export function markSkySourceDirty(t: THREE.Texture): void {
+  if (t.source.dataReady !== false) t.needsUpdate = true;
+}
+
 function ensureQuad(): void {
   if (!quad) {
     const geo = new THREE.BufferGeometry();
@@ -125,33 +145,98 @@ function ensureQuad(): void {
   }
 }
 
+let prepared: Promise<void> | null = null;
+
+/**
+ * Link the bake program in parallel (KHR_parallel_shader_compile) and resolve once it is ready, so bakeSkyMap never
+ * links it synchronously on first use (a 300+ ms freeze mid-travel). Await it alongside the tier upload; once per page.
+ */
+export function prepareSkyBake(renderer: THREE.WebGLRenderer): Promise<void> {
+  if (!prepared) {
+    ensureQuad();
+    const rt = new THREE.WebGLRenderTarget(1, 1, { colorSpace: THREE.SRGBColorSpace, depthBuffer: false });
+    const ready = precompileOffscreen(renderer, quadScene!, quadCam, rt);
+    prepared = new Promise<void>((resolve) => {
+      const poll = (): void => {
+        if (ready()) { rt.dispose(); resolve(); return; }
+        if (typeof requestAnimationFrame === 'function') requestAnimationFrame(poll);
+        else setTimeout(poll, 16);
+      };
+      poll();
+    });
+  }
+  return prepared;
+}
+
+
 /** Bake `src` (an sRGB image texture) into a new mipmapped sRGB render target. The caller owns the result. */
 export function bakeSkyMap(renderer: THREE.WebGLRenderer, src: THREE.Texture, opts: BakeOptions): THREE.WebGLRenderTarget {
+  const job = beginBake(renderer, src, opts);
+  job.strip(0, job.rt.height, true);
+  job.end();
+  return job.rt;
+}
+
+const nextFrame = (): Promise<void> =>
+  new Promise((r) => (typeof requestAnimationFrame === 'function' ? requestAnimationFrame(() => r()) : setTimeout(r, 16)));
+
+/** Pixels per bake strip: the natural-sky bake costs ~11 ns/px on the RTX 3050, so ~1 MP keeps a strip near 12 ms. */
+const STRIP_PIXELS = 1024 * 1024;
+
+/**
+ * bakeSkyMap spread over frames in horizontal strips (one per frame): the single-shot 8K bake held the GPU for ~380 ms
+ * and froze the frame whenever a band first loaded mid-travel (the switch to the natural sky in true scale). Resolves
+ * null (target freed) when cancelled. Uniforms are re-applied per strip, so concurrent bakes cannot mix inputs.
+ */
+export async function bakeSkyMapAsync(
+  renderer: THREE.WebGLRenderer,
+  src: THREE.Texture,
+  opts: BakeOptions,
+  isCancelled: () => boolean = () => false,
+): Promise<THREE.WebGLRenderTarget | null> {
+  const job = beginBake(renderer, src, opts);
+  const { width: w, height: h } = job.rt;
+  const rows = Math.max(64, Math.floor(STRIP_PIXELS / w));
+  for (let y = 0; y < h; y += rows) {
+    if (isCancelled()) {
+      job.end();
+      job.rt.dispose();
+      return null;
+    }
+    const last = y + rows >= h;
+    job.strip(y, Math.min(rows, h - y), last);
+    if (!last) await nextFrame();
+  }
+  job.end();
+  return job.rt;
+}
+
+interface BakeJob {
+  readonly rt: THREE.WebGLRenderTarget;
+  /** Render rows [y, y + rows); `mips` regenerates the mip chain afterwards (only needed after the last strip). */
+  strip(y: number, rows: number, mips: boolean): void;
+  end(): void;
+}
+
+function beginBake(renderer: THREE.WebGLRenderer, src: THREE.Texture, opts: BakeOptions): BakeJob {
   const img = src.image as { width: number; height: number };
   const w = img.width;
   const h = img.height;
-  src.wrapS = THREE.RepeatWrapping;
-  src.wrapT = THREE.ClampToEdgeWrapping;
-  // Mipmapped: the faint-sky smoothing samples coarse levels (skyTap).
-  src.minFilter = THREE.LinearMipmapLinearFilter;
-  src.magFilter = THREE.LinearFilter;
-  src.generateMipmaps = true;
-  src.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy());
-  src.colorSpace = THREE.SRGBColorSpace;
-  src.needsUpdate = true;
-
+  configureSkySource(src, Math.min(16, renderer.capabilities.getMaxAnisotropy()));
+  markSkySourceDirty(src);
   ensureQuad();
-  const q = quad!;
-  const u = q.material.uniforms;
-  u.uSrc.value = src;
-  u.uTexel.value.set(1 / w, 1 / h);
-  u.uStarless.value = opts.starless ? 1 : 0;
-  u.uSaturation.value = opts.saturation;
-  u.uBlack.value = opts.blackPoint;
-  u.uSmooth.value = opts.smooth ?? 0;
-  u.uGamma.value = opts.gamma ?? 1;
-  u.uDenoise.value = opts.denoise ?? 0;
-  u.uNoiseLod.value = Math.max(0, 2.5 + Math.log2(w / 8192));
+  const u = quad!.material.uniforms;
+  const apply = (): void => {
+    u.uSrc.value = src;
+    u.uTexel.value.set(1 / w, 1 / h);
+    u.uStarless.value = opts.starless ? 1 : 0;
+    u.uSaturation.value = opts.saturation;
+    u.uBlack.value = opts.blackPoint;
+    u.uSmooth.value = opts.smooth ?? 0;
+    u.uGamma.value = opts.gamma ?? 1;
+    u.uDenoise.value = opts.denoise ?? 0;
+    u.uNoiseLod.value = Math.max(0, 2.5 + Math.log2(w / 8192));
+  };
 
   const rt = new THREE.WebGLRenderTarget(w, h, {
     type: THREE.UnsignedByteType,
@@ -166,17 +251,34 @@ export function bakeSkyMap(renderer: THREE.WebGLRenderer, src: THREE.Texture, op
     stencilBuffer: false,
     anisotropy: Math.min(16, renderer.capabilities.getMaxAnisotropy()),
   });
+  let first = true;
 
-  const prevTarget = renderer.getRenderTarget();
-  const prevAutoClear = renderer.autoClear;
-  const prevXr = renderer.xr.enabled;
-  renderer.xr.enabled = false;
-  renderer.autoClear = false;
-  renderer.setRenderTarget(rt);
-  renderer.render(quadScene!, quadCam);
-  renderer.setRenderTarget(prevTarget);
-  renderer.autoClear = prevAutoClear;
-  renderer.xr.enabled = prevXr;
-  u.uSrc.value = null;
-  return rt;
+  return {
+    rt,
+    strip(y: number, rows: number, mips: boolean): void {
+      apply();
+      const full = y === 0 && rows >= h;
+      rt.scissorTest = !full;
+      rt.scissor.set(0, y, w, rows);
+      // Storage (with its mip levels) is allocated on the first bind, so mip generation may be skipped after that.
+      rt.texture.generateMipmaps = first || mips;
+      first = false;
+      const prevTarget = renderer.getRenderTarget();
+      const prevAutoClear = renderer.autoClear;
+      const prevXr = renderer.xr.enabled;
+      renderer.xr.enabled = false;
+      renderer.autoClear = false;
+      renderer.setRenderTarget(rt);
+      renderer.render(quadScene!, quadCam);
+      renderer.setRenderTarget(prevTarget);
+      renderer.autoClear = prevAutoClear;
+      renderer.xr.enabled = prevXr;
+      u.uSrc.value = null;
+    },
+    end(): void {
+      rt.scissorTest = false;
+      rt.scissor.set(0, 0, w, h);
+      rt.texture.generateMipmaps = true;
+    },
+  };
 }

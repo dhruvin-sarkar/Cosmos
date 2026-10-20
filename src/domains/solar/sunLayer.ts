@@ -23,7 +23,7 @@ import { createSunImagery, type SunImage, type SunImageId, type SunImagery } fro
 import { SunMaterial } from './sunMaterial';
 
 /** Disc-centre radiance (scene-linear); other photospheres (stars domain) scale from it. */
-const SUN_DISC_INTENSITY = 14;
+const SUN_DISC_INTENSITY = 42;
 /** Seconds for the SDO-view cross-fade. */
 const SDO_FADE_SEC = 0.6;
 

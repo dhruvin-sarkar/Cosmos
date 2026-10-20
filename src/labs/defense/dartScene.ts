@@ -43,6 +43,8 @@ const APPROACH_S = 150;
 const EJECTA_S = 900;
 const ORBIT_S = 4 * 86400;
 const FREEZE_M = 2600;
+/** Replay framing: widen the view ~1.4x so Didymos and the plume stay inside the viewport frame. */
+const ZOOM_OUT = 1.4;
 const DIMORPHOS_R = 75;
 const DIDYMOS_SPIN_S = 2.26 * 3600;
 
@@ -547,6 +549,7 @@ export class DartScene {
       this.camTarget.copy(this.impact).addScaledVector(this.axis, Math.min(EJECTA_S * 2.5, 5000)).multiplyScalar(1 - b).addScaledVector(Z, 420 * b);
       this.camera.fov = 38 - 6 * b;
     }
+    this.camera.fov = (2 * Math.atan(ZOOM_OUT * Math.tan((this.camera.fov * Math.PI) / 360)) * 180) / Math.PI;
     this.camera.position.copy(this.camPos);
     this.camera.up.copy(Z);
     this.camera.lookAt(this.camTarget);
@@ -585,7 +588,7 @@ export class DartScene {
     if (dl && dl.textContent !== want) dl.textContent = want;
     this.placeLabel('didymos', _v.set(0, 0, 0), 420, true);
     this.placeLabel('dimorphos', this.dimorphos.position, 95, !merged);
-    this.placeLabel('dart', this.dart.position, 6, before && ch === 0);
+    this.placeLabel('dart', this.dart.position, 6, before && ch === 0, true);
     this.placeLabel('ghost', this.ghost, 120, ch === 2 && lead > 4);
 
     info.ts = ts;
@@ -595,11 +598,14 @@ export class DartScene {
     return info;
   }
 
-  private placeLabel(key: LabelKey, pos: THREE.Vector3, radiusM: number, show: boolean): void {
+  private placeLabel(key: LabelKey, pos: THREE.Vector3, radiusM: number, show: boolean, below = false): void {
     const el = this.labels[key];
     if (!el) return;
     _w.copy(pos).project(this.camera);
-    const vis = show && _w.z < 1 && Math.abs(_w.x) < 1.05 && Math.abs(_w.y) < 1.05;
+    // The clock and caption occupy the top-left of the stage: a label that would land on them is dropped instead.
+    const sy = (-_w.y * 0.5 + 0.5) * this.height, sx = (_w.x * 0.5 + 0.5) * this.width;
+    const underHud = sy < 110 && sx < this.width * 0.8;
+    const vis = show && !underHud && _w.z < 1 && Math.abs(_w.x) < 1.05 && Math.abs(_w.y) < 1.05;
     if (!vis) {
       if (el.style.visibility !== 'hidden') el.style.visibility = 'hidden';
       return;
@@ -608,9 +614,11 @@ export class DartScene {
     const dist = this.camera.position.distanceTo(pos);
     const rPx = (radiusM / Math.max(1, dist)) / Math.tan((this.camera.fov * Math.PI) / 360) * (this.height / 2);
     const x = (_w.x * 0.5 + 0.5) * this.width;
-    const y = (-_w.y * 0.5 + 0.5) * this.height - Math.max(10, rPx + 8);
+    const cy = (-_w.y * 0.5 + 0.5) * this.height;
+    // `below` keeps the DART tag under the spacecraft, clear of the Dimorphos label that sits above the pair.
+    const y = below ? cy + 22 : cy - Math.max(10, rPx + 8);
     el.style.visibility = 'visible';
-    el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`;
+    el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, ${below ? '0' : '-100%'})`;
   }
 
   dispose(): void {

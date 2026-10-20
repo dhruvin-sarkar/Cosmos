@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import type { EngineServices, FrameContext, Layer, QualityProfile, SpectralBandId } from '../../core/types';
 import { sliceUpload } from '../../core/perf';
 import { PC_M } from '../../core/units';
-import { bakeSkyMap } from './bake';
+import { bakeSkyMapAsync, configureSkySource, prepareSkyBake } from './bake';
 import { bakeEnhanced, ENHANCED_TUNING, STORE_SCALE } from './enhanced';
 import {
   BANDS_JSON_PATH,
@@ -26,6 +26,9 @@ import {
  * Backdrop style for the visible band: 'enhanced' = the "Enhanced colour composite" (Gaia + boosted Hα + dust glow,
  * enhanced.ts), 'natural' = the plain visible-light map, 'auto' = enhanced in exhibition mode (enlarge-bodies on).
  */
+/** Bake-input sampler settings, applied before sliceUpload so the sliced copy inherits them (see bake.ts). */
+const prepSrc = (r: THREE.WebGLRenderer, t: THREE.Texture): THREE.Texture => (configureSkySource(t, Math.min(16, r.capabilities.getMaxAnisotropy())), t);
+
 export type SkyStyle = 'auto' | 'enhanced' | 'natural';
 const ENHANCED_KEY = 'visible-enhanced';
 /** Display exposure of the enhanced composite (its target stores linear × STORE_SCALE). */
@@ -194,13 +197,18 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
     try {
       for (let i = start; i < tiers.length && !disposed; i++) {
         // Big tiers go up in slices over a few frames instead of one 80-180 ms upload at bake time (perf).
-        const tex = await sliceUpload(renderer, await svc.assets.textureAsync(tiers[i].path, { colorSpace: 'srgb' }));
+        const [tex] = await Promise.all([
+          sliceUpload(renderer, prepSrc(renderer, await svc.assets.textureAsync(tiers[i].path, { colorSpace: 'srgb' }))),
+          prepareSkyBake(renderer),
+        ]);
         if (disposed) {
           tex.dispose();
           return;
         }
-        const rt = bakeSkyMap(renderer, tex, { starless: disp.starless, saturation: disp.saturation, blackPoint: disp.blackPoint, smooth: disp.smooth, gamma: disp.gamma, denoise: disp.denoise });
+        // Baked in strips over a few frames: a single-shot 8K bake froze the frame for ~380 ms (perf).
+        const rt = await bakeSkyMapAsync(renderer, tex, { starless: disp.starless, saturation: disp.saturation, blackPoint: disp.blackPoint, smooth: disp.smooth, gamma: disp.gamma, denoise: disp.denoise }, () => disposed);
         tex.dispose();
+        if (!rt) return;
         const prev = cache.get(rec.id);
         if (prev) {
           // Same band, sharper tier: swap in place (no fade), free the old target.
@@ -239,7 +247,7 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
     let haTier = '';
     let dust: THREE.Texture | null = null;
     const tex = (path: string | undefined): Promise<THREE.Texture | null> =>
-      path ? assets.textureAsync(path, { colorSpace: 'srgb' }).then(t => sliceUpload(renderer, t)).catch(() => null) : Promise.resolve(null);
+      path ? assets.textureAsync(path, { colorSpace: 'srgb' }).then(t => sliceUpload(renderer, prepSrc(renderer, t))).catch(() => null) : Promise.resolve(null);
     try {
       dust = await tex(firRec?.files.low?.path ?? firRec?.files.high?.path);
       for (let i = start; i < tiers.length && !disposed; i++) {
@@ -253,7 +261,7 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
             haTier = wantHa;
           }
         }
-        const vis = await sliceUpload(renderer, await assets.textureAsync(tiers[i].path, { colorSpace: 'srgb' }));
+        const vis = await sliceUpload(renderer, prepSrc(renderer, await assets.textureAsync(tiers[i].path, { colorSpace: 'srgb' })));
         if (disposed) {
           vis.dispose();
           return;

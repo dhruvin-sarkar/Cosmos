@@ -322,3 +322,18 @@
 
 /* Part 2 is hypothetical by design: the lede says so, so the shell's "you changed real values" banner would mislead. */
 .cx-dfn-shell--hypo .cx-lab__banner { display: none; }
+
+/* While this lab is open the main 3D scene (Earth, debris, labels) must not leak around the replay frame: hide it and go black. */
+html:has(.cx-dfn-shell), body:has(.cx-dfn-shell) { background: #000; }
+body:has(.cx-dfn-shell) .cx-engine-host { visibility: hidden; }
+
+/* The shell's status line says "every value comes from catalogue data". The replay is a reconstruction from measured values,
+   so replace the text (CSS only: LabShell has no status prop yet). The Scenario text when values are edited is untouched. */
+.cx-dfn-shell--replay .cx-lab__banner.is-real { font-size: 0; }
+.cx-dfn-shell--replay .cx-lab__banner.is-real::after {
+  content: 'Reconstruction from measured values';
+  font: var(--type-label);
+  font-size: 13px;
+}
+/* Label overlays of the main scene are individually visible, so the parent's visibility:hidden does not reach them. */
+body:has(.cx-dfn-shell) .cosmos-labels { display: none; }

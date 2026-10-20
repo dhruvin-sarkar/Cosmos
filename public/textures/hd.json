@@ -527,10 +527,14 @@
     "color_8k": 2064408
    },
    "notes": {
-    "color_8k": "GetMap EPSG:4326 as two 4096x4096 half-globe tiles stitched to 8192x4096. observedFraction=0.614; unobserved area filled smoothly and faded to mean colour (illustrative, no real detail); see coverage_* mask"
+    "color_8k": "GetMap EPSG:4326 as two 4096x4096 half-globe tiles stitched to 8192x4096. observedFraction=0.614; the unimaged area is a flat mean-colour fill (illustrative, no real detail) feathered ~4 deg into the mosaic (moons-triton-feather.mjs); soft coverage_* mask drives the procedural fill"
    },
    "license": "public domain (NASA/USGS)",
-   "source": "USGS Astrogeology planetary WMS TRITON_VOYAGER2 - NASA/JPL/USGS Voyager 2 Triton colour mosaic (P. Schenk, LPI)"
+   "source": "USGS Astrogeology planetary WMS TRITON_VOYAGER2 - NASA/JPL/USGS Voyager 2 Triton colour mosaic (P. Schenk, LPI)",
+   "coverage": {
+    "2k": "textures/triton/coverage_2k.png",
+    "1k": "textures/triton/coverage_1k.png"
+   }
   },
   "deimos": {
    "sources": [

@@ -1,0 +1,36 @@
+{
+  "domain": "moons",
+  "datasets": [
+    {
+      "id": "phobos-gaskell-shape",
+      "name": "Gaskell Phobos Shape Model V1.0 (vertex-facet, quantised)",
+      "organization": "Robert Gaskell (Planetary Science Institute), archived at NASA PDS Small Bodies Node",
+      "purpose": "True 3D shape of Phobos for the moon close-up (stereophotoclinometry mesh)",
+      "mechanism": "Downloaded phobos_ver128q.tab from the PDS4 archive and converted offline by scripts/data/moons/build-phobos-shape.mjs into a compact binary mesh",
+      "endpoint": "https://sbnarchive.psi.edu/pds4/non_mission/gaskell.phobos.shape-model/data/phobos_ver128q.tab",
+      "query": null,
+      "version": "Gaskell Phobos Shape Model V1.0 (PDS4 urn:nasa:pds:gaskell.phobos.shape-model::1.0), phobos_ver128q.tab",
+      "retrieved": "2026-10-19T09:05:00.000Z",
+      "license": "NASA PDS data, public domain / free to use with citation (as stated in the build script header).",
+      "licenseUrl": null,
+      "citation": "Gaskell, R., 'Gaskell Phobos Shape Model V1.0', VO1-SA-VISA/VISB-5-PHOBOSSHAPE-V1.0, NASA PDS Small Bodies Node, 2011.",
+      "rateLimits": "n/a (single static file download; PDS archive publishes no numeric limit - not recorded)",
+      "fieldsUsed": [
+        "vertex x,y,z (km)",
+        "facet vertex indices"
+      ],
+      "updateCadence": "static archive release (V1.0, 2011)",
+      "cachePolicy": "versioned offline snapshot",
+      "normalization": "scripts/data/moons/build-phobos-shape.mjs: source 99,846 vertices / 196,608 facets; unused duplicate edge/corner vertices dropped (98,306 kept); vertices quantised to int16 (+-32767 = +-maxRadiusKm, 13.94 km), quantisation error < 0.4 m; little-endian 'SHP1' header, u32 nVerts, u32 nFaces, f32 maxRadiusKm, i16[3*nVerts], u32[3*nFaces] (0-based). Frame: Gaskell body-fixed, +z north, +x prime meridian.",
+      "fallback": "Phobos keeps its illustrative ellipsoid shape when the mesh fails to load (moonsLayer.ts loadShape).",
+      "files": [
+        {
+          "path": "data/moons/phobos.shape.bin",
+          "records": 1
+        }
+      ],
+      "limitations": "Stereophotoclinometry from Viking Orbiter 1 and Phobos 2 images; a model fitted to images, not a direct survey, and quantised to under 0.4 m.",
+      "provenanceClass": "derived"
+    }
+  ]
+}

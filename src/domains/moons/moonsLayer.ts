@@ -21,6 +21,7 @@ import { DetachedHaze, PlumeSystem, enceladusPlumeSpec, ioPlumeSpec } from './ef
 import { createSatelliteSystemTransform, mapSatelliteOffset, registerScaledBody, renderTransform, satelliteSystem } from '../../core/visualScale';
 import { MoonMaterial, type MoonSpecial } from './moonMaterial';
 import { meanRadiusM } from './entities';
+import { coverageClock, fillFractionOfLitDisc, hasPartialCoverage, subSolarLatDeg } from './coverage';
 
 const DEG = Math.PI / 180;
 
@@ -92,6 +93,10 @@ interface MoonVisual {
   detached: DetachedHaze | null;
   plume: PlumeSystem | null;
   shapeRequested: boolean;
+  /** Share of the lit visible disc that is illustrative fill (Voyager-2-limited moons only; NaN = not applicable). */
+  fillFrac: number;
+  fillAtMs: number;
+  fillRealMs: number;
   orbitFactor: number;
   /** True parent-relative orbit samples (m) of the last rebuild; mapped through the parent's satellite system. */
   orbitTrue: Float64Array;
@@ -329,7 +334,7 @@ export function createMoonsLayer(entities: Entity[]): Layer {
         const c = new THREE.Color(look.color);
         const v: MoonVisual = {
           rec, entity, index, parentId: PARENT_ENTITY[rec.parent], radiusM, aOrbitM: rec.orbit.aKm * 1000,
-          group, overlayGroup, mesh, material, detached, plume, shapeRequested: false, orbitFactor: Number.NaN, orbitTrue: new Float64Array(3 * 160), orbitN: 0, trueWorld: new THREE.Vector3(), orbit, orbitBuiltMs: Number.NaN,
+          group, overlayGroup, mesh, material, detached, plume, shapeRequested: false, fillFrac: Number.NaN, fillAtMs: -1e18, fillRealMs: 0, orbitFactor: Number.NaN, orbitTrue: new Float64Array(3 * 160), orbitN: 0, trueWorld: new THREE.Vector3(), orbit, orbitBuiltMs: Number.NaN,
           orbitPeriodMs: (SIDEREAL_DAYS[rec.id] ?? rec.orbit.periodDays) * 86_400_000,
           world: new THREE.Vector3(), parentWorld: new THREE.Vector3(), distM: 1, px: 0, shownPx: 0, enlarge: 1, sepPx: 1e6,
           highRequested: false, geometryBuilt: false, meanLum: 0, lod: { level: 'point', point: 1, sphere: 0, detail: 0, extras: 0 },
@@ -473,6 +478,16 @@ export function createMoonsLayer(entities: Entity[]): Layer {
         u.uSunDir.value.copy(sunDir).applyQuaternion(qInv);
         u.uCamLocal.value.subVectors(ctx.cameraPosition, v.world).applyQuaternion(qInv).multiplyScalar(unit);
         u.uSunIntensity.value = E * v.lod.sphere;
+        if (hasPartialCoverage(rec.id) && v.shownPx > 40 && (ctx.focusEntityId === v.entity.id || ctx.selectedId === v.entity.id)) {
+          // Coverage of the lit visible disc (throttled: it only changes with the view and the slow orbital phase).
+          if (performance.now() - v.fillRealMs > 250) {
+            v.fillRealMs = performance.now();
+            v.fillAtMs = ctx.timeMs;
+            v.fillFrac = fillFractionOfLitDisc(rec.id, u.uSunDir.value, u.uCamLocal.value);
+            coverageClock.timeMs = ctx.timeMs;
+            coverageClock.sunLatDeg = subSolarLatDeg(u.uSunDir.value);
+          }
+        } else v.fillFrac = Number.NaN;
         u.uSunAngularRadius.value = Math.asin(Math.min(1, R_SUN_M / dSun));
         u.uDetail.value = v.lod.detail;
 
@@ -535,6 +550,20 @@ export function createMoonsLayer(entities: Entity[]): Layer {
       const focus = ctx.focusEntityId;
       const focusSystem = focus ? (idToParent.get(focus) ?? focus) : null;
       for (const v of visuals) {
+        if (v.fillFrac > 0.6) {
+          ctx.project(v.world, screen);
+          if (screen.visible) {
+            out.push({
+              entityId: null,
+              text: 'Unimaged hemisphere: illustrative',
+              detail: 'Voyager 2 imaged only this moon’s southern hemisphere (1986). The sunlit face in view is a procedural fill, not a photograph.',
+              x: screen.x,
+              y: screen.y + Math.min(v.shownPx / 2, ctx.viewport.height * 0.46) + 14,
+              priority: 200,
+              kind: 'annotation',
+            });
+          }
+        }
         if (v.shownPx > ctx.viewport.height * 0.9) continue;
         const inSystem = focusSystem === v.parentId;
         const minSep = inSystem ? 18 : 60;

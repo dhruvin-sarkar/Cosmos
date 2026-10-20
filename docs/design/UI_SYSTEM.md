@@ -67,10 +67,13 @@ Brass on black is 11.9 : 1; secondary text on `--capsule` over a sunlit limb sta
 
 4 px grid (`--sp-1` … `--sp-16`). HUD gutter 24 px (20 below 1440, 16 below 1200).
 
-- **Top band** (`--topbar-h` 64 / 76): breadcrumb top-left, search field top-centre, then one toolbar capsule
+- **Top band** (`--topbar-h` 64 / 76): breadcrumb top-left, search field top-centre with the **view-scale chip**
+  beside it (src/ui/shell/ScaleChip.tsx: "Exhibition scale · Enlarged for visibility" with a dotted ring, or
+  "True scale" with a solid ring; click toggles store.visualScale; always visible, the scientific-honesty disclosure
+  of docs/design/VISUAL_SCALE.md; below 1200 px only "Enlarged for visibility" remains), then one toolbar capsule
   top-right in three groups (travel: Planets, What's up · view: Layers, Light, Tour ·
   utilities: Sources, Settings, Help).
-- **Settings** holds the view scale ("View scale": Enlarged for visibility / True scale, with a one-line explanation)
+- **Settings** also holds the view scale ("View scale": Enlarged for visibility / True scale, with a one-line explanation)
   and the full time controls ("Time": play/pause, the UTC date and clock, the rate stepper in words with reverse,
   Live/Now, Go to a date). Keyboard shortcuts (Space, comma, full stop, N) work everywhere; tours still drive time.
 - **Time status chip** (`--timebar-h` 34 / 42 reserved) top-left under the breadcrumb, shown ONLY while the sky is

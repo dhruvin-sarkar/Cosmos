@@ -131,11 +131,24 @@ A missing value is "Unknown", never 0.
 
 - **Method.** Survey images resampled to an all-sky sphere in Galactic and equatorial frames. Each band shows its own caption: survey, instrument, what it reveals, and caveats.
 - **Data (14 bands).** Visible (Gaia DR3 flux map; CC BY-NC 3.0 IGO), near-infrared (2MASS), mid-infrared (unWISE), far-infrared (AKARI), submillimetre, microwave and the CMB (Planck PR3; CC BY-NC 3.0 IGO), radio at 408 MHz (Haslam, Remazeilles), neutral hydrogen (HI4PI), hydrogen-alpha (Finkbeiner 2003), ultraviolet (GALEX), X-ray (ROSAT and eROSITA-DE DR1), gamma ray (Fermi LAT).
-- **Limits.** Colours in non-visible bands are false colour. The eROSITA map covers half the sky. Maps are down-sampled for the browser. The CMB map is the SMICA foreground-cleaned temperature map and is shown as a sky texture, not as a 3D "surface of last scattering".
+- **Limits.** Colours in non-visible bands are false colour. The eROSITA map covers half the sky. Maps are down-sampled for the browser. The CMB map is the SMICA foreground-cleaned temperature map; as a band it is a sky texture, and in the cosmology view it is also drawn as the 3D last-scattering sphere (section 20).
 
-## 18. Datasets stored but not yet shown
+## 18. Exoplanets
 
-`public/data/` also holds exoplanet systems (NASA Exoplanet Archive PSCompPars), Milky Way, Sagittarius A* and cosmology parameters, nearby galaxies (UNGC), 2MRS and DESI DR1 samples for the cosmic web, and famous galaxies. They are documented under `docs/data/` but not drawn in the current build, so the exhibition does not claim a visit to them.
+- **Data.** NASA Exoplanet Archive `pscomppars` snapshot of 2026-10-16: 6,451 confirmed planets around 4,847 host stars. Host stars are placed from their catalogue right ascension, declination and distance. Showcase systems (TRAPPIST-1, Proxima Centauri, Kepler-16, HR 8799 and others) draw planet orbits from the archive elements.
+- **Limits.** Planet surfaces and colours are illustrative: no exoplanet has been imaged as a resolved disc. Missing elements are shown as "Unknown". The habitability lab is a simple energy-balance teaching model.
+
+## 19. The Milky Way, Sagittarius A* and black holes
+
+- **Milky Way.** A reconstruction, not a photograph: nobody has seen our Galaxy from outside. Distance to the centre R0 = 8,275.9 pc and Sgr A* mass 4.30 million solar masses (GRAVITY Collaboration 2024); spiral arms from Reid et al. 2019; bar from Wegg et al. 2015 and Portail et al. 2017; discs from Bland-Hawthorn and Gerhard 2016; dust from Drimmel and Spergel 2001. 157 globular clusters and 28 landmark objects are placed from their catalogue positions.
+- **S-stars.** Kepler orbits from Gillessen et al. 2017, with S2 from the GRAVITY 2020 fit.
+- **Black holes.** 13 objects with masses and distances from the cited papers (`public/data/blackholes/blackholes.json`). Lensing, accretion disks and jets are drawn from these parameters but their appearance is illustrative; the M87* image shown is the Event Horizon Telescope 2019 observation.
+
+## 20. Galaxies, the cosmic web and the CMB
+
+- **Nearby galaxies.** 869 galaxies of the Local Volume (Karachentsev, Makarov and Kaisina 2013) plus famous galaxies and structures (Local Group, Virgo, Laniakea) with per-object references.
+- **Cosmic web.** 2MRS (Huchra et al. 2012; 43,508 galaxies) and DESI DR1 (1.8 million bright galaxies and 400,000 luminous red galaxies, random subsamples). Distances are comoving distances from redshift in flat ΛCDM with Planck 2018 parameters, so positions are in redshift space (clusters look stretched along the line of sight). The empty wedge behind the Milky Way's disc is the Zone of Avoidance, where surveys cannot see.
+- **CMB.** The Planck PR3 SMICA temperature map, shown on a sphere at the comoving distance of last scattering.
 
 ## Citations
 

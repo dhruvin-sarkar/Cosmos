@@ -141,6 +141,7 @@ export function DefensePanel({ onClose, params }: LabPanelProps) {
       <LabShell
         title="Asteroid deflection lab"
         subject="Didymos and Dimorphos"
+        className="cx-dfn-shell cx-dfn-shell--replay"
         modified={modified}
         onReset={reset}
         onClose={onClose}
@@ -234,7 +235,7 @@ export function DefensePanel({ onClose, params }: LabPanelProps) {
       title="Asteroid deflection lab"
       subject="Defend Earth"
       modified={modified}
-      className="cx-dfn-shell--hypo"
+      className="cx-dfn-shell cx-dfn-shell--hypo"
       onReset={reset}
       onClose={onClose}
       realState={

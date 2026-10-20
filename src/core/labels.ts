@@ -504,13 +504,20 @@ export function createLabelManager(opts: LabelManagerOptions): LabelManager {
   };
 
   // ── HUD exclusion zones: opaque-ish panels (inspector, [data-label-exclude]) block labels, so nothing ghosts
-  //    through them. Re-measured at most every 250 ms (no per-frame layout reads).
+  //    through them. Re-measured at most every 250 ms, in a task right after the frame has been laid out: reading
+  //    rects inside the frame callback forced a synchronous layout of the whole UI (30-40 ms mid-travel, perf).
   let exclusion = new Float32Array(16);
   let exclusionCount = 0;
   let exclusionAt = -Infinity;
+  let exclusionQueued = false;
   const measureExclusions = (nowMs: number): void => {
-    if (nowMs - exclusionAt < 250 && nowMs >= exclusionAt) return;
+    if (exclusionQueued || (nowMs - exclusionAt < 250 && nowMs >= exclusionAt)) return;
     exclusionAt = nowMs;
+    exclusionQueued = true;
+    setTimeout(readExclusions, 0);
+  };
+  const readExclusions = (): void => {
+    exclusionQueued = false;
     exclusionCount = 0;
     const els = document.querySelectorAll(EXCLUDE_SELECTOR);
     if (els.length === 0) return;

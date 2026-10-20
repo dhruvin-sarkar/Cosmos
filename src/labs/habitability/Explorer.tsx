@@ -3,7 +3,7 @@
  * search with fly-to, the showcase systems, and the filters of the 3-D planet-host marker field (shared state with the
  * markers layer, so filtering here filters the sky).
  */
-import { useDeferredValue, useMemo, useState, type ReactNode } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Search } from 'lucide-react';
 import { Button } from '../../ui/components/Button';
 import { Slider } from '../../ui/components/Slider';
@@ -88,6 +88,11 @@ export function useExplorerParts(loaded: { catalog: ExoCatalog; index: ExoIndex 
   const { catalog, index } = loaded;
   const commands = useCommands();
   const { view, counts, allCounts, pass, highlight } = useExplorer(catalog);
+  // While the explorer is open every planet host gets its full ring in the sky (not just the prominent ones).
+  useEffect(() => {
+    setExoView({ explorer: true });
+    return () => setExoView({ explorer: false });
+  }, []);
   const [query, setQuery] = useState('');
   const q = useDeferredValue(query);
   const hits = useMemo(() => searchExo(catalog, index, q, 8), [catalog, index, q]);

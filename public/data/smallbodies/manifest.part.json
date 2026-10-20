@@ -1,0 +1,105 @@
+{
+  "domain": "smallbodies",
+  "datasets": [
+    {
+      "id": "smallbody-mission-shapes",
+      "name": "Mission shape models of eight small bodies (decimated meshes)",
+      "organization": "NASA PDS / NAIF (Bennu, Eros, Itokawa, Didymos, Dimorphos, Arrokoth), JAXA DARTS (Ryugu), ESA RMOC / Rosetta NAVCAM via NASA PDS SBN and ESA PSA (67P)",
+      "purpose": "True 3D shapes of visited asteroids and comets for the small-body close-up views",
+      "mechanism": "Source models downloaded by scripts/data/smallbodies/fetch-shapes.mjs (URLs in scripts/data/smallbodies/sources.json) and converted offline by build-shapes.py (weld, orient, quadric-error decimation, int16 quantisation) into compact SBSH binaries",
+      "endpoint": "https://sbnarchive.psi.edu/ (Eros, Itokawa), https://naif.jpl.nasa.gov/pub/naif/pds/pds4/orex/ (Bennu), https://pds-smallbodies.astro.umd.edu/ (Didymos, Dimorphos, 67P), https://pdssbn.astro.umd.edu/ (Arrokoth), https://data.darts.isas.jaxa.jp/pub/hayabusa2/ (Ryugu); per-body URLs in sources.json and shapes/index.json",
+      "query": null,
+      "version": "Per body: 67p ESA Rosetta NAVCAM SPC shape model, MTP019 (CSHP_DV_130_01_LORES), Cheops reference frame; arrokoth New Horizons merged high-polygon shape model of (486958) Arrokoth (mu69_merged, 107,506 facets); bennu OSIRIS-REx OLA/altimetry global shape model v021, 3.25 m GSD (SPICE DSK g_03250mm_alt_obj_0000n00000_v021); didymos DART SPC global shape model of Didymos v003, 4.657 m GSD; dimorphos DART SPC global shape model of Dimorphos v004, 0.972 m GSD; eros Gaskell Eros Shape Model V1.0, ICQ q=128 plate model (ver128q); itokawa Gaskell Itokawa Shape Model V1.0, ICQ q=128 plate model (ver128q); ryugu Hayabusa2 ONC SfM shape model SHAPE_SFM_49k_v20180804",
+      "retrieved": "2026-10-19T10:08:00.000Z",
+      "license": "Public domain (NASA PDS / NAIF, U.S. Government work) for Bennu, Eros, Itokawa, Didymos, Dimorphos and Arrokoth; JAXA DARTS open data (free use with credit to JAXA and the Hayabusa2 team) for Ryugu; CC BY-SA 3.0 IGO (ESA/Rosetta/NAVCAM) for 67P - share-alike applies to the 67P mesh.",
+      "licenseUrl": null,
+      "citation": "67P/Churyumov-Gerasimenko: ESA/Rosetta/NAVCAM, ESA RMOC Flight Dynamics SPC model MTP019 (2016), RO-C-MULTI-5-67P-SHAPE-V2.0, NASA PDS SBN / ESA PSA [CC BY-SA 3.0 IGO (ESA/Rosetta/NAVCAM)] | (486958) Arrokoth: Spencer, J. R. et al. 2020, Science 367, eaay3999 (New Horizons team; NASA/JHUAPL/SwRI), PDS4 nh_derived arrokoth_geophysics [Public domain (NASA PDS, U.S. Government work)] | (101955) Bennu: OSIRIS-REx Altimetry Working Group; Daly, M. G. et al. 2020, Sci. Adv. 6, eabd3649 (NASA/GSFC/Univ. of Arizona/CSA/York/MDA), v021 archived in the OSIRIS-REx SPICE PDS4 bundle [Public domain (NASA PDS / NAIF archive, U.S. Government work)] | (65803) Didymos: Daly, R. T., Barnouin, O. S., Ernst, C. M., Nair, H., Espiritu, R., Waller, C. 2023, DART Shape Model Bundle, NASA PDS SBN, doi:10.26007/96fn-p578 (Daly et al. 2023, Nature 616, 443) [Public domain (NASA PDS, U.S. Government work)] | Dimorphos: Daly, R. T. et al. 2024, PSJ 5, 24, doi:10.3847/PSJ/ad0b07; DART Shape Model Bundle, NASA PDS SBN, doi:10.26007/96fn-p578 [Public domain (NASA PDS, U.S. Government work)] | (433) Eros: Gaskell, R. W. 2008, Gaskell Eros Shape Model V1.0, NEAR-A-MSI-5-EROSSHAPE-V1.0, NASA Planetary Data System [Public domain (NASA PDS, U.S. Government work)] | (25143) Itokawa: Gaskell, R. et al. 2008, Gaskell Itokawa Shape Model V1.0, HAY-A-AMICA-5-ITOKAWASHAPE-V1.0, NASA Planetary Data System [Public domain (NASA PDS, U.S. Government work)] | (162173) Ryugu: Watanabe, S. et al. 2019, Science 364, 268 (JAXA/Hayabusa2 project; Univ. of Tokyo, Kochi, Rikkyo, Nagoya, Chiba Inst. Tech., Meiji, Aizu, AIST) [JAXA DARTS open data (free use with credit to JAXA and the Hayabusa2 team)]",
+      "rateLimits": "Eight one-off file downloads from public archives; no limits recorded.",
+      "fieldsUsed": [
+        "vertex positions",
+        "triangle indices",
+        "mean radius and extent (computed)"
+      ],
+      "updateCadence": "static; archive releases are versioned and rarely change",
+      "cachePolicy": "versioned offline snapshot",
+      "normalization": "scripts/data/smallbodies/build-shapes.py: read OBJ / Gaskell ICQ plate .tab / SPICE DSK type 2; weld duplicate vertices; drop degenerate and duplicate faces; orient outward; re-centre on the volume centroid if offset > 1% of the radius; quadric-error-metric edge collapse (Garland & Heckbert 1997) to 40,000 triangles (20,000 for Didymos and Dimorphos); quantise to int16 positions with a per-body scale; written as SBSH v1 binaries plus shapes/index.json (meanRadiusKm, extentKm).",
+      "fallback": "A body without a mission mesh keeps its procedural surface and ellipsoid (src/domains/smallbodies/famousShapes.ts).",
+      "files": [
+        {
+          "path": "data/smallbodies/shapes/67p.bin",
+          "records": 1
+        },
+        {
+          "path": "data/smallbodies/shapes/arrokoth.bin",
+          "records": 1
+        },
+        {
+          "path": "data/smallbodies/shapes/bennu.bin",
+          "records": 1
+        },
+        {
+          "path": "data/smallbodies/shapes/didymos.bin",
+          "records": 1
+        },
+        {
+          "path": "data/smallbodies/shapes/dimorphos.bin",
+          "records": 1
+        },
+        {
+          "path": "data/smallbodies/shapes/eros.bin",
+          "records": 1
+        },
+        {
+          "path": "data/smallbodies/shapes/itokawa.bin",
+          "records": 1
+        },
+        {
+          "path": "data/smallbodies/shapes/ryugu.bin",
+          "records": 1
+        },
+        {
+          "path": "data/smallbodies/shapes/index.json",
+          "records": 8
+        }
+      ],
+      "limitations": "Decimated to 20,000-40,000 triangles, so metre-scale relief is smoothed away (source resolutions range from 0.97 m to hundreds of metres per facet). Ryugu, Bennu and Arrokoth meshes come from different pipelines (SfM, laser altimetry, merged stereo) and carry different uncertainties. 67P uses the low-resolution MTP019 model. Not recorded: retrieval time of each download (the build date from index.json and file mtimes is used).",
+      "provenanceClass": "derived"
+    },
+    {
+      "id": "horizons-craft-tracks",
+      "name": "JPL Horizons whole-mission spacecraft trajectories (15 craft, decimated state vectors)",
+      "organization": "NASA JPL Solar System Dynamics (Horizons On-Line Ephemeris System)",
+      "purpose": "Complete launch-to-end (or to 2030) trajectories for spacecraft, including planet flybys, perijoves and perihelia",
+      "mechanism": "Horizons API state vectors fetched in chunks by scripts/data/smallbodies/craft-tracks.mjs, refined at flybys and decimated to a non-uniform Hermite-interpolable sample set",
+      "endpoint": "https://ssd.jpl.nasa.gov/api/horizons.api",
+      "query": "COMMAND=<naif id>&CENTER=<sun 500@10 | earth 500@399 | jupiter 500@599 | saturn 500@699 | didymos 500@20065803>&EPHEM_TYPE=VECTORS, ICRF axes, km and km/s, JD TDB, whole mission coverage at 1-12 h coarse steps (exact parameter set in craft-tracks.mjs)",
+      "version": "Horizons live state at retrieval; schemaVersion 2; craft: voyager-1, voyager-2, new-horizons, parker-solar-probe, juno, europa-clipper, psyche, lucy, hera, juice, bepicolombo, solar-orbiter, jwst, cassini, dart",
+      "retrieved": "2026-10-19T09:47:41.369Z",
+      "license": "U.S. Government (NASA/JPL-Caltech) public data service; no license or reuse restrictions are stated by JPL SSD/CNEOS. Use is governed by the JPL SSD/CNEOS API Fair Use Policy (one request at a time, application-specific User-Agent, cache results, no embedding of the APIs in websites per NASA CORS policy). Do not imply NASA/JPL endorsement.",
+      "licenseUrl": "https://ssd-api.jpl.nasa.gov/",
+      "citation": "NASA/JPL Horizons On-Line Ephemeris System (https://ssd.jpl.nasa.gov/horizons/). Spacecraft trajectories from mission navigation teams via NAIF SPK kernels.",
+      "rateLimits": "JPL SSD/CNEOS API Fair Use Policy: no numeric limit published; only one request at a time; back off on errors. The script runs requests sequentially, waits 2 s between them and backs off 3 s x attempt on HTTP 429/503; each request stays under the API 90k-line limit (80,000-line chunks).",
+      "fieldsUsed": [
+        "JDTDB",
+        "X",
+        "Y",
+        "Z",
+        "VX",
+        "VY",
+        "VZ"
+      ],
+      "updateCadence": "future portions are navigation predictions updated by flight dynamics teams after maneuvers; regenerate to refresh",
+      "cachePolicy": "versioned offline snapshot",
+      "normalization": "scripts/data/smallbodies/craft-tracks.mjs: coarse pass, refinement of intervals where velocity turns by more than 0.12 rad (flybys, perijoves, perihelia), then greedy decimation so cubic Hermite interpolation with the true velocities reproduces every dropped sample within a per-centre tolerance (sun 20 km, earth 2 km, jupiter/saturn 5 km, didymos 5 m). t = JD(TDB) offsets in days from t0; p, v flat arrays in km and km/s relative to centerId.",
+      "fallback": "Older uniform 2025-2030 samples (data/solar/spacecraft.json) via HermiteTrack.fromUniform; spacecraft with no track are hidden (src/domains/smallbodies/craftTracks.ts).",
+      "files": [
+        {
+          "path": "data/smallbodies/craft-tracks.json",
+          "records": 15
+        }
+      ],
+      "limitations": "Future portions (most craft to 2030-12-31) are navigation predictions that shift after trajectory corrections. Interpolation error is bounded by the per-centre tolerance (up to 20 km heliocentric). Historic missions (Cassini, DART) end at their mission end dates.",
+      "provenanceClass": "derived"
+    }
+  ]
+}

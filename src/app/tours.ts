@@ -49,11 +49,13 @@ export type TourAction =
   /**
    * Orbit-frame the anchor from the direction of another entity (or from the opposite side with `away`, which
    * puts `towardId` behind the anchor). `sunwardDeg` then turns that line up to this many degrees toward the Sun, so
-   * the anchor's lit side faces the camera; `azimuthOffsetDeg` / `elevationOffsetDeg` swing the camera off the result.
+   * the anchor's lit side faces the camera; `phaseDeg` instead turns it (toward or away from the Sun) to exactly this
+   * Sun–anchor–camera angle, staying as close as possible to `towardId`'s side (e.g. the Moon's near side at a 60°
+   * gibbous whatever the lunar phase); `azimuthOffsetDeg` / `elevationOffsetDeg` swing the camera off the result.
    */
   | {
       type: 'view-toward'; anchorId: string; towardId: string; distanceM: number; away?: boolean; sunwardDeg?: number;
-      azimuthOffsetDeg?: number; elevationOffsetDeg?: number; durationSec?: number;
+      phaseDeg?: number; azimuthOffsetDeg?: number; elevationOffsetDeg?: number; durationSec?: number;
     }
   /**
    * Orbit-frame the anchor looking down the orbit normal of `satelliteId` around it (both bodies and the
@@ -192,7 +194,17 @@ export function tourViewDirection(
       b.sub(a);
       if (action.away) b.negate();
       b.normalize();
-      if (action.sunwardDeg) {
+      if (action.phaseDeg !== undefined) {
+        const s = new THREE.Vector3();
+        if (!position('sol:sun', timeMs, s)) s.set(0, 0, 0);
+        s.sub(a).normalize();
+        // Component of the line perpendicular to the Sun direction (any perpendicular when they are parallel).
+        const perp = b.clone().addScaledVector(s, -b.dot(s));
+        if (perp.lengthSq() < 1e-12) perp.crossVectors(s, Math.abs(s.z) < 0.9 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(1, 0, 0));
+        perp.normalize();
+        const p = action.phaseDeg * DEG;
+        b.copy(s).multiplyScalar(Math.cos(p)).addScaledVector(perp, Math.sin(p));
+      } else if (action.sunwardDeg) {
         const s = new THREE.Vector3();
         if (!position('sol:sun', timeMs, s)) s.set(0, 0, 0);
         s.sub(a).normalize();

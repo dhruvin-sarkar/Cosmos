@@ -12,6 +12,7 @@ import { NavigatorButton, NavigatorHost } from '../navigator/Navigator';
 import { useFocusFramed } from '../navigator/framing';
 import { SkyEvents } from '../events/SkyEvents';
 import { TimeStatusChip } from './TimeControls';
+import { ScaleChip } from './ScaleChip';
 
 /** Default guided tour started by the Tour button (the tours module registers it under this id). */
 export const DEFAULT_TOUR_ID = 'golden-journey';
@@ -96,7 +97,7 @@ export function BarButton({
 
 /**
  * Top band. Left: where you are (breadcrumb) and, only while the sky is not "now", one time status chip beneath it
- * (time and view scale live in Settings). Centre: search. Right: one toolbar grouped as travel (Planets, What's up), view (Layers, Light, Tour)
+ * (time lives in Settings). Centre: search and the always-visible view-scale chip. Right: one toolbar grouped as travel (Planets, What's up), view (Layers, Light, Tour)
  * and utilities (Sources, Settings, Help as icons with tooltips).
  */
 export function TopBar({ tourId = DEFAULT_TOUR_ID }: { tourId?: string }) {
@@ -115,17 +116,20 @@ export function TopBar({ tourId = DEFAULT_TOUR_ID }: { tourId?: string }) {
         <Breadcrumb />
         <TimeStatusChip />
       </div>
-      <button
-        type="button"
-        className="cx-search-trigger cursor-target"
-        data-cursor-label="Search"
-        onClick={() => setUi(store, { searchOpen: true })}
-        aria-keyshortcuts="Control+K /"
-      >
-        <Search size={18} aria-hidden />
-        <span className="cx-search-trigger__text">Search planets, moons and stars</span>
-        <Kbd keys="Ctrl+K" size="sm" />
-      </button>
+      <div className="cx-topbar__centre">
+        <button
+          type="button"
+          className="cx-search-trigger cursor-target"
+          data-cursor-label="Search"
+          onClick={() => setUi(store, { searchOpen: true })}
+          aria-keyshortcuts="Control+K /"
+        >
+          <Search size={18} aria-hidden />
+          <span className="cx-search-trigger__text">Search planets, moons and stars</span>
+          <Kbd keys="Ctrl+K" size="sm" />
+        </button>
+        <ScaleChip />
+      </div>
       <div className="cx-topbar__right">
         <div className="cx-toolbar" role="group" aria-label="Explore and view">
           <NavigatorButton />

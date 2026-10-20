@@ -212,17 +212,19 @@ uniform float uIntensity;
 uniform float uGrade;
 
 // Display-graded centre-to-limb colour (centre luminance 1), solved with agxInverse so that, at the metered exposure,
-// AgX shows μ = 1 (241,233,209) · 0.85 (233,213,171) · 0.7 (222,190,130) · 0.45 (200,141,78) · 0.25 (173,87,41) · 0.1 (137,44,13).
+// AgX shows μ = 1 (238,214,164) · 0.85 (232,196,138) · 0.7 (222,178,116) · 0.45 (202,144,86) · 0.25 (176,102,50) ·
+// 0.1 (152,78,38) · 0.02 (116,56,30) · 0 (88,42,24): a warm golden centre about 1 EV under white falling to an amber-red
+// limb that stays bright enough to hold a crisp edge against the glare halo (never grey/lavender).
 // Interpolated in log radiance (smooth gradient, no visible kinks at the nodes).
 vec3 gradeLimb(float mu) {
   vec3 l;
-  if (mu > 0.85) l = mix(vec3(-0.2243, -0.8027, -2.6736), vec3(0.2833, -0.0230, -1.3459), (mu - 0.85) / 0.15);
-  else if (mu > 0.70) l = mix(vec3(-0.7002, -1.4576, -4.4918), vec3(-0.2243, -0.8027, -2.6736), (mu - 0.70) / 0.15);
-  else if (mu > 0.45) l = mix(vec3(-1.4114, -2.6255, -6.9078), vec3(-0.7002, -1.4576, -4.4918), (mu - 0.45) / 0.25);
-  else if (mu > 0.25) l = mix(vec3(-2.0565, -3.9686, -8.1117), vec3(-1.4114, -2.6255, -6.9078), (mu - 0.25) / 0.20);
-  else if (mu > 0.10) l = mix(vec3(-2.7662, -5.2030, -9.2103), vec3(-2.0565, -3.9686, -8.1117), (mu - 0.10) / 0.15);
-  else if (mu > 0.02) l = mix(vec3(-3.7173, -5.9915, -9.2103), vec3(-2.7662, -5.2030, -9.2103), (mu - 0.02) / 0.08);
-  else l = mix(vec3(-4.1997, -6.5023, -9.2103), vec3(-3.7173, -5.9915, -9.2103), mu / 0.02);
+  if (mu > 0.85) l = mix(vec3(-0.3934, -1.3158, -5.2129), vec3(-0.0602, -0.7705, -3.6711), (mu - 0.85) / 0.15);
+  else if (mu > 0.70) l = mix(vec3(-0.7617, -1.7732, -6.1479), vec3(-0.3934, -1.3158, -5.2129), (mu - 0.70) / 0.15);
+  else if (mu > 0.45) l = mix(vec3(-1.3427, -2.5670, -5.6325), vec3(-0.7617, -1.7732, -6.1479), (mu - 0.45) / 0.25);
+  else if (mu > 0.25) l = mix(vec3(-1.9618, -3.5346, -7.1172), vec3(-1.3427, -2.5670, -5.6325), (mu - 0.25) / 0.20);
+  else if (mu > 0.10) l = mix(vec3(-2.4430, -4.0805, -6.0641), vec3(-1.9618, -3.5346, -7.1172), (mu - 0.10) / 0.15);
+  else if (mu > 0.02) l = mix(vec3(-3.1371, -4.5679, -5.6319), vec3(-2.4430, -4.0805, -6.0641), (mu - 0.02) / 0.08);
+  else l = mix(vec3(-3.7103, -4.9232, -5.6581), vec3(-3.1371, -4.5679, -5.6319), mu / 0.02);
   return exp(l);
 }
 uniform float uGranuleScale;
@@ -328,7 +330,14 @@ void main() {
   float meso = netFade * uPatternOn * (tn.a - 0.5) / 0.22;
   float network = netFade * uPatternOn * tn.g;
   float contrast = uContrast * (0.3 + 0.7 * mu);
-  float quiet = 1.0 + contrast * clamp(g, -2.5, 2.5) + 0.008 * meso; // meso/supergranular intensity contrast < 1 %
+  // Visibility aid: a true 1.3 Mm granule is ~1 px across at 1e9 m, so the pattern would vanish exactly where the Sun is
+  // first resolved. Below ~4 px per granule a 3.3x coarser copy of the same cell pattern (~4 Mm, drifting slowly)
+  // takes over at ~7 % contrast; it fades out as the real granules resolve (and as its own cells fall under ~2.5 px).
+  float coarsePx = cellPx / 0.3;
+  float coarseW = (1.0 - granFade) * smoothstep(2.5, 6.0, coarsePx);
+  vec4 tcs = tri(p, w, tile * 0.3, vec3(3.7, 11.3, 6.1) + vec3(0.0, 0.0, uTime * 4e-6) + warp);
+  float gc = uPatternOn * coarseW * (tcs.r - 0.5) / 0.22;
+  float quiet = 1.0 + contrast * clamp(g, -2.5, 2.5) + 0.07 * (0.3 + 0.7 * mu) * clamp(gc, -2.5, 2.5) + 0.008 * meso; // meso/supergranular intensity contrast < 1 %
 
   // ── activity belts: faculae and (illustrative) procedural spots ──
   float alat = abs(p.z);

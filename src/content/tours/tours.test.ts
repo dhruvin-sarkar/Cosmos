@@ -37,6 +37,26 @@ describe('tour geometry', () => {
     expect(d.angleTo(new THREE.Vector3(-1, 0, 0)) / DEG).toBeLessThan(1e-6);
   });
 
+  it('view-toward with phaseDeg sets the exact phase angle on the side of the target, even when it is sunward', () => {
+    const toSun = new THREE.Vector3(-1, 0, 0);
+    for (const t of [0, 1_350_000, 2_700_000]) {
+      // t = 0: 'away' line exactly sunward (degenerate); then a quarter and half orbit (line anti-sunward).
+      const d = tourViewDirection(
+        { type: 'view-toward', anchorId: 'p', towardId: 's', away: true, phaseDeg: 60, distanceM: 1e4 }, t, position, new THREE.Vector3(),
+      )!;
+      expect(d.length()).toBeCloseTo(1, 9);
+      expect(d.angleTo(toSun) / DEG).toBeCloseTo(60, 6);
+    }
+    // A quarter orbit on, the satellite direction is perpendicular to the Sun line: the camera stays on that side.
+    const s = new THREE.Vector3();
+    position('s', 1_350_000, s);
+    const awayFromS = s.sub(new THREE.Vector3(AU, 0, 0)).negate().normalize();
+    const d = tourViewDirection(
+      { type: 'view-toward', anchorId: 'p', towardId: 's', away: true, phaseDeg: 60, distanceM: 1e4 }, 1_350_000, position, new THREE.Vector3(),
+    )!;
+    expect(d.angleTo(awayFromS) / DEG).toBeCloseTo(30, 6);
+  });
+
   it('findAlignmentTime finds the satellite at the requested angle from the subsolar direction', () => {
     const t = findAlignmentTime('p', 's', 60, 0, 5_400_000, position)!;
     const p = new THREE.Vector3();

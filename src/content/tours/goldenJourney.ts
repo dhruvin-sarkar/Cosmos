@@ -72,7 +72,7 @@ const OORT: TourStep = {
   actions: [
     { type: 'visual-scale', mode: 'true' },
     // The Sun, the 1-light-year scale ring (src/domains/outer scaleRings) and Proxima / Alpha Centauri in one frame.
-    // The outer domain's Oort particle model fades out at this scale, which suits a cloud nobody has seen.
+    // The outer domain's illustrative Oort particle model is at full opacity at this scale (it fades out from 10^17.6 m).
     { type: 'view-from', anchorId: 'sol:sun', distanceM: 4.5e16, elevationDeg: 24, azimuthDeg: 20, durationSec: 9 },
   ],
 };

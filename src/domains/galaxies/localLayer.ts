@@ -18,7 +18,8 @@ import { createGalaxiesProvider, galaxyRadiusM } from './entities';
 import { localGalaxiesOpacity, smooth } from './fade';
 import { createImpostorGeometry, GalaxyPointsMaterial, ImpostorMaterial } from './materials';
 import { createMilkyWayFallbackProvider, MW_R0_KPC } from './milkyway';
-import { loadLinearImage, mulberry32, sampleCloud, StarCloudMaterial } from './starClouds';
+import { StarCloudMaterial } from './starClouds';
+import { buildCloudAsync } from './starCloudsAsync';
 
 const POINT_GAIN = 0.55;
 const IMPOSTOR_GAIN = 1.25;
@@ -218,19 +219,21 @@ export function createLocalGalaxiesLayer(): LocalGalaxiesLayer {
     h.cloudState = 1;
     const im = h.g.impostor!;
     const base = (import.meta.env?.BASE_URL as string | undefined) ?? '/';
-    void loadLinearImage(base + h.lowPath, 512).then((img) => {
-      const C = h.g.pos;
-      const N = new THREE.Vector3().crossVectors(
-        new THREE.Vector3(h.g.majorAxis.x, h.g.majorAxis.y, h.g.majorAxis.z),
-        new THREE.Vector3(h.g.minorAxis.x, h.g.minorAxis.y, h.g.minorAxis.z)).normalize();
-      const a = im.semiMajorArcmin / 60 * Math.PI / 180;
-      const fov = im.fovDeg * Math.PI / 180;
-      const R = 1.45 * a * h.g.distMpc;
-      const smp = sampleCloud({ ...img, center: C, normal: { x: N.x, y: N.y, z: N.z }, radiusMpc: R, fovRad: fov, count, rand: mulberry32(0x5eed + h.g.id.length * 7919) });
+    const C = h.g.pos;
+    const N = new THREE.Vector3().crossVectors(
+      new THREE.Vector3(h.g.majorAxis.x, h.g.majorAxis.y, h.g.majorAxis.z),
+      new THREE.Vector3(h.g.minorAxis.x, h.g.minorAxis.y, h.g.minorAxis.z)).normalize();
+    const a = im.semiMajorArcmin / 60 * Math.PI / 180;
+    const fov = im.fovDeg * Math.PI / 180;
+    const R = 1.45 * a * h.g.distMpc;
+    // Image decode + sampling run in a worker (were a ~190 ms main-thread task on the M31 approach).
+    const url = new URL(base + h.lowPath, globalThis.location?.href).href;
+    void buildCloudAsync({ url, maxSize: 512, center: { x: C.x, y: C.y, z: C.z }, normal: { x: N.x, y: N.y, z: N.z }, radiusMpc: R, fovRad: fov, count, seed: 0x5eed + h.g.id.length * 7919 }).then((smp) => {
+      const img = { width: smp.width };
       if (!svc || smp.count === 0) { h.cloudState = 3; return; }
       const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(smp.positions.subarray(0, smp.count * 3), 3));
-      geo.setAttribute('aColor', new THREE.BufferAttribute(smp.colors.subarray(0, smp.count * 3), 3));
+      geo.setAttribute('position', new THREE.BufferAttribute(smp.positions, 3));
+      geo.setAttribute('aColor', new THREE.BufferAttribute(smp.colors, 3));
       const mat = new StarCloudMaterial();
       // Same light as the impostor seen from Earth: G · ΣL · (pixel solid angle) · D² / N (see starClouds.ts).
       const gain = IMPOSTOR_GAIN * Math.min(Math.max(h.g.surfaceBrightness, 0.35), 2.2);
@@ -262,6 +265,17 @@ export function createLocalGalaxiesLayer(): LocalGalaxiesLayer {
 
     init(s: EngineServices): void {
       svc = s;
+      // Hidden stand-in so the idle shader warm-up links the star-cloud program long before the first hero approach
+      // (its first link mid-travel was the 510 ms Andromeda hitch). Never drawn; shares the program by source.
+      const warmGeo = new THREE.BufferGeometry();
+      warmGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3));
+      warmGeo.setAttribute('aColor', new THREE.BufferAttribute(new Float32Array(3), 3));
+      const warmMat = new StarCloudMaterial();
+      const warm = new THREE.Points(warmGeo, warmMat);
+      warm.visible = false;
+      warm.frustumCulled = false;
+      s.groups.transparent.add(warm);
+      disposables.push(warmGeo, warmMat, { dispose: () => warm.removeFromParent() });
       void loadGalaxyCatalog(s.assets).then((c) => {
         cat = c;
         buildPoints(c);

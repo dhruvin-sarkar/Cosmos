@@ -437,6 +437,37 @@ export function createShaderWarmup(renderer: THREE.WebGLRenderer, scene: THREE.S
 }
 
 /**
+ * Pre-compile the programs of a scene a layer renders itself (off-screen passes are invisible to the idle warm-up and
+ * the gate, so their first render links synchronously: the galaxy-volume march was a 130 ms freeze on the first Milky
+ * Way view). Programs are created now under `target` (any non-XR render target: linear output, no tone mapping) and
+ * link in parallel (KHR_parallel_shader_compile). The returned poll is true once every program is linked; skip the
+ * pass until then. Call it after the scene's materials are final (defines/side changes create new variants).
+ */
+export function precompileOffscreen(renderer: THREE.WebGLRenderer, scene: THREE.Object3D, camera: THREE.Camera, target: THREE.WebGLRenderTarget): () => boolean {
+  let mats: Set<THREE.Material>;
+  const prev = renderer.getRenderTarget();
+  renderer.setRenderTarget(target);
+  try {
+    mats = renderer.compile(scene, camera);
+  } catch (err) {
+    console.warn('[cosmos] off-screen precompile failed', err);
+    return () => true;
+  } finally {
+    renderer.setRenderTarget(prev);
+  }
+  let ready = false;
+  return () => {
+    if (ready) return true;
+    for (const m of mats) {
+      const p = (renderer.properties.get(m) as { currentProgram?: ProgramLike }).currentProgram;
+      if (p?.isReady !== undefined && !p.isReady()) return false;
+    }
+    ready = true;
+    return true;
+  };
+}
+
+/**
  * Upload a large image texture to the GPU in horizontal slices spread over several frames, instead of the single
  * texSubImage2D three.js issues on first use (an uncompressed 8K map blocks the main thread for 80-180 ms; a 4K one
  * 30-60 ms). Returns a texture with the same sampling state whose storage is already filled (mipmaps generated

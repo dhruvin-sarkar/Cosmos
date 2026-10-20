@@ -69,7 +69,7 @@ Keys are ignored while you type in a text field.
 ## The top bar
 
 - **Breadcrumb** (left): where you are, for example Solar System, Jupiter, Io.
-- **Search**: finds planets, moons, asteroids, spacecraft, satellites, stars and constellations.
+- **Search**: finds planets, moons, asteroids, spacecraft, satellites, stars, constellations, exoplanets and their stars, Milky Way landmarks, black holes, galaxies and cosmic structures (try "TRAPPIST-1 e", "Sgr A*", "Andromeda", "Laniakea" or "CMB").
 - **Scale pill**: shows "Exhibition scale, Enlarged for visibility" or "True scale". Click to switch. See below.
 - **Navigator**: a tree of the Solar System. Click a planet to fly there; moons appear in a strip. Moons are reachable one by one.
 - **Layers**: switches for labels, orbits, satellites, debris, spacecraft, asteroids, constellations, equatorial, ecliptic and galactic grids, habitable zones, and the Milky Way reconstruction.
@@ -99,7 +99,7 @@ The **Light** menu changes the all-sky background to other wavelengths: visible,
 
 ## Labs
 
-Labs open from a button in the inspector. The debris lab is offered for satellites, the ISS and other tracked Earth-orbit objects; the deflection lab for Didymos, Dimorphos, Apophis and 2024 YR4. Press `Esc` to close a lab.
+Labs open from a button in the inspector. The debris lab is offered for satellites, the ISS and other tracked Earth-orbit objects; the deflection lab for Didymos, Dimorphos, Apophis and 2024 YR4; the habitability lab for exoplanet systems and their planets; the black hole lab for Sagittarius A*, the S-stars and the other black holes. Press `Esc` to close a lab.
 
 **Orbital debris lab.** Shows the 29,408 tracked objects in low Earth orbit by type, and a chart of objects per 50 km of altitude. Choose a policy scenario, solar activity, the number of debris removals per year and the time horizon. Views: Growth (log-scale lines for each scenario), By altitude (heat map), Around Earth (a density glow with a year slider), and Breakup (the Iridium 33 and Cosmos 2251 collision, or the Fengyun-1C test). The result and a side-by-side table update as you change inputs. The future is a simplified model; the lab says so.
 
@@ -107,11 +107,16 @@ Labs open from a button in the inspector. The debris lab is offered for satellit
 1. *DART replay*: a 3D replay of the impact on 26 September 2022, in three chapters (Approach, Impact and ejecta, Orbit change), with a scrubber. You can change the momentum enhancement factor beta, spacecraft mass, impact speed and Dimorphos density, and see the effect on the orbit period.
 2. *Defend Earth*: a hypothetical scenario. Set the asteroid size and density, the warning time, and the impactor mass, speed and beta. The lab shows the miss distance against Earth's capture radius, success probability from a Monte Carlo run, and a plain-language verdict. No real asteroid is predicted to hit Earth in this scenario.
 
+**Habitability lab.** Two parts. *Habitability*: pick a star, orbit, planet size and climate (or start from Earth or Venus), choose whole-planet or day-side-only heat redistribution, and read the surface and equilibrium temperature, starlight relative to Earth, the Earth Similarity Index and where the planet sits in its star's habitable zone. *Explore exoplanets*: charts of the 6,451 confirmed exoplanets with filters; while the explorer is open, every host star is ringed in the 3D view.
+
+**Black hole lab.** Four views. *Drop a clock*: lower a clock towards Sagittarius A* past the photon sphere and the innermost stable orbit (ISCO) and watch it slow. *Time dilation*: how much slower time runs at each distance. *S2 orbit*: the star S2's 16-year orbit and its measured gravitational redshift. *In 3D*: the same distances drawn around the black hole. Readouts include the Schwarzschild radius, the shadow's size on our sky, and the tidal stretch on a person at the horizon.
+
 ## Tours
 
-Press `T` or use the Tour button.
+Press `T` to start the golden journey, or use the Tour button to choose a tour.
 
-- **The golden journey** (default): 20 chapters from Earth to Voyager 1: Earth, the ISS, orbital debris, the Moon, the Sun, Mercury, Venus, Mars, Ceres, DART, Jupiter, Io, Europa, Saturn, Titan, Enceladus, Uranus, Neptune, Pluto, and a look back from Voyager 1. Each chapter has narration with sources.
+- **The golden journey** (default): 23 chapters from Earth to the oldest light in the universe and home: Earth, the ISS, the debris lab, the Moon, the Sun, the Sun's family of planets, Jupiter, Saturn, the DART lab, a look back from Voyager 1, the Oort cloud, Proxima Centauri, TRAPPIST-1, out of the Orion Arm, the Milky Way, Sagittarius A* and S2, a black hole, Andromeda, the Local Group, Virgo and Laniakea, the cosmic web, the cosmic microwave background, and home. Each chapter has narration with sources.
+- **The Solar System**: 20 chapters: Earth, the ISS, orbital debris, the Moon, the Sun, Mercury, Venus, Mars, Ceres, DART, Jupiter, Io, Europa, Saturn, Titan, Enceladus, Uranus, Neptune, Pluto, and a look back from Voyager 1.
 - **Quick tour**: six chapters in about three minutes: Earth, the ISS, the Sun, Jupiter, Saturn, and the view from Voyager 1.
 
 Use the arrow keys to move between chapters; any drag or scroll lets you explore, and `R` returns to the chapter's view. `T` exits.

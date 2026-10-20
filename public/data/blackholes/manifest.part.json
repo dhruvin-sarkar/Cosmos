@@ -1,0 +1,83 @@
+{
+  "domain": "blackholes",
+  "datasets": [
+    {
+      "id": "blackholes-catalogue",
+      "name": "Curated black-hole catalogue (13 objects) with per-value references",
+      "organization": "Published literature (Gaia Collaboration, LIGO/Virgo, EHT, X-ray binary and AGN dynamical-mass papers); curated by the Cosmos project",
+      "purpose": "Stellar and supermassive black holes shown in the exhibit: position, distance, mass, spin, companion, orbit, jet and discovery data",
+      "mechanism": "Hand-curated from the cited papers (arXiv abstracts or full text) into JSON; no network access at runtime; validated by scripts/data/blackholes/build-doc.mjs",
+      "endpoint": "n/a",
+      "query": null,
+      "version": "schemaVersion 1; generated 2026-10-20; every value cites an entry of the file's own references table (42 references, e.g. El-Badry et al. 2023, Gaia Collaboration Panuzzo et al. 2024, Miller-Jones et al. 2021)",
+      "retrieved": "2026-10-20",
+      "license": "Factual measurements transcribed from published papers (facts are not copyrightable); no third-party text or images are redistributed. Individual papers keep their own licences. Not recorded: per-paper licence terms.",
+      "licenseUrl": null,
+      "citation": "See the 'references' object in blackholes.json for the full per-value list, each with citation and URL (e.g. Gaia Collaboration, Panuzzo et al. 2024, A&A 686, L2; Miller-Jones et al. 2021, Science 371, 1046; Reid et al. 2014, ApJ 796, 2; Gaia Collaboration, Vallenari et al. 2023, A&A 674, A1).",
+      "rateLimits": "n/a (no network access; static transcription from papers)",
+      "fieldsUsed": [
+        "id",
+        "name",
+        "aliases",
+        "class",
+        "accretionState",
+        "constellation",
+        "raDeg",
+        "decDeg",
+        "positionRef",
+        "positionIllustrative",
+        "distancePc",
+        "massMsun",
+        "spin",
+        "companion",
+        "orbit",
+        "jet",
+        "hostGalaxyId",
+        "discovery",
+        "summary",
+        "extra"
+      ],
+      "updateCadence": "manual; revisit when new dynamical-mass or Gaia astrometric results are published",
+      "cachePolicy": "versioned offline snapshot",
+      "normalization": "Hand curation; scripts/data/blackholes/build-doc.mjs checks that every value has a resolvable reference and regenerates docs/data/blackholes.md. Quoted errors are 1-sigma unless a field note says otherwise (GW150914 90% credible; Greene et al. 2001 95%); null means unknown or not verified, never zero; coordinates are ICRS decimal degrees; a few values marked 'derived' in notes were computed from published quantities (companion mass = q x M_BH, distance = 1/parallax).",
+      "fallback": "Black holes whose entry is missing are not drawn; positions flagged positionIllustrative are placed for display only.",
+      "files": [
+        {
+          "path": "data/blackholes/blackholes.json",
+          "records": 13
+        }
+      ],
+      "limitations": "Curated by hand, so transcription errors are possible. Many masses are model-dependent (inclination, mass-ratio assumptions) and carry wide errors. Entries with positionIllustrative true are not measured positions. Some values are derived from published quantities rather than quoted directly.",
+      "provenanceClass": "observed"
+    },
+    {
+      "id": "eht-m87-2019-image",
+      "name": "Event Horizon Telescope 2019 image of M87*",
+      "organization": "Event Horizon Telescope Collaboration (images published by ESO under CC BY 4.0)",
+      "purpose": "The real 1.3 mm radio image of the M87* shadow, shown beside the rendered black hole in the approach readout",
+      "mechanism": "Single JPEG committed to the repository and displayed by src/domains/blackholes/readout.ts; the download URL and any resizing were not recorded in the repo",
+      "endpoint": "n/a",
+      "query": null,
+      "version": "EHT 2019 M87* image (EHT Collaboration 2019, ApJL 875, L1)",
+      "retrieved": "2026-10-20T16:23:00.000Z",
+      "license": "CC BY 4.0 (EHT Collaboration, as credited in the in-app caption; the repo notes the image as CC BY 4.0). Credit EHT Collaboration.",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "citation": "The Event Horizon Telescope Collaboration 2019, ApJL 875, L1, 'First M87 Event Horizon Telescope Results. I. The Shadow of the Supermassive Black Hole'. In-app caption: 'The real M87*: Event Horizon Telescope 2019, 1.3 mm radio. EHT Collaboration, CC BY 4.0.'",
+      "rateLimits": "n/a (single static file)",
+      "fieldsUsed": [
+        "image pixels"
+      ],
+      "updateCadence": "static; one-off image",
+      "cachePolicy": "versioned offline snapshot",
+      "normalization": "None recorded beyond JPEG storage (file mtime 2026-10-20 16:23 local; used as the retrieval time).",
+      "fallback": "The real-image thumbnail is omitted from the readout and the rendered black hole is shown alone.",
+      "files": [
+        {
+          "path": "data/blackholes/eht-m87-2019.jpg"
+        }
+      ],
+      "limitations": "A reconstructed interferometric radio image (1.3 mm), not a photograph, representing one epoch only. Original download URL and processing are not recorded.",
+      "provenanceClass": "observed"
+    }
+  ]
+}

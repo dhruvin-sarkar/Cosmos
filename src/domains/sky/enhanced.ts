@@ -15,6 +15,8 @@
  * back out through the band exposure. Baked in horizontal strips across frames so an 8K bake never stalls a frame.
  */
 import * as THREE from 'three';
+import { precompileOffscreen } from '../../core/perf';
+import { configureSkySource, markSkySourceDirty } from './bake';
 import { SKY_TAP_GLSL } from './skyTap';
 
 /** Tunables (exposed on window.__sky.tuning for live tuning; rebake() applies them). */
@@ -223,18 +225,13 @@ export interface EnhancedInputs {
 
 let quad: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial> | null = null;
 let quadScene: THREE.Scene | null = null;
+let quadReady = false;
 const quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 let blackTex: THREE.DataTexture | null = null;
 
 function prepare(t: THREE.Texture, aniso: number): void {
-  t.wrapS = THREE.RepeatWrapping;
-  t.wrapT = THREE.ClampToEdgeWrapping;
-  t.minFilter = THREE.LinearMipmapLinearFilter;
-  t.magFilter = THREE.LinearFilter;
-  t.generateMipmaps = true;
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = aniso;
-  t.needsUpdate = true;
+  configureSkySource(t, aniso);
+  markSkySourceDirty(t);
 }
 
 const sizeOf = (t: THREE.Texture): { w: number; h: number } => {
@@ -330,6 +327,19 @@ export async function bakeEnhanced(
     stencilBuffer: false,
     anisotropy: Math.min(16, renderer.capabilities.getMaxAnisotropy()),
   });
+  // Link the composite program in parallel before the first strip: its synchronous first-use link froze a travel
+  // for 640 ms (perf). Programs are keyed the same for any render target, so this is needed once.
+  if (!quadReady) {
+    const ready = precompileOffscreen(renderer, quadScene!, quadCam, rt);
+    while (!ready()) {
+      if (isCancelled()) {
+        rt.dispose();
+        return null;
+      }
+      await nextFrame();
+    }
+    quadReady = true;
+  }
   const stripRows = Math.max(64, Math.floor((4 * 1024 * 1024) / w));
   rt.scissorTest = true;
   for (let y = 0; y < h; y += stripRows) {
