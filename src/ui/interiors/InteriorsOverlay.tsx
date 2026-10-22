@@ -6,6 +6,7 @@ import { ProvenanceGlyph } from '../components/Provenance';
 import { cx } from '../lib/dom';
 import { drawnRadii, findBody, loadInteriors, type InteriorBody, type InteriorLayer, type InteriorsData } from './data';
 import { CutawayRenderer, temperatureRange, type ColourMode, type CutawayLayout } from './cutaway';
+import { layoutLabels, ringBottom } from './labelLayout';
 import { depthText, fmtKm, fmtNum, fmtRange, MATERIAL_SWATCH, niceKm, PROVENANCE_CLASS, PROVENANCE_TEXT } from './format';
 
 export interface InteriorsOverlayProps {
@@ -66,23 +67,6 @@ function legendTicks([l0, l1]: [number, number]): Array<{ t: number; pct: number
   }));
 }
 
-/** Lays labels out in an edge-aligned column beside the disc, in anchor order, never overlapping. */
-function layoutLabels(layout: CutawayLayout, count: number): Array<{ y: number; ax: number; ay: number; visible: boolean }> {
-  const b = layout.bodies[0];
-  const items = b.anchors.slice(0, count).map((a, i) => ({ i, ax: a.x, ay: a.y, visible: a.visible, y: a.y }));
-  const shown = items.filter(it => it.visible).sort((p, q) => p.ay - q.ay);
-  const top = 92, bottom = layout.height - 120;
-  for (let k = 0; k < shown.length; k++) shown[k].y = Math.max(shown[k].ay, k > 0 ? shown[k - 1].y + LABEL_GAP : top);
-  const over = shown.length ? shown[shown.length - 1].y - bottom : 0;
-  if (over > 0) {
-    for (let k = shown.length - 1; k >= 0; k--) {
-      const limit = k < shown.length - 1 ? shown[k + 1].y - LABEL_GAP : bottom;
-      shown[k].y = Math.min(shown[k].y, limit);
-    }
-  }
-  return items;
-}
-
 export function InteriorsOverlay({ entityId, onClose, initialCompare = null, initialMode = 'material', initialLayer = null }: InteriorsOverlayProps) {
   const [data, setData] = useState<InteriorsData | null>(null);
   const [error, setError] = useState(false);
@@ -128,9 +112,7 @@ export function InteriorsOverlay({ entityId, onClose, initialCompare = null, ini
     const b0 = layout.bodies[0];
     const n = body.layers.length;
     const showLabels = !comparing;
-    const placed = layoutLabels(layout, n);
-    const colX = Math.min(b0.cx + b0.rPx + 72, layout.width - 250);
-    const kneeX = b0.cx + b0.rPx + 22;
+    const { items: placed, colX, kneeX } = layoutLabels(b0, n, layout.width, layout.height);
     placed.forEach((p, i) => {
       const el = labelRefs.current[i];
       const path = leaderRefs.current[i];
@@ -153,7 +135,7 @@ export function InteriorsOverlay({ entityId, onClose, initialCompare = null, ini
     });
     layout.bodies.forEach((b, k) => {
       const cap = captionRefs.current[k];
-      if (cap) cap.style.transform = `translate(${Math.round(b.cx)}px, ${Math.round(b.cy + b.rPx + 18)}px)`;
+      if (cap) cap.style.transform = `translate(${Math.round(b.cx)}px, ${Math.round(Math.max(b.cy + b.rPx, ringBottom(b)) + 18)}px)`;
     });
     const km = niceKm(b0.kmPerPx * 160);
     if (scaleRef.current) scaleRef.current.style.width = `${Math.round(km / b0.kmPerPx)}px`;

@@ -56,8 +56,8 @@
   background: var(--scrim-right);
 }
 .cx-hud:has(.cx-ruler--big) > .cx-scrim--right {
-  width: calc(var(--ruler-w) + 520px);
-  background: linear-gradient(270deg, oklch(0 0 0 / 0.88) 0, oklch(0 0 0 / 0.78) calc(var(--ruler-w) + 360px), oklch(0 0 0 / 0) calc(var(--ruler-w) + 520px));
+  width: calc(var(--ruler-w) + 300px);
+  background: linear-gradient(270deg, oklch(0 0 0 / 0.88) 0, oklch(0 0 0 / 0.74) calc(var(--ruler-w) + 120px), oklch(0 0 0 / 0) calc(var(--ruler-w) + 300px));
 }
 .cx-scrim--bottom {
   left: 0;
@@ -860,8 +860,10 @@
   letter-spacing: -0.01em;
   transform-origin: right bottom;
 }
+/* Active readout stays compact: it never reaches further left than the ruler's own column plus a small margin, so it
+   cannot cover the body or the system being looked at. */
 .cx-ruler--big .cx-ruler__mag {
-  font: var(--type-ruler);
+  font: 400 clamp(56px, 4.4vw, 84px) / 1 var(--font-atlas);
 }
 .cx-ruler__mag-exp {
   display: inline-block;
@@ -887,15 +889,15 @@
   right: 12px;
   top: calc(50% + 12px);
   width: max-content;
-  max-width: 260px;
+  max-width: calc(var(--ruler-w) + 40px);
   font: 450 13px/1.35 var(--font-ui);
   color: var(--text-secondary);
   text-align: right;
   text-wrap: balance;
 }
 .cx-ruler--big .cx-ruler__line {
-  max-width: 380px;
-  font-size: 17px;
+  max-width: calc(var(--ruler-w) + 40px);
+  font-size: 14px;
   color: var(--text-primary);
 }
 .cx-ruler__overview {

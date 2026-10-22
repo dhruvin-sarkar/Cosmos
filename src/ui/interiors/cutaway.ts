@@ -33,7 +33,28 @@ export interface CutawayBodyLayout {
   kmPerPx: number;
   /** One anchor per layer (centre -> surface) on the visible cut face. */
   anchors: CutawayAnchor[];
+  /** Saturn's main rings projected to the screen (closed polygons), when the body has them. */
+  ring?: CutawayRingLayout;
 }
+
+export interface CutawayRingPoint {
+  x: number;
+  y: number;
+  /** On the half of the ring farther from the camera than the body's centre. */
+  far: boolean;
+}
+
+export interface CutawayRingLayout {
+  outer: CutawayRingPoint[];
+  inner: CutawayRingPoint[];
+  /** The far half projects above the body's centre (camera above the ring plane). */
+  farUp: boolean;
+}
+
+/** Saturn's main rings (C ring inner edge 74,658 km to A ring outer edge 136,775 km) in equatorial radii (60,268 km). */
+export const RING_INNER = 74658 / 60268;
+export const RING_OUTER = 136775 / 60268;
+const RING_SAMPLES = 72;
 
 export interface CutawayLayout {
   width: number;
@@ -319,7 +340,8 @@ const LAYER_FRAG = /* glsl */ `
     float fill = 0.16 + 0.06 * N.y;
     vec3 H = normalize(uLight + V);
     float sp = spec * pow(max(dot(N, H), 0.0), 48.0) * step(0.0, ndl);
-    vec3 col = alb * (diff * 1.55 + fill) + vec3(sp) * 1.2 + emit;
+    // Incandescent layers keep their own colour: a glint on top of the glow would burn out to white.
+    vec3 col = alb * (diff * 1.55 + fill) + vec3(sp) * 1.2 * (1.0 - 0.85 * clamp(gw, 0.0, 1.0)) + emit;
 
     if (uMode > 0.5) {
       if (T > 0.0) {
@@ -332,11 +354,24 @@ const LAYER_FRAG = /* glsl */ `
     }
 
     if (uHighlight > 0.5) {
-      col *= 1.18;
+      // A clean lift, not a bloom: a modest gain that fades out as the layer gets brighter (glowing cores are already
+      // near white), plus a thin warm rim on the cut-face edges. Nothing here is allowed to exceed ~1.0.
+      float lum = dot(col, vec3(0.3, 0.55, 0.15));
+      col *= 1.0 + 0.16 / (1.0 + 2.5 * lum);
       if (isFace > 0.5) {
-        float px = fwidth(r) * 1.6;
-        float edge = 1.0 - smoothstep(px * 0.5, px * 1.5, min(abs(r - uR.x), abs(uR.y - r)));
-        col = mix(col, vec3(0.82, 0.59, 0.22) * 2.2, edge);
+        float px = fwidth(r);
+        float edge = 1.0 - smoothstep(px * 1.1, px * 2.2, min(abs(r - uR.x), abs(uR.y - r)));
+        col = mix(col, vec3(1.0, 0.97, 0.9), edge);
+      } else {
+        // A curved shell: rim it where the wedge cuts it away (angular distance to the cut, in pixels) and softly along
+        // its silhouette.
+        float wAz = max(fwidth(az), 1e-5);
+        float dCut = 9.0;
+        if (uHalf > 1e-3) dCut = abs(abs(az) - uHalf);
+        if (uCull < 3.0) dCut = min(dCut, abs(abs(az) - (uCull + 0.03)));
+        float edgeAz = 1.0 - smoothstep(wAz * 1.1, wAz * 2.2, dCut);
+        float limb = pow(1.0 - clamp(abs(dot(N, V)), 0.0, 1.0), 3.0);
+        col = mix(col, vec3(1.0, 0.97, 0.9), clamp(max(edgeAz, limb * 0.6), 0.0, 1.0));
       }
     }
     gl_FragColor = vec4(finish(col), 1.0);
@@ -395,7 +430,7 @@ const SURFACE_FRAG = /* glsl */ `
       col = alb * (diff * 2.2 + fill);
       if (uSurf == 2) col += pow(1.0 - mu, 3.5) * vec3(0.22, 0.42, 1.0) * 0.9 * clamp(ndl + 0.35, 0.0, 1.0);
       if (uMode > 0.5) col = vec3(dot(col, vec3(0.3, 0.55, 0.15))) * 0.35;
-      if (uHighlight > 0.5) col *= 1.25;
+      if (uHighlight > 0.5) col *= 1.1;
       col = finish(col);
     }
     gl_FragColor = vec4(col, 1.0);
@@ -739,7 +774,7 @@ export class CutawayRenderer {
 
     if (data.body === 'saturn') {
       // Main rings (C ring inner edge 74,658 km to A ring outer edge 136,775 km) over Saturn's equatorial radius.
-      const inner = 74658 / 60268, outer = 136775 / 60268;
+      const inner = RING_INNER, outer = RING_OUTER;
       const ringMat = new THREE.ShaderMaterial({
         vertexShader: VERT,
         fragmentShader: RING_FRAG,
@@ -883,9 +918,11 @@ export class CutawayRenderer {
     let centreX: number;
     const right = new THREE.Vector3(Math.sin(this.camAz), 0, -Math.cos(this.camAz));
     if (this.rigs.length <= 1) {
-      const fill = (ringed ? 0.5 : 0.74) / this.zoom;
+      // Ringed: also keep the whole ring inside the free width (it must not slide under the panel).
+      const ringFit = ringed ? (availW / 2 - 14) / (RING_OUTER * 1.05) / (h / 2) : 1;
+      const fill = Math.min(ringed ? 0.5 : 0.74, ringFit) / this.zoom;
       dist = 1 / Math.sin(Math.atan(fill * tanY));
-      centreX = inset + availW * (inset > 0 ? 0.4 : 0.5);
+      centreX = inset + availW * (ringed ? 0.5 : inset > 0 ? 0.4 : 0.5);
       this.rigs[0]?.group.position.set(0, 0, 0);
     } else {
       const [a, b] = this.rigs;
@@ -977,7 +1014,24 @@ export class CutawayRenderer {
         const s = toScreen(world);
         return { x: s.x, y: s.y, visible };
       });
-      out.bodies.push({ cx: c.x, cy: c.y, rPx, kmPerPx: rig.data.radiusKm / Math.max(rPx, 1e-3), anchors });
+      let ring: CutawayRingLayout | undefined;
+      if (rig.ring) {
+        const toCam = cam.position.clone().sub(centre).normalize();
+        const poly = (radius: number): CutawayRingPoint[] => {
+          const pts: CutawayRingPoint[] = [];
+          for (let k = 0; k < RING_SAMPLES; k++) {
+            const t = (k / RING_SAMPLES) * Math.PI * 2;
+            const world = new THREE.Vector3(Math.cos(t) * radius, 0, Math.sin(t) * radius).multiplyScalar(rig.scale).add(centre);
+            const s = toScreen(world);
+            pts.push({ x: s.x, y: s.y, far: world.clone().sub(centre).dot(toCam) < 0 });
+          }
+          return pts;
+        };
+        const outer = poly(RING_OUTER);
+        const far = outer.filter(p => p.far);
+        ring = { outer, inner: poly(RING_INNER), farUp: far.reduce((a, p) => a + p.y, 0) / Math.max(1, far.length) < c.y };
+      }
+      out.bodies.push({ cx: c.x, cy: c.y, rPx, kmPerPx: rig.data.radiusKm / Math.max(rPx, 1e-3), anchors, ring });
     }
     return out;
   }

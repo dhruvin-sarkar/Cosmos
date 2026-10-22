@@ -11,9 +11,11 @@
  *
  * Main-thread budget (it shares the thread with the WebGL loop): the per-frame work only writes transforms and
  * opacity. No blend modes or filters (the dark outline is a second bracket drawn behind, see TargetCursor.css), no
- * layout reads per frame: a static target's rect is cached and refreshed on scroll, resize, size changes and the end
- * of CSS transitions/animations; a moving 3D label is tracked by reading its inline translate3d (written by the
- * engine) as an offset from the rect measured at lock time. The pointer position comes from pointerrawupdate where
+ * layout reads per frame: a static target's rect is cached and refreshed on scroll, resize, size changes, DOM
+ * mutations (outside the engine's label layer) and the end of CSS transitions/animations; a moving 3D label is
+ * tracked by reading its inline translate3d (written by the engine) as an offset from the rect measured at lock time.
+ * The pointer path itself (pointermove) reads nothing that forces layout: no hit-testing (the event already names its
+ * target), no computed style for a target seen before (corner radius is cached per element), and the scope rect is cached. The pointer position comes from pointerrawupdate where
  * available, so the reticle uses the freshest position at each frame.
  */
 import { useEffect, useRef, useState, type RefObject } from 'react';
@@ -199,6 +201,9 @@ export function TargetCursor({
     let rectX = 0;
     let rectY = 0;
     let rectDirty = true;
+    let rescan = false;
+    let scopeBox: { left: number; top: number; right: number; bottom: number } | null = null;
+    const radiusCache = new WeakMap<Element, number>();
     let mover: HTMLElement | null = null;
     const moverAt = { x: 0, y: 0 };
     const moverNow = { x: 0, y: 0 };
@@ -214,6 +219,7 @@ export function TargetCursor({
 
     function markDirty(): void {
       rectDirty = true;
+      scopeBox = null;
       if (target) wake();
     }
 
@@ -260,7 +266,12 @@ export function TargetCursor({
       if (target) {
         const s = settingsRef.current;
         quarter = Math.round(turn.x / QUARTER);
-        targetRadius = parseFloat(getComputedStyle(target).borderTopLeftRadius) || 0;
+        let radius = radiusCache.get(target);
+        if (radius === undefined) {
+          radius = parseFloat(getComputedStyle(target).borderTopLeftRadius) || 0;
+          radiusCache.set(target, radius);
+        }
+        targetRadius = radius;
         if (s.liveSelector && target.matches(s.liveSelector)) {
           // The element the engine moves: the nearest ancestor (or self) with an inline translate.
           for (let el: HTMLElement | null = target as HTMLElement; el; el = el.parentElement) {
@@ -291,6 +302,11 @@ export function TargetCursor({
       last = now;
       const instant = reduced();
 
+      if (rescan) {
+        // After a scroll: one hit-test per frame, not one per scroll event.
+        rescan = false;
+        if (pointer.inside && !pointer.dragging) lockOn(findTarget(pointer.x, pointer.y));
+      }
       if (target && (!target.isConnected || !target.matches(s.targetSelector))) lockOn(null);
       let hasRect = false;
       if (target && !pointer.dragging) {
@@ -468,8 +484,11 @@ export function TargetCursor({
       const scope = scopeOf();
       if (!scope) return true;
       if (element && scope.contains(element)) return true;
-      const box = scope.getBoundingClientRect();
-      return x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
+      if (!scopeBox) {
+        const r = scope.getBoundingClientRect();
+        scopeBox = { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+      }
+      return x >= scopeBox.left && x <= scopeBox.right && y >= scopeBox.top && y <= scopeBox.bottom;
     };
 
     // pointerrawupdate (secure contexts, Chromium) arrives as soon as the OS reports motion, not once per frame: the
@@ -515,8 +534,9 @@ export function TargetCursor({
       pointer.pressed = false;
       if (pointer.dragging) {
         pointer.dragging = false;
-        const el = document.elementFromPoint(event.clientX, event.clientY);
-        lockOn(findTarget(event.clientX, event.clientY, el));
+        // The pointer is captured by the drag surface, so the event target is not what is under it: the next
+        // pointermove (immediately after) locks properly; until then the plain reticle stays.
+        lockOn(null);
       }
       wake();
     };
@@ -532,10 +552,27 @@ export function TargetCursor({
 
     const onScroll = (): void => {
       rectDirty = true;
+      scopeBox = null;
       if (!pointer.inside || pointer.dragging) return;
-      lockOn(findTarget(pointer.x, pointer.y));
+      rescan = true;
       wake();
     };
+
+    // DOM changes can move a locked target without resizing it: re-measure once, in the frame. The engine's label
+    // layer is excluded (it mutates every frame while the camera moves, and its labels are tracked by transform).
+    const mutations = typeof MutationObserver !== 'undefined'
+      ? new MutationObserver(records => {
+        if (!target) return;
+        for (const record of records) {
+          const node = record.target;
+          const element = node instanceof Element ? node : node.parentElement;
+          if (element?.closest('.cosmos-label, .target-cursor')) continue;
+          markDirty();
+          return;
+        }
+      })
+      : null;
+    mutations?.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'open', 'aria-expanded', 'data-state'] });
 
     // A locked target may slide or grow (popovers, sheets, hover styles): re-measure when its motion ends.
     const onSettled = (event: Event): void => {
@@ -561,6 +598,7 @@ export function TargetCursor({
       cancelAnimationFrame(raf);
       wakeRef.current = null;
       resize?.disconnect();
+      mutations?.disconnect();
       if (hasRaw) window.removeEventListener('pointerrawupdate', onRaw as EventListener);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown, { capture: true });
