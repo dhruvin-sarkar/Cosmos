@@ -1,4 +1,4 @@
-// Shared helpers for the "stars" data domain (Cosmos / AstroNexus, SCI-FORGE 2026).
+// Shared helpers for the "stars" data domain (Cosmos, SCI-FORGE 2026).
 //
 // - polite HTTP (fixed User-Agent, >=1.1 s between requests to the same host,
 //   retry with back-off on 429/5xx, honours Retry-After)
@@ -16,7 +16,7 @@ import crypto from 'node:crypto';
 import zlib from 'node:zlib';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-export const UA = 'Cosmos-AstroNexus/0.1 (educational SCI-FORGE 2026 project)';
+export const UA = 'Cosmos/0.1 (educational SCI-FORGE 2026 project)';
 
 /** True when the module with this import.meta.url is the script node was started with. */
 export function isMain(metaUrl) {

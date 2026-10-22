@@ -1,4 +1,4 @@
-// Shared helpers for the "orbital" data domain (Cosmos / AstroNexus, SCI-FORGE 2026).
+// Shared helpers for the "orbital" data domain (Cosmos, SCI-FORGE 2026).
 //
 // - polite HTTP client: fixed User-Agent, per-host throttle, no silent redirects,
 //   stop-on-any-non-200 (CelesTrak usage policy), Content-Length budget check
@@ -14,7 +14,7 @@ import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const USER_AGENT = 'Cosmos-AstroNexus/0.1 (educational SCI-FORGE 2026 project)';
+export const USER_AGENT = 'Cosmos/0.1 (educational SCI-FORGE 2026 project)';
 
 const toPosix = (p) => p.replace(/\\/g, '/');
 const HERE = toPosix(path.dirname(fileURLToPath(import.meta.url)));

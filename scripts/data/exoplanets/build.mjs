@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Cosmos / AstroNexus — exoplanets domain: offline normalisation phase.
+// Cosmos — exoplanets domain: offline normalisation phase.
 //
 // Reads the raw TAP snapshot in data-raw/exoplanets/ (written by fetch.mjs) and writes:
 //   public/data/exoplanets/planets.json     one row per confirmed planet (PSCompPars + PS default provenance)
@@ -559,7 +559,7 @@ async function main() {
       {
         id: 'exoplanets-host-systems',
         name: 'Exoplanet host systems (one record per host star) derived from the PSCompPars snapshot',
-        organization: 'Derived by the Cosmos/AstroNexus project from NASA Exoplanet Archive data (Caltech/IPAC)',
+        organization: 'Derived by the Cosmos project from NASA Exoplanet Archive data (Caltech/IPAC)',
         purpose: 'Place exoplanet host stars in the 3D star field (ICRS Cartesian parsecs), host-level stellar parameters for system views and the habitability lab, and the index of each host\'s planets in planets.json.',
         mechanism: 'Offline aggregation of the PSCompPars snapshot by hostname + spherical-to-Cartesian conversion (x = d cos(dec) cos(ra), y = d cos(dec) sin(ra), z = d sin(dec))',
         endpoint: C.TAP_SYNC,

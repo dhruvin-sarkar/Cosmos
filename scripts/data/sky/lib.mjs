@@ -20,7 +20,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT = path.resolve(HERE, '../../..').replace(/\\/g, '/');
 export const RAW_DIR = `${ROOT}/data-raw/sky`;
 export const OUT_DIR = `${ROOT}/public/data/sky`;
-export const UA = 'Cosmos-AstroNexus/0.1 (educational SCI-FORGE 2026 project)';
+export const UA = 'Cosmos/0.1 (educational SCI-FORGE 2026 project)';
 
 // Two independent CDS endpoints (documented on the hips2fits page). We prefer the primary and fall back to the mirror.
 export const CDS_HOSTS = ['https://alasky.cds.unistra.fr', 'https://alaskybis.cds.unistra.fr'];

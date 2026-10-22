@@ -15,7 +15,7 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const USER_AGENT = 'Cosmos-AstroNexus/0.1 (educational SCI-FORGE 2026 project)';
+export const USER_AGENT = 'Cosmos/0.1 (educational SCI-FORGE 2026 project)';
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = resolve(here, '..', '..', '..').replace(/\\/g, '/');

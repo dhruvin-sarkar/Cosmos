@@ -13,7 +13,7 @@ Provenance classes follow the in-app legend: **observed** (measured and publishe
 |---|---|---|---|---|---|---|---|
 | [Curated black-hole catalogue](#blackholes-catalogue) | blackholes | Published literature | schemaVersion 1; generated 2026-10-20;… | 2026-10-20 | Factual measurements transcribed from published papers | observed | 1 (33.7 KB) |
 | [Event Horizon Telescope 2019 image of M87*](#eht-m87-2019-image) | blackholes | Event Horizon Telescope Collaboration | EHT 2019 M87* image | 2026-10-20 | CC BY 4.0 | observed | 1 (39.8 KB) |
-| [Exoplanet host systems](#exoplanets-host-systems) | exoplanets | Derived by the Cosmos/AstroNexus project from N… | derived from the PSCompPars snapshot re… | 2026-10-16 | No explicit licence is published by the NASA Exoplanet… | derived | 1 (1.80 MB) |
+| [Exoplanet host systems](#exoplanets-host-systems) | exoplanets | Derived by the Cosmos project from N… | derived from the PSCompPars snapshot re… | 2026-10-16 | No explicit licence is published by the NASA Exoplanet… | derived | 1 (1.80 MB) |
 | [NASA Exoplanet Archive](#exoplanets-pscomppars) | exoplanets | NASA Exoplanet Archive | live archive state at retrieval | 2026-10-16 | No explicit licence is published by the NASA Exoplanet… | observed | 2 (4.66 MB) |
 | [Mission landing sites and informal features](#features-landing-sites) | features | Cosmos team compilation from LROC | 1 | 2026-10-19 | Facts | observed | 1 (135.0 KB) |
 | [Gazetteer of Planetary Nomenclature](#iau-usgs-gazetteer) | features | IAU Working Group for Planetary System Nomencla… | live gazetteer state at retrieval | 2026-10-19 | Public domain | observed | 1 (135.0 KB) |
@@ -33,7 +33,7 @@ Provenance classes follow the in-app legend: **observed** (measured and publishe
 | [CelesTrak GP mean element sets](#celestrak-gp-omm) | orbital | CelesTrak | live archive state at retrieval | 2026-10-17 | No formal open-data licence. | observed | 1 (8.68 MB) |
 | [CelesTrak Satellite Catalog](#celestrak-satcat) | orbital | CelesTrak | SATCAT file Last-Modified 2026-10-15T20… | 2026-10-16 | No formal open-data licence. | observed | 2 (8.70 MB) |
 | [CelesTrak SATCAT source](#celestrak-satcat-code-tables) | orbital | CelesTrak | live page state at retrieval | 2026-10-16 | No formal open-data licence. | observed | 1 (13.2 KB) |
-| [Derived on-orbit population statistics](#orbital-population-statistics) | orbital | Cosmos / AstroNexus | derived from the snapshot of 2026-10-17… | 2026-10-17 | No formal open-data licence. | derived | 1 (18.5 KB) |
+| [Derived on-orbit population statistics](#orbital-population-statistics) | orbital | Cosmos | derived from the snapshot of 2026-10-17… | 2026-10-17 | No formal open-data licence. | derived | 1 (18.5 KB) |
 | [JPL SBDB trans-Neptunian objects](#jpl-sbdb-tnos) | outer | NASA JPL SSD | live archive state at retrieval | 2026-10-19 | U.S. Government | observed | 2 (263.0 KB) |
 | [Heliosphere boundary crossings and outer-system constants](#outer-literature) | outer | Published literature | Stone 2005, 2008, 2013, 2019; Gurnett 2… | 2026-10-19 | Facts and measured values cited from peer-reviewed pape… | reconstructed | 0 (0 B) |
 | [Astronomy Engine](#astronomy-engine) | references | Don Cross | npm astronomy-engine 2.x | 2026-10-18 | MIT | derived | 0 (0 B) |
@@ -164,7 +164,7 @@ Domain notes: [docs/data/exoplanets.md](data/exoplanets.md)
 ### Exoplanet host systems (one record per host star) derived from the PSCompPars snapshot
 
 - **Dataset id:** `exoplanets-host-systems`
-- **Organization:** Derived by the Cosmos/AstroNexus project from NASA Exoplanet Archive data (Caltech/IPAC)
+- **Organization:** Derived by the Cosmos project from NASA Exoplanet Archive data (Caltech/IPAC)
 - **Version:** derived from the PSCompPars snapshot retrieved 2026-10-16T18:28:50.774Z
 - **Retrieved:** 2026-10-16T18:28:50.774Z
 - **License:** No explicit licence is published by the NASA Exoplanet Archive. The data are publicly and freely accessible (NASA-funded archive operated by Caltech/IPAC); the archive requests its standard acknowledgement, citation of Christiansen et al. (2025) and the table DOIs, and credit to the original literature references (linked per parameter in references.json). No redistribution restriction is documented; this snapshot is redistributed unmodified in value for non-commercial educational display with full attribution. (<https://exoplanetarchive.ipac.caltech.edu/docs/acknowledge.html>)
@@ -916,7 +916,7 @@ https://celestrak.org/satcat/sources.php ; https://celestrak.org/satcat/launchsi
 ### Derived on-orbit population statistics (class, regime, 50-km shells, spatial density, notable objects)
 
 - **Dataset id:** `orbital-population-statistics`
-- **Organization:** Cosmos / AstroNexus (derived from CelesTrak GP + SATCAT)
+- **Organization:** Cosmos (derived from CelesTrak GP + SATCAT)
 - **Version:** derived from the snapshot of 2026-10-17T06:50:38.227Z
 - **Retrieved:** 2026-10-17T06:50:38.227Z
 - **License:** No formal open-data licence. CelesTrak makes the data freely available to all users subject to its usage policy (https://celestrak.org/usage-policy.php). The GP/OMM element sets and SATCAT are "basic SSA data" originating from USSPACECOM (U.S. Space Force 18th/19th Space Defense Squadrons) via Space-Track.org, for which USSPACECOM grants "express blanket approval for transfer/redistribution of basic SSA data ... conditioned on appropriate citation" (Space-Track User Agreement, section "Redistribution of Basic SSA Information"). Derived statistics: cite as below. (<https://celestrak.org/usage-policy.php>)
@@ -936,7 +936,7 @@ https://celestrak.org/satcat/sources.php ; https://celestrak.org/satcat/launchsi
 
 **Limitations.** Shell statistics use mean (not osculating) apsides and a two-body residence-time model; satcat-shape rows use rounded SATCAT apsides. Only the tracked public catalogue is counted (objects >~10 cm in LEO); real densities including untracked debris are far higher.
 
-**Citation.** Orbital data: CelesTrak (Dr T.S. Kelso, https://celestrak.org) - GP element sets and SATCAT; source data: U.S. Space Force 18th & 19th Space Defense Squadrons / USSPACECOM via Space-Track.org. Statistics computed by the Cosmos/AstroNexus project. Context figures: ESA Space Debris Office (sdup.esoc.esa.int/discosweb/statistics, 2026-10-14) and CelesTrak SATCAT boxscore (2026-10-15).
+**Citation.** Orbital data: CelesTrak (Dr T.S. Kelso, https://celestrak.org) - GP element sets and SATCAT; source data: U.S. Space Force 18th & 19th Space Defense Squadrons / USSPACECOM via Space-Track.org. Statistics computed by the Cosmos project. Context figures: ESA Space Debris Office (sdup.esoc.esa.int/discosweb/statistics, 2026-10-14) and CelesTrak SATCAT boxscore (2026-10-15).
 
 **Fields used (6).** `objectClass`, `isActive`, `perigeeKm`, `apogeeKm`, `inclinationDeg`, `groups`
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Cosmos / AstroNexus — exoplanets domain: offline validation of the published files.
+// Cosmos — exoplanets domain: offline validation of the published files.
 //
 // Hard failures (exit code 1): structural/type errors, NaN/Infinity, count mismatches, broken
 // indices, coordinate inconsistencies, failed spot checks against published values, budget overrun.

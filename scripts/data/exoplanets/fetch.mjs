@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Cosmos / AstroNexus — exoplanets domain: download phase.
+// Cosmos — exoplanets domain: download phase.
 //
 // Downloads a consistent snapshot of the NASA Exoplanet Archive PSCompPars table (selected
 // columns), the PS default-parameter-set provenance columns, confirmed-planet counts and the

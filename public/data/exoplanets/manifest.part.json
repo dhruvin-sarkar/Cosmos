@@ -174,7 +174,7 @@
   {
    "id": "exoplanets-host-systems",
    "name": "Exoplanet host systems (one record per host star) derived from the PSCompPars snapshot",
-   "organization": "Derived by the Cosmos/AstroNexus project from NASA Exoplanet Archive data (Caltech/IPAC)",
+   "organization": "Derived by the Cosmos project from NASA Exoplanet Archive data (Caltech/IPAC)",
    "purpose": "Place exoplanet host stars in the 3D star field (ICRS Cartesian parsecs), host-level stellar parameters for system views and the habitability lab, and the index of each host's planets in planets.json.",
    "mechanism": "Offline aggregation of the PSCompPars snapshot by hostname + spherical-to-Cartesian conversion (x = d cos(dec) cos(ra), y = d cos(dec) sin(ra), z = d sin(dec))",
    "endpoint": "https://exoplanetarchive.ipac.caltech.edu/TAP/sync",

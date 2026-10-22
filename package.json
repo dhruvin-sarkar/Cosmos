@@ -2,7 +2,7 @@
   "name": "cosmos",
   "private": true,
   "version": "0.1.0",
-  "description": "Cosmos / AstroNexus — a scientifically grounded, multi-scale 3D universe explorer and interactive science laboratory (SCI-FORGE 2026).",
+  "description": "Cosmos — a scientifically grounded, multi-scale 3D universe explorer and interactive science laboratory (SCI-FORGE 2026).",
   "type": "module",
   "engines": {
     "node": ">=22"

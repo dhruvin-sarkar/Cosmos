@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Cosmos / AstroNexus — "sky" domain ingestion.
+// Cosmos — "sky" domain ingestion.
 // Renders all-sky multi-wavelength images (equirectangular, ICRS, RA increasing to the right, RA=0 at the left edge)
 // from CDS HiPS surveys via the CDS hips2fits service, normalises them, and writes:
 //   public/data/sky/<band>/...jpg|png|bin|json, public/data/sky/bands.json, public/data/sky/manifest.part.json

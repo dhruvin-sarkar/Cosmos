@@ -10,7 +10,7 @@ import { wmsUrl } from './fetch-wms.mjs';
 import { toRaw } from '../textures/process.mjs';
 import { pullPushFill } from '../textures/process.mjs';
 
-const UA = { 'User-Agent': 'Cosmos-AstroNexus/0.1 (educational SCI-FORGE 2026 project)' };
+const UA = { 'User-Agent': 'Cosmos/0.1 (educational SCI-FORGE 2026 project)' };
 async function getTile(body, c, i) {
   const dir = path.join(RAW, 'wms2'); fs.mkdirSync(dir, { recursive: true });
   const dest = path.join(dir, `${body}_t${i}.png`);

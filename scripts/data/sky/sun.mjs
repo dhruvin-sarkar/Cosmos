@@ -1,6 +1,6 @@
 // Fetch latest SDO images (public domain, NASA/SDO) -> public/data/sky/sun/
 import fs from 'node:fs'
-const UA = 'Cosmos-AstroNexus/0.1 (educational SCI-FORGE 2026 project)'
+const UA = 'Cosmos/0.1 (educational SCI-FORGE 2026 project)'
 const OUT = 'public/data/sky/sun'
 fs.mkdirSync(OUT, { recursive: true })
 const BANDS = [

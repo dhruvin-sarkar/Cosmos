@@ -19,7 +19,7 @@ for (const x of EXTRA) {
   if (fs.existsSync(file)) j = JSON.parse(fs.readFileSync(file, 'utf8'));
   else {
     const url = `https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=${encodeURIComponent(x.sstr)}&full-prec=1&phys-par=1`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'Cosmos-AstroNexus/0.1 (educational SCI-FORGE 2026 project)' } });
+    const res = await fetch(url, { headers: { 'User-Agent': 'Cosmos/0.1 (educational SCI-FORGE 2026 project)' } });
     if (!res.ok) throw new Error(`${url} -> ${res.status}`);
     j = await res.json();
     fs.writeFileSync(file, JSON.stringify(j));

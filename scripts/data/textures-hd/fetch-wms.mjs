@@ -23,7 +23,7 @@ export async function fetchWms(body, width = 8192, { layer, map, tag = '' } = {}
     const t = setTimeout(() => ac.abort(), 600_000);
     try {
       log(`fetch ${body} ${width} attempt ${attempt}`);
-      const res = await fetch(url, { signal: ac.signal, headers: { 'User-Agent': 'Cosmos-AstroNexus/0.1 (educational SCI-FORGE 2026 project)' } });
+      const res = await fetch(url, { signal: ac.signal, headers: { 'User-Agent': 'Cosmos/0.1 (educational SCI-FORGE 2026 project)' } });
       const type = res.headers.get('content-type') || '';
       if (!res.ok || !/^image\//.test(type)) { const txt = (await res.text()).slice(0, 300); throw new Error(`HTTP ${res.status} ${type} ${txt}`); }
       const buf = Buffer.from(await res.arrayBuffer());

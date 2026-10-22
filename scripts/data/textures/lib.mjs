@@ -1,4 +1,4 @@
-// Shared helpers for the "textures" data domain (Cosmos / AstroNexus).
+// Shared helpers for the "textures" data domain (Cosmos).
 // - polite, throttled, cached HTTP downloads (User-Agent, >=1 s per host, retries)
 // - disk-space and raw-budget guards (C: is tight; other domains share the disk)
 // - OGC WMS / WMTS helpers
@@ -15,7 +15,7 @@ export const TEX_DIR = `${PUBLIC_DIR}/textures`;
 export const DATA_DIR = `${PUBLIC_DIR}/data/textures`;
 export const MODELS_DIR = `${PUBLIC_DIR}/models`;
 
-export const UA = 'Cosmos-AstroNexus/0.1 (educational SCI-FORGE 2026 project)';
+export const UA = 'Cosmos/0.1 (educational SCI-FORGE 2026 project)';
 export const RAW_BUDGET_BYTES = 1.5 * 2 ** 30; // domain raw-download budget
 export const OUTPUT_BUDGET_BYTES = 220 * 2 ** 20; // domain output budget (public/textures + models)
 export const MIN_FREE_BYTES = 3.5 * 2 ** 30; // never let C: drop below this

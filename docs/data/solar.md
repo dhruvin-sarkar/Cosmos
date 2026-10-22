@@ -16,7 +16,7 @@ Pipeline (re-runnable, idempotent, raw cache in `data-raw/solar/`, gitignored):
 | spacecraft | `fetch-spacecraft.mjs` | `spacecraft.json` |
 | space weather | `fetch-space-weather.mjs` | `space-weather.json` |
 
-Shared helpers: `lib.mjs` (polite cached fetch, >=1.1 s per host, User-Agent `Cosmos-AstroNexus/0.1 (educational SCI-FORGE 2026 project)`), `parsers.mjs`, `astro.mjs`. `--refresh` re-downloads.
+Shared helpers: `lib.mjs` (polite cached fetch, >=1.1 s per host, User-Agent `Cosmos/0.1 (educational SCI-FORGE 2026 project)`), `parsers.mjs`, `astro.mjs`. `--refresh` re-downloads.
 
 ## Sources, licences, credits
 

@@ -1,4 +1,4 @@
-// Cosmos / AstroNexus — exoplanets domain: shared configuration.
+// Cosmos — exoplanets domain: shared configuration.
 //
 // Source: NASA Exoplanet Archive (Caltech/IPAC, NASA Exoplanet Exploration Program)
 //   TAP sync endpoint: https://exoplanetarchive.ipac.caltech.edu/TAP/sync
@@ -18,7 +18,7 @@ export const OUT_DIR = `${REPO_ROOT}/public/data/exoplanets`;
 export const DOC_PATH = `${REPO_ROOT}/docs/data/exoplanets.md`;
 
 export const DOMAIN = 'exoplanets';
-export const USER_AGENT = 'Cosmos-AstroNexus/0.1 (educational SCI-FORGE 2026 project)';
+export const USER_AGENT = 'Cosmos/0.1 (educational SCI-FORGE 2026 project)';
 export const TAP_SYNC = 'https://exoplanetarchive.ipac.caltech.edu/TAP/sync';
 export const ARCHIVE_BASE = 'https://exoplanetarchive.ipac.caltech.edu';
 

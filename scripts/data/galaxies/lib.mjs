@@ -1,4 +1,4 @@
-// Shared helpers for the "galaxies" data domain (Cosmos / AstroNexus, SCI-FORGE 2026).
+// Shared helpers for the "galaxies" data domain (Cosmos, SCI-FORGE 2026).
 // Pure Node (>=22) ESM, no third-party packages.
 //
 //  - polite HTTP (User-Agent, per-host throttle >= 1 s, retries, loud failures)
@@ -17,7 +17,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { Readable } from 'node:stream';
 
-export const UA = 'Cosmos-AstroNexus/0.1 (educational SCI-FORGE 2026 project)';
+export const UA = 'Cosmos/0.1 (educational SCI-FORGE 2026 project)';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url)).replace(/\\/g, '/').replace(/\/$/, '');
 export const ROOT = HERE.replace(/\/scripts\/data\/galaxies$/, '');

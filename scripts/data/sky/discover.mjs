@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Cosmos / AstroNexus — "sky" domain: HiPS discovery via the CDS MocServer.
+// Cosmos — "sky" domain: HiPS discovery via the CDS MocServer.
 // Queries the MocServer for candidate all-sky HiPS per wavelength band and prints a compact table
 // (ID, title, regime, em range, sky fraction, tile formats, copyright) so the choice of HiPS in
 // bands.config.mjs is reproducible and reviewable. Raw responses are cached in data-raw/sky/mocserver-search/.

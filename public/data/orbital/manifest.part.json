@@ -135,7 +135,7 @@
     {
       "id": "orbital-population-statistics",
       "name": "Derived on-orbit population statistics (class, regime, 50-km shells, spatial density, notable objects)",
-      "organization": "Cosmos / AstroNexus (derived from CelesTrak GP + SATCAT)",
+      "organization": "Cosmos (derived from CelesTrak GP + SATCAT)",
       "purpose": "Kessler / debris laboratory: real-catalog shell populations and spatial densities; HUD counts; notable-object shortcuts.",
       "mechanism": "Computed locally by build.mjs from the catalog rows (no separate download): regime classification, mean-altitude histogram, residence-time-weighted shell occupancy and spatial density; external reference figures (ESA, CelesTrak boxscore) quoted for context.",
       "endpoint": "https://celestrak.org/pub/satcat.csv",
@@ -144,7 +144,7 @@
       "retrieved": "2026-10-17T06:50:38.227Z",
       "license": "No formal open-data licence. CelesTrak makes the data freely available to all users subject to its usage policy (https://celestrak.org/usage-policy.php). The GP/OMM element sets and SATCAT are \"basic SSA data\" originating from USSPACECOM (U.S. Space Force 18th/19th Space Defense Squadrons) via Space-Track.org, for which USSPACECOM grants \"express blanket approval for transfer/redistribution of basic SSA data ... conditioned on appropriate citation\" (Space-Track User Agreement, section \"Redistribution of Basic SSA Information\"). Derived statistics: cite as below.",
       "licenseUrl": "https://celestrak.org/usage-policy.php",
-      "citation": "Orbital data: CelesTrak (Dr T.S. Kelso, https://celestrak.org) - GP element sets and SATCAT; source data: U.S. Space Force 18th & 19th Space Defense Squadrons / USSPACECOM via Space-Track.org. Statistics computed by the Cosmos/AstroNexus project. Context figures: ESA Space Debris Office (sdup.esoc.esa.int/discosweb/statistics, 2026-10-14) and CelesTrak SATCAT boxscore (2026-10-15).",
+      "citation": "Orbital data: CelesTrak (Dr T.S. Kelso, https://celestrak.org) - GP element sets and SATCAT; source data: U.S. Space Force 18th & 19th Space Defense Squadrons / USSPACECOM via Space-Track.org. Statistics computed by the Cosmos project. Context figures: ESA Space Debris Office (sdup.esoc.esa.int/discosweb/statistics, 2026-10-14) and CelesTrak SATCAT boxscore (2026-10-15).",
       "rateLimits": "not applicable (local computation)",
       "fieldsUsed": [
         "objectClass",

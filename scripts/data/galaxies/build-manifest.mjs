@@ -43,7 +43,7 @@ log('validation OK: local', loc.rows.length, 'famous', fam.rows.length, 'structu
 
 // ---- manifest
 const now = isoNow();
-const UA = 'Cosmos-AstroNexus/0.1';
+const UA = 'Cosmos/0.1';
 const vizier = 'https://vizier.cds.unistra.fr/viz-bin/asu-tsv';
 const ungcMeta = JSON.parse(fs.readFileSync(`${OUT_DIR}/../../../data-raw/galaxies/_meta/ungc.json`, 'utf8'));
 const hu = JSON.parse(fs.readFileSync(`${OUT_DIR}/../../../data-raw/galaxies/_meta/huchra-2012-2mrs.json`, 'utf8'));

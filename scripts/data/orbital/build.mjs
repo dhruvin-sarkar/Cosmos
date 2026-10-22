@@ -731,7 +731,7 @@ async function main() {
       {
         id: 'orbital-population-statistics',
         name: 'Derived on-orbit population statistics (class, regime, 50-km shells, spatial density, notable objects)',
-        organization: 'Cosmos / AstroNexus (derived from CelesTrak GP + SATCAT)',
+        organization: 'Cosmos (derived from CelesTrak GP + SATCAT)',
         purpose: 'Kessler / debris laboratory: real-catalog shell populations and spatial densities; HUD counts; notable-object shortcuts.',
         mechanism: 'Computed locally by build.mjs from the catalog rows (no separate download): regime classification, mean-altitude histogram, residence-time-weighted shell occupancy and spatial density; external reference figures (ESA, CelesTrak boxscore) quoted for context.',
         endpoint: SATCAT_URL,
@@ -740,7 +740,7 @@ async function main() {
         retrieved: gpRetrievedTo,
         license: `${LICENSE} Derived statistics: cite as below.`,
         licenseUrl: 'https://celestrak.org/usage-policy.php',
-        citation: `${CITATION} Statistics computed by the Cosmos/AstroNexus project. Context figures: ESA Space Debris Office (sdup.esoc.esa.int/discosweb/statistics, 2026-10-14) and CelesTrak SATCAT boxscore (2026-10-15).`,
+        citation: `${CITATION} Statistics computed by the Cosmos project. Context figures: ESA Space Debris Office (sdup.esoc.esa.int/discosweb/statistics, 2026-10-14) and CelesTrak SATCAT boxscore (2026-10-15).`,
         rateLimits: 'not applicable (local computation)',
         fieldsUsed: ['objectClass', 'isActive', 'perigeeKm', 'apogeeKm', 'inclinationDeg', 'groups'],
         updateCadence: 'Regenerated with every build.',

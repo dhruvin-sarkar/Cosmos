@@ -1,4 +1,4 @@
-// Shared helpers for the "galactic" data domain of Cosmos / AstroNexus.
+// Shared helpers for the "galactic" data domain of Cosmos.
 // Node >= 22 ESM, no third-party dependencies (astronomy-engine is used only by build-messier.mjs).
 //
 // Responsibilities:
@@ -15,7 +15,7 @@ import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 
-export const UA = 'Cosmos-AstroNexus/0.1 (educational SCI-FORGE 2026 project)';
+export const UA = 'Cosmos/0.1 (educational SCI-FORGE 2026 project)';
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT = path.resolve(here, '../../..').replace(/\\/g, '/');
 export const RAW = `${ROOT}/data-raw/galactic`;

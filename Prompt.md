@@ -1,4 +1,4 @@
-# Cosmos / AstroNexus: Deep Research Brief and Master Context Prompt for Claude Opus 5.5
+# Cosmos: Deep Research Brief and Master Context Prompt for Claude Opus 5.5
 
 ## Research synthesis
 
@@ -252,7 +252,7 @@ That path lets the team show scientific understanding, engineering innovation, p
 
 The SDG relationship is also stronger than simply displaying SDG logos. UN SDG 4 includes educational skills and education for sustainable development, with specific emphasis on relevant technical skills and knowledge. SDG 17 emphasizes knowledge, technology, expertise, international cooperation, and partnerships. citeturn8search13turn8search6 The UAE's National Space Strategy 2030 explicitly seeks to strengthen the national space sector and the UAE's regional and international role, while MBRSC combines national space exploration with educational and STEM-oriented activities. citeturn9search1turn8search1turn8search8
 
-AstroNexus therefore has a credible SDG story:
+Cosmos therefore has a credible SDG story:
 
 **SDG 4:** turn difficult astronomy, physics, orbital mechanics, cosmology, and scientific data into an experiential learning environment.
 
@@ -266,9 +266,9 @@ The following is the context I would actually give the coding agent. It delibera
 
 ### BEGIN MASTER CONTEXT
 
-You are taking principal ownership of a project currently referred to as **Cosmos / AstroNexus**.
+You are taking principal ownership of a project currently referred to as **Cosmos**.
 
-Treat **Cosmos** as the working platform/product name and **AstroNexus: Exploring the Cosmic Frontier** as a potential SCI-FORGE presentation identity unless the existing repository establishes a different naming decision. Do not perform unnecessary renaming if established project files already use another canonical name.
+Treat **Cosmos** as the product name (SCI-FORGE presentation identity: **Cosmos: Exploring the Cosmic Frontier**) unless the existing repository establishes a different naming decision. Do not perform unnecessary renaming if established project files already use another canonical name.
 
 You are not being asked to make a normal astronomy website.
 
@@ -2796,7 +2796,7 @@ The final pitch should not be:
 
 It should be closer to:
 
-> **AstroNexus turns the universe into an interactive scientific laboratory. Instead of reading about orbital debris, planetary defense, exoplanets, relativity and cosmology as disconnected topics, students can travel through one continuous universe, inspect real scientific data, manipulate physical variables and immediately observe their consequences across scales ranging from kilometers to billions of light-years.**
+> **Cosmos turns the universe into an interactive scientific laboratory. Instead of reading about orbital debris, planetary defense, exoplanets, relativity and cosmology as disconnected topics, students can travel through one continuous universe, inspect real scientific data, manipulate physical variables and immediately observe their consequences across scales ranging from kilometers to billions of light-years.**
 
 The visual experience earns attention.
 
@@ -3182,7 +3182,7 @@ It lets a black hole begin with measured mass and then permit controlled paramet
 
 It prevents simulations from becoming misinformation because the interface can always expose **Real**, **Modified**, and **Difference**.
 
-That can become a defining feature of AstroNexus.
+That can become a defining feature of Cosmos.
 
 The final product vision is therefore larger than "Google Earth for space." It is closer to:
 
@@ -3230,7 +3230,7 @@ Presentation
 
 SDG & Future
 
-.AstroNexus – Exploring the Cosmic Frontier
+Cosmos – Exploring the Cosmic Frontier
 SDG 4 – Quality Education – astronomy and STEM learning
 SDG 17 – Partnerships for the Goals – international space research and collaboration
 

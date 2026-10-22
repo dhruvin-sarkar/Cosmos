@@ -1,4 +1,4 @@
-// Cosmos / AstroNexus — exoplanets domain: small shared helpers (no network).
+// Cosmos — exoplanets domain: small shared helpers (no network).
 
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';

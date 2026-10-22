@@ -1,4 +1,4 @@
-# Cosmos / AstroNexus — Architecture
+# Cosmos — Architecture
 
 > **One explorable universe, real science, continuous scale.** Cosmos is an interactive scientific universe
 > engine: travel from Earth to the CMB without ever leaving one continuous 3D space, inspect real data with

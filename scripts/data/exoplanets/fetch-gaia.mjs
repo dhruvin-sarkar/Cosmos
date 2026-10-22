@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Cosmos / AstroNexus — exoplanets domain: Gaia DR3 cross-check download (VALIDATION ONLY).
+// Cosmos — exoplanets domain: Gaia DR3 cross-check download (VALIDATION ONLY).
 //
 // For every host in the cached PSCompPars snapshot that carries a Gaia DR3 designation, downloads the
 // Gaia DR3 astrometry (position at ref_epoch J2016.0, proper motion, parallax, G magnitude) from the

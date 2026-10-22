@@ -25,7 +25,7 @@ for (const b of SRC.bodies) {
     if (fs.existsSync(file)) j = JSON.parse(fs.readFileSync(file, 'utf8'));
     else {
       const url = `https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=${encodeURIComponent(SSTR[b.id])}&full-prec=1`;
-      const res = await fetch(url, { headers: { 'User-Agent': 'Cosmos-AstroNexus/0.1 (educational SCI-FORGE 2026 project)' } });
+      const res = await fetch(url, { headers: { 'User-Agent': 'Cosmos/0.1 (educational SCI-FORGE 2026 project)' } });
       if (!res.ok) throw new Error(`${url} -> ${res.status}`);
       j = await res.json();
       if (!j.orbit) throw new Error(`no orbit for ${b.id}: ${JSON.stringify(j).slice(0, 200)}`);
