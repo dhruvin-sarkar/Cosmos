@@ -19,6 +19,8 @@ import { galaxyVolumeVisibility } from './volumeLayer';
 /** Radius of the stars domain's catalogue sphere (kpc). */
 const CATALOGUE_KPC = 1.1;
 const MAX_PARTICLES = 320_000;
+/** V-band dust optical depth per kpc in the solar-circle mid-plane (≈ 1 mag/kpc; Spitzer 1978, Whittet 2003). */
+const DUST_TAU_PER_KPC = 0.9;
 
 const VERT = /* glsl */ `
 ${VERTEX_PRELUDE}
@@ -30,7 +32,22 @@ uniform float uOpacity;
 uniform vec3 uSunKpc;
 uniform float uHole;
 uniform vec3 uCamKpc;
+uniform float uDustTau;
 varying vec3 vCol;
+// Dust column (kpc at the solar-circle mid-plane density) between the camera and a cloud: exponential dust disc
+// (h ≈ 134 pc, R_d = 2.26 kpc, inner hole) integrated exactly in z along the chord, radial density at its midpoint.
+// Without it the clouds of the whole inner disc stack into one solid white line when seen from inside the Galaxy.
+float dustColumn(vec3 a, vec3 b) {
+  const float h = 0.134;
+  vec3 m = 0.5 * (a + b);
+  float R = length(m.xy);
+  float radial = exp(-(R - 8.2) / 2.26) * (0.2 + 0.8 * smoothstep(2.0, 4.5, R));
+  float dz = b.z - a.z;
+  float fa = sign(a.z) * h * (1.0 - exp(-abs(a.z) / h));
+  float fb = sign(b.z) * h * (1.0 - exp(-abs(b.z) / h));
+  float vert = abs(dz) > 1e-3 ? (fb - fa) / dz : exp(-abs(m.z) / h);
+  return length(b - a) * vert * radial;
+}
 void main() {
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
   gl_Position = projectionMatrix * mv;
@@ -42,7 +59,7 @@ void main() {
   float hole = mix(1.0, smoothstep(CATALOGUE * 0.75, CATALOGUE, length(position - uSunKpc)), uHole);
   float I = lum * uGain * near * hole * uOpacity;
   float size = clamp(1.2 + 0.7 * sqrt(lum * near), 1.2, 3.4);
-  vCol = color * I;
+  vCol = color * I * exp(-uDustTau * dustColumn(uCamKpc, position) * vec3(0.72, 1.0, 1.38));
   gl_PointSize = I > 1e-4 ? size * uPixelRatio : 0.0;
 }`.replace('CATALOGUE', CATALOGUE_KPC.toFixed(3)).replace('CATALOGUE', CATALOGUE_KPC.toFixed(3));
 
@@ -120,6 +137,7 @@ export function createGalaxyParticlesLayer(): Layer & GalaxyParticlesHandle {
           uPixelRatio: { value: 1 },
           uGain: { value: 0.35 },
           uOpacity: { value: 0 },
+          uDustTau: { value: DUST_TAU_PER_KPC },
           uSunKpc: { value: new THREE.Vector3() },
           uHole: { value: 1 },
           uCamKpc: { value: new THREE.Vector3() },

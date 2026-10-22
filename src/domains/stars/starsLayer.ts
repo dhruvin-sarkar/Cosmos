@@ -32,6 +32,7 @@ import {
 } from './photometry';
 import type { StarsRuntime } from './runtime';
 import { StarFieldMaterial } from './starFieldMaterial';
+import { backgroundLift } from '../../render/post/exposure';
 
 const NEAR_PC = 25;
 const CLOSEUP_SLOTS = 3;
@@ -356,7 +357,8 @@ export function createStarsLayer(opts: StarsLayerOptions): Layer & { debug: Star
       const k = Math.min(1, (MAX_RENDER_DEPTH * ctx.metersPerUnit) / farM);
       const visible = exposure.opacity > 0.001 && camR < 3 * CATALOG_MAX_PC * PC_M;
       material.setFrame(ctx.metersPerUnit, ctx.viewport.pixelRatio, k, exposure);
-      material.uniforms.uOpacity.value = exposure.opacity;
+      // Bounded dimming: auto exposure pulled far down by a bright body never crushes the star field (exposure.ts).
+      material.uniforms.uOpacity.value = exposure.opacity * backgroundLift.value;
       const tc0 = performance.now();
       budget = Math.max(0, ctx.quality.starBudget - (near ? near.count : 0));
       if (field && near && svcRef) {

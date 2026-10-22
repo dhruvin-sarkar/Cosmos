@@ -121,7 +121,7 @@ const BLACK = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
 BLACK.needsUpdate = true;
 
 export class CinematicPass extends Pass {
-  readonly exposure = new ExposureController();
+  readonly exposure = new ExposureController(true);
   readonly sun: SunScreen = createSunScreen();
   readonly settings: CinematicSettings = {
     bloom: true,

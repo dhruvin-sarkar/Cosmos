@@ -4,7 +4,11 @@ import { agxToneMap } from '../tonemap';
 import { AGX_GLSL, agxPunchyLook } from './shaders';
 import {
   ADAPT_TAU_DOWN,
+  BACKGROUND_DIM_MAX_EV,
+  BACKGROUND_LIFT_MAX_EV,
   ExposureController,
+  backgroundLift,
+  backgroundLiftFor,
   HIGHLIGHT_TARGET,
   METER_EV_MAX,
   meterCorrection,
@@ -107,6 +111,38 @@ describe('exposure model', () => {
     expect(c.state.mode).toBe('manual');
     c.setManual(null);
     expect(c.state.mode).toBe('auto');
+  });
+});
+
+describe('background protection', () => {
+  it('bounds how far auto exposure dims the stars and the Milky Way', () => {
+    // Within the allowed dimming nothing is lifted.
+    expect(backgroundLiftFor(0.25, 0.25)).toBe(1);
+    expect(backgroundLiftFor(0.25 - BACKGROUND_DIM_MAX_EV, 0.25)).toBe(1);
+    // The resolved Sun (about -4.7 EV at base +0.25): the background ends BACKGROUND_DIM_MAX_EV below base.
+    const ev = -4.7;
+    const lift = backgroundLiftFor(ev, 0.25);
+    expect(ev + Math.log2(lift)).toBeCloseTo(0.25 - BACKGROUND_DIM_MAX_EV, 9);
+    // Capped for gross pull-downs; never a dimming; NaN-safe.
+    expect(backgroundLiftFor(-40, 0)).toBe(Math.pow(2, BACKGROUND_LIFT_MAX_EV));
+    expect(backgroundLiftFor(3, 0)).toBe(1);
+    expect(backgroundLiftFor(Number.NaN, 0)).toBe(1);
+  });
+
+  it('is published only by the on-screen controller and switched off in manual mode', () => {
+    backgroundLift.value = 1;
+    const quiet = new ExposureController();
+    quiet.setBias(-8);
+    quiet.update(7, 1, true);
+    expect(backgroundLift.value).toBe(1);
+    const main = new ExposureController(true);
+    main.meter(reading({ meanLog2: Math.log2(3), coverage: 1, highLog2: Math.log2(40), highCoverage: 0.3 }));
+    main.update(12, 1, true);
+    expect(main.state.ev).toBeLessThan(main.state.baseEv - BACKGROUND_DIM_MAX_EV);
+    expect(backgroundLift.value).toBeGreaterThan(1);
+    main.setManual(-6);
+    main.update(12, 1, true);
+    expect(backgroundLift.value).toBe(1);
   });
 });
 

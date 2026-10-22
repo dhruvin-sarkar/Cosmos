@@ -1,14 +1,29 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "cosmos-astronexus.vercel.app" }],
+      "destination": "https://cosmos-sciforge.vercel.app/:path*",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
     },
     {
-      "source": "/(textures|data|fonts|models)/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }]
+      "source": "/(textures|data|fonts|models|basis)/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=600, stale-while-revalidate=86400" }]
+    },
+    {
+      "source": "/(.*)\\.cbin",
+      "headers": [
+        { "key": "Content-Type", "value": "application/x-cosmos-binary" },
+        { "key": "Content-Disposition", "value": "inline" }
+      ]
     }
   ]
 }

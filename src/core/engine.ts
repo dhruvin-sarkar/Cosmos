@@ -740,6 +740,26 @@ export function createEngine(opts: EngineOptions): Engine {
   let settledFrames = 0;
   let firstFrameMs = Number.POSITIVE_INFINITY;
   let consecutiveRenderErrors = 0;
+  // Boot progress while the first programs link (0.7 -> 0.98, monotonic): half the share of gated objects linked so
+  // far (objects gated later add to the total), half the elapsed share of BOOT_COMPILE_CAP_MS, the wait's hard bound.
+  let bootGatedTotal = 0;
+  let bootGatedPrev = 0;
+  let bootLinked = 0;
+  let bootReportMs = Number.NEGATIVE_INFINITY;
+  const reportBootLink = (now: number): void => {
+    const gated = shaderWarmup.gated;
+    bootGatedTotal += Math.max(0, gated - bootGatedPrev);
+    bootGatedPrev = gated;
+    const linked = Math.max(bootLinked, bootGatedTotal - gated);
+    if (linked === bootLinked && now - bootReportMs < 150) return;
+    bootLinked = linked;
+    bootReportMs = now;
+    const linkShare = bootGatedTotal > 0 ? linked / bootGatedTotal : 1;
+    const timeShare = Math.min(1, Math.max(0, now - firstFrameMs) / BOOT_COMPILE_CAP_MS);
+    const progress = 0.7 + 0.28 * (0.5 * linkShare + 0.5 * timeShare);
+    const message = bootGatedTotal > 0 ? `Compiling shaders · ${linked} of ${bootGatedTotal} objects` : 'Compiling shaders';
+    store.setState(s => ({ boot: { ...s.boot, progress: Math.max(s.boot.progress, progress), message } }));
+  };
 
   const applyCamera = (cam: CameraFrameState): void => {
     camPos.copy(cam.position);
@@ -867,6 +887,7 @@ export function createEngine(opts: EngineOptions): Engine {
     // Boot screen stays up while the first programs link in parallel (shader gate), then the scene appears complete.
     if (!readyResolved) {
       settledFrames = shaderWarmup.gated === 0 ? settledFrames + 1 : 0;
+      reportBootLink(now);
       if (settledFrames >= 3 || now - firstFrameMs > BOOT_COMPILE_CAP_MS) {
         readyResolved = true;
         readyMs = now;

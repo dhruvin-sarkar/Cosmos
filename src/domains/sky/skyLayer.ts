@@ -32,8 +32,9 @@ const prepSrc = (r: THREE.WebGLRenderer, t: THREE.Texture): THREE.Texture => (co
 export type SkyStyle = 'auto' | 'enhanced' | 'natural';
 const ENHANCED_KEY = 'visible-enhanced';
 /** Display exposure of the enhanced composite (its target stores linear × STORE_SCALE). */
-const ENHANCED_EXPOSURE = 0.06 / STORE_SCALE;
+const ENHANCED_EXPOSURE = 0.07 / STORE_SCALE;
 import { SkyBackdropMaterial, makeSkyQuad } from './skyMaterial';
+import { backgroundLift } from '../../render/post/exposure';
 
 export const SKY_BACKDROP_LAYER_ID = 'sky:backdrop';
 /** Distance from the Sun (m) where the Earth-centred maps start / finish fading out. */
@@ -144,6 +145,14 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
     },
   };
 
+  /** Quality tiers this GPU can hold: an 8K map on a 4096-texel device would upload as black (no sky at all). */
+  function tiersHere(rec: SkyBandRecord): ReturnType<typeof tiersFor> {
+    const max = svc?.renderer.capabilities.maxTextureSize ?? 16384;
+    const all = tiersFor(rec, quality);
+    const fit = all.filter((f) => f.width <= max);
+    return fit.length ? fit : all.slice(0, 1);
+  }
+
   function useEnhanced(): boolean {
     if (runtime.style === 'natural') return false;
     if (runtime.style === 'enhanced') return true;
@@ -187,7 +196,7 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
 
   async function loadBand(band: SpectralBandId, rec: SkyBandRecord): Promise<void> {
     if (!svc || loading.has(rec.id)) return;
-    const tiers = tiersFor(rec, quality);
+    const tiers = tiersHere(rec);
     const have = cache.get(rec.id);
     const start = have ? have.tier + 1 : 0;
     if (start >= tiers.length) return;
@@ -234,7 +243,7 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
   /** Enhanced composite: visible tiers (low → quality tier), each baked with Hα and far-IR dust. */
   async function loadEnhanced(rec: SkyBandRecord): Promise<void> {
     if (!svc || loading.has(ENHANCED_KEY)) return;
-    const tiers = tiersFor(rec, quality);
+    const tiers = tiersHere(rec);
     const have = cache.get(ENHANCED_KEY);
     const start = have ? have.tier + 1 : 0;
     if (start >= tiers.length) return;
@@ -331,7 +340,7 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
         const baked = cache.get(ENHANCED_KEY);
         if (baked) {
           show(desiredBand, ENHANCED_KEY, baked);
-          if (baked.tier + 1 < tiersFor(rec, quality).length) void loadEnhanced(rec);
+          if (baked.tier + 1 < tiersHere(rec).length) void loadEnhanced(rec);
         } else {
           void loadEnhanced(rec);
         }
@@ -339,7 +348,7 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
         const baked = cache.get(rec.id);
         if (baked) {
           show(desiredBand, rec.id, baked);
-          if (baked.tier + 1 < tiersFor(rec, quality).length && !loading.has(rec.id)) void loadBand(desiredBand, rec);
+          if (baked.tier + 1 < tiersHere(rec).length && !loading.has(rec.id)) void loadBand(desiredBand, rec);
         } else if (!loading.has(rec.id)) {
           void loadBand(desiredBand, rec);
         }
@@ -351,11 +360,12 @@ export function createSkyBackdropLayer(): { layer: Layer; runtime: SkyRuntime } 
       }
       const s = fadeT * fadeT * (3 - 2 * fadeT);
       const u = mesh.material.uniforms;
-      const k = runtime.exposureScale;
-      // Close to a planet the broad Hα/dust glow competes with the body: the enhanced composite drops to 40%
+      // Bounded dimming near bright bodies (exposure.ts backgroundLift) keeps the Milky Way from being crushed to black.
+      const k = runtime.exposureScale * backgroundLift.value;
+      // Close to a planet the broad Hα/dust glow competes with the body: the enhanced composite drops to 70%
       // inside 1e10 m of the focus and returns to full by 1e11 m.
       const fx = Math.min(1, Math.max(0, Math.log10(Math.max(1, ctx.focusDistanceM) / 1e10)));
-      const closeDim = 0.4 + 0.6 * fx * fx * (3 - 2 * fx);
+      const closeDim = 0.7 + 0.3 * fx * fx * (3 - 2 * fx);
       const fadeFor = (slot: Slot): number => (slot.everywhere ? 1 : distanceFade);
       u.uMapB.value = active ? active.baked.rt.texture : null;
       u.uWeightB.value = active ? active.exposure * k * fadeFor(active) * s * (active.baked.dataId === ENHANCED_KEY ? closeDim : 1) : 0;

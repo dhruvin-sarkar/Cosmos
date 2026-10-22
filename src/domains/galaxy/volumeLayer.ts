@@ -20,6 +20,10 @@ import { precompileOffscreen } from '../../core/perf';
 
 /** Half-size of the baked face-on map (kpc). */
 export const MAP_EXTENT_KPC = 20;
+/** From inside the disc, emission closer than this (kpc) ramps in: those stars are drawn as resolved points. */
+/** Diffuse-light gain for a camera in the mid-plane of the disc (see update()). */
+export const IN_DISC_GAIN = 0.4;
+export const NEAR_RESOLVED_KPC: readonly [number, number] = [0.2, 2.0];
 const SKY_FADE_START_M = 50 * PC_M;
 const SKY_FADE_END_M = 500 * PC_M;
 
@@ -159,6 +163,7 @@ uniform float uOpacity;
 uniform float uBgDim;       // 0..1: how much the dust dims what is behind (off near the Sun: no depth)
 uniform float uMaxSteps;
 uniform float uCoreSoft;
+uniform vec2 uNearKpc;    // resolved-star radius: diffuse emission ramps in over [x, y] kpc from the camera (0 = off)
 uniform float uPixelAngle; // radians per drawing-buffer pixel
 uniform float uTexel;      // kpc per map texel    // kpc: softening of the central cusp (raised when the camera is deep in the bulge)
 varying vec3 vDir;
@@ -245,6 +250,9 @@ void main() {
     // Explicit LOD from the pixel footprint (implicit derivatives are undefined inside the loop).
     float lod = log2(max(t + 0.5 * dsj, 1e-4) * uPixelAngle / uTexel + 1e-6);
     sampleGalaxy(sp, lod, e, k);
+    // Stars within ~1 kpc are resolved points (the catalogue / particle stars), not unresolved glow: counting them
+    // as diffuse light filled the whole sky with a grey wash from inside the disc (no blacks, no band contrast).
+    if (uNearKpc.y > 0.0) e *= smoothstep(uNearKpc.x, uNearKpc.y, t + 0.5 * dsj);
     vec3 att = exp(-k * dsj);
     // Exact integral of constant emission over a slab of constant extinction.
     vec3 w = mix(vec3(dsj), (1.0 - att) / max(k, vec3(1e-6)), step(vec3(1e-4), k * dsj));
@@ -347,6 +355,7 @@ export function createGalaxyVolumeLayer(): Layer & GalaxyVolumeHandle {
           uBgDim: { value: 0 },
           uMaxSteps: { value: 112 },
           uCoreSoft: { value: 0.01 },
+          uNearKpc: { value: new THREE.Vector2(0, 0) },
           uPixelAngle: { value: 1e-3 },
           uTexel: { value: (2 * MAP_EXTENT_KPC) / 2048 },
         },
@@ -424,8 +433,15 @@ export function createGalaxyVolumeLayer(): Layer & GalaxyVolumeHandle {
       u.uCoreSoft.value = THREE.MathUtils.clamp(0.06 - 0.05 * THREE.MathUtils.smoothstep(Math.log10(dGc / KPC_M), -1.5, 0), 0.01, 0.06);
       // Eye adaptation inside the bulge: the diffuse glow dims so the nuclear cluster, the S-stars and Sgr A* read
       // against it (a deep-sky exposure, not a white-out). 1 beyond 2 kpc → 0.05 within 1 pc of Sgr A*.
-      u.uIntensity.value = Math.pow(10, -1.3 * (1 - THREE.MathUtils.smoothstep(lgc, -3, 0.3))) * deepFade;
+      // Inside the disc (away from the bulge) the band is seen edge-on through the whole disc: exposed like the
+      // view from above it sat in AgX's shoulder (a flat cream wash, no dust lanes). Expose it like a dark-site
+      // long exposure instead: IN_DISC_GAIN in the mid-plane, back to 1 by 3 kpc above it.
+      const inDisc = (1 - THREE.MathUtils.smoothstep(Math.abs(camGal.z), 0.4, 3)) * THREE.MathUtils.smoothstep(dGc / KPC_M, 3, 5);
+      u.uIntensity.value = Math.pow(10, -1.3 * (1 - THREE.MathUtils.smoothstep(lgc, -3, 0.3))) * deepFade * (1 + (IN_DISC_GAIN - 1) * inDisc);
       u.uTexel.value = (2 * MAP_EXTENT_KPC) / (map?.width ?? 2048);
+      // Resolved-star suppression only in the disc away from the bulge (the GC views keep their surrounding glow).
+      const nearK = THREE.MathUtils.smoothstep(dGc / KPC_M, 2.5, 5);
+      (u.uNearKpc.value as THREE.Vector2).set(NEAR_RESOLVED_KPC[0] * nearK, NEAR_RESOLVED_KPC[1] * nearK);
 
       // March off-screen at reduced resolution (the dominant cost of galactic views), upsampled by the composite.
       if (!svcRef || !marchRt || !marchScene) return;

@@ -71,6 +71,25 @@ export const ADAPT_TAU_DOWN = 0.45;
 export const ADAPT_TAU_UP = 1.1;
 export const EV_LIMIT = 12;
 
+/**
+ * Background protection: the metered pull-down near a bright body (the Sun's photosphere needs about -4.7 EV) would
+ * crush the star field and the Milky Way to black, which no eye or long-exposure camera would show as total
+ * darkness. The background layers (catalogue stars, the sky backdrop) multiply their radiance by
+ * `backgroundLift.value`, so the background is dimmed by at most BACKGROUND_DIM_MAX_EV below the regime's base
+ * exposure (+ user bias): a gentle, bounded dimming. Manual exposure gets no lift.
+ */
+export const BACKGROUND_DIM_MAX_EV = 1.25;
+/** Largest lift applied (EV), so a gross pull-down still dims the background somewhat beyond the bound. */
+export const BACKGROUND_LIFT_MAX_EV = 4.5;
+/** Linear lift for the background layers, updated by the app's ExposureController every frame. */
+export const backgroundLift = { value: 1 };
+
+/** Linear background lift for an exposure `ev` relative to the reference (regime base + bias) EV. */
+export function backgroundLiftFor(ev: number, referenceEv: number): number {
+  const dim = referenceEv - ev - BACKGROUND_DIM_MAX_EV;
+  return Number.isFinite(dim) ? Math.pow(2, Math.min(BACKGROUND_LIFT_MAX_EV, Math.max(0, dim))) : 1;
+}
+
 const smooth = (x: number): number => x * x * (3 - 2 * x);
 
 export function regimeEv(scaleLog10: number): number {
@@ -137,6 +156,9 @@ export class ExposureController {
   private reading: MeterReading = { meanLog2: Number.NaN, coverage: 0, highLog2: Number.NaN, highCoverage: 0 };
   private initialized = false;
 
+  /** @param drivesBackground publish backgroundLift (the on-screen pipeline only; tests and thumbnails pass false). */
+  constructor(private readonly drivesBackground = false) {}
+
   get linear(): number {
     return Math.pow(2, this.state.ev);
   }
@@ -174,6 +196,7 @@ export class ExposureController {
       const k = 1 - Math.exp(-Math.max(0, dtSec) / tau);
       s.ev += (s.targetEv - s.ev) * k;
     }
+    if (this.drivesBackground) backgroundLift.value = s.mode === 'manual' ? 1 : backgroundLiftFor(s.ev, s.baseEv + s.biasEv);
     return s.ev;
   }
 }
