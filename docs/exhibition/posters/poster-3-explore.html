@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cosmos, poster 3: Explore it</title>
+<link rel="stylesheet" href="poster.css">
+<style>
+  .head { position: absolute; left: var(--safe); right: var(--safe); top: var(--safe); }
+  .head .row { display: flex; justify-content: space-between; }
+  .title { font-size: 56mm; line-height: 1; margin-top: 6mm; letter-spacing: -0.015em; }
+  .title em { font-style: italic; }
+  .lede.top { position: absolute; left: 282mm; top: 44mm; width: 121mm; font-size: 6.3mm; line-height: 1.42; }
+
+  .shots { position: absolute; left: var(--safe); right: var(--safe); top: 112mm; display: grid; grid-template-columns: 236mm 1fr; gap: 10mm; }
+  .shots .main .frame { height: 132.75mm; }
+  .shots .side .frame { height: 75.4mm; }
+  .side .body { font-size: 4.9mm; margin-top: 3mm; }
+
+  .block { position: absolute; left: var(--safe); right: var(--safe); }
+  .block h2 { font-size: 12mm; line-height: 1.05; margin-bottom: 5mm; }
+  .tries { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6mm 10mm; counter-reset: t; }
+  .try { position: relative; padding-left: 13mm; padding-top: 3mm; border-top: 0.35mm solid var(--hair); }
+  .try::before { counter-increment: t; content: counter(t); position: absolute; left: 0; top: 1.4mm; font-family: var(--atlas); font-size: 11mm; line-height: 1; color: var(--accent); }
+  .try b { display: block; font-weight: 600; font-size: 5.5mm; line-height: 1.25; color: var(--text-1); }
+  .try p { font-size: 4.5mm; line-height: 1.42; color: var(--text-2); margin-top: 1.2mm; }
+  .try kbd { height: 7.4mm; min-width: 7.4mm; font-size: 3.9mm; padding: 0 1.6mm; vertical-align: -1.4mm; }
+
+  .controls { display: grid; grid-template-columns: 1fr 1fr 1.55fr; gap: 0 12mm; }
+  .ctl h3 { font-family: var(--instrument); font-weight: 600; font-size: 4.6mm; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); padding-bottom: 2mm; border-bottom: 0.35mm solid var(--hair-strong); }
+  .ctl dl { display: grid; grid-template-columns: auto 1fr; gap: 2.1mm 4mm; margin-top: 3mm; align-items: center; }
+  .ctl dt { font-size: 4.5mm; color: var(--text-1); font-weight: 560; white-space: nowrap; }
+  .ctl dd { font-size: 4.5mm; color: var(--text-2); line-height: 1.3; }
+  .ctl.keys dl { grid-template-columns: auto 1fr auto 1fr; }
+  .ctl kbd { height: 7.6mm; min-width: 7.6mm; font-size: 3.9mm; padding: 0 1.6mm; }
+  .ctl dt kbd + kbd { margin-left: 1mm; }
+
+  .labs { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm 10mm; width: 252mm; }
+  .lab { border-top: 0.35mm solid var(--hair); padding-top: 3mm; }
+  .lab b { font-family: var(--atlas); font-weight: 400; font-size: 7.4mm; line-height: 1.1; color: var(--text-1); display: block; }
+  .lab p { font-size: 4.4mm; line-height: 1.4; color: var(--text-2); margin-top: 1.2mm; }
+  .qr { position: absolute; right: var(--safe); width: 118mm; }
+  .qr .plate { background: #fff; padding: 4mm; width: 66mm; height: 66mm; border-radius: 2mm; }
+  .qr .plate img { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+  .qr .t { font-family: var(--atlas); font-size: 9mm; line-height: 1.1; margin-top: 4mm; }
+  .qr .u { font-family: var(--catalogue); font-size: 4.4mm; color: var(--accent); margin-top: 1.5mm; word-break: break-all; }
+  .qr .small { margin-top: 1.5mm; font-size: 4.2mm; }
+  .credits { position: absolute; left: var(--safe); right: var(--safe); bottom: calc(var(--safe) + 15mm); font-size: 3.9mm; line-height: 1.45; color: var(--text-3); }
+  .credits b { color: var(--text-2); font-weight: 560; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="head">
+    <div class="row"><span class="overline">Cosmos · 3 of 3</span><span class="overline" style="color:var(--text-3)">SCI-FORGE 2026</span></div>
+    <h1 class="title">Explore <em>it</em></h1>
+  </div>
+  <p class="lede top">Cosmos starts at Earth. Drag to turn, scroll to travel, click anything to find out what it is. You cannot break it: press <kbd>H</kbd> to come home.</p>
+
+  <div class="shots">
+    <figure class="main">
+      <div class="frame"><img src="assets/img/ui-saturn-inspector.jpg" alt="Cosmos showing Saturn with its fact sheet and the planet strip"></div>
+      <figcaption class="caption"><b>Every planet and moon is one click away.</b> The strip at the bottom flies you to each planet; the row above it to each of its moons.</figcaption>
+    </figure>
+    <figure class="side">
+      <div class="frame"><img src="assets/img/ui-tour-proxima.jpg" alt="The golden journey tour at Proxima Centauri" style="object-position: 0 50%"></div>
+      <figcaption class="caption"><b>The golden journey,</b> chapter 12 of 23: Proxima Centauri.</figcaption>
+      <p class="body">Press <kbd style="height:7mm;min-width:7mm;font-size:3.8mm;vertical-align:-1.2mm">T</kbd> and Cosmos flies you from Earth past the planets, the nearest stars and the black hole at the centre of the Milky Way to the oldest light in the universe, with a short story at every stop. About nine minutes.</p>
+    </figure>
+  </div>
+
+  <section class="block" style="top: 268mm">
+    <h2>Six things to try</h2>
+    <div class="tries">
+      <div class="try"><b>Find the space station</b><p>Press <kbd>/</kbd> and type ISS. It is where it really is right now, with about 31,800 satellites and pieces of debris around it.</p></div>
+      <div class="try"><b>Visit every planet and moon</b><p>Keys <kbd>1</kbd> to <kbd>8</kbd> fly to Mercury through Neptune, <kbd>9</kbd> to Pluto. <kbd>[</kbd> and <kbd>]</kbd> step through the moons.</p></div>
+      <div class="try"><b>See the true scale</b><p>Click "Exhibition scale" at the top. In true scale the planets shrink to specks: space is mostly empty.</p></div>
+      <div class="try"><b>Look inside a planet</b><p>Open "Inside" on a planet's fact sheet for its layers, measured by quakes, gravity and spacecraft.</p></div>
+      <div class="try"><b>See the invisible sky</b><p>Open Light and switch the sky to radio, infrared, X-rays, gamma rays or the cosmic microwave background.</p></div>
+      <div class="try"><b>Speed up time</b><p>Press <kbd>.</kbd> to run time faster, up to 10 million times; <kbd>Space</kbd> pauses and <kbd>N</kbd> jumps back to now.</p></div>
+    </div>
+  </section>
+
+  <section class="block" style="top: 367mm">
+    <div class="controls">
+      <div class="ctl">
+        <h3>Touch</h3>
+        <dl>
+          <dt>Drag</dt><dd>Turn around</dd>
+          <dt>Pinch</dt><dd>Zoom across scales</dd>
+          <dt>Two fingers</dt><dd>Pan</dd>
+          <dt>Tap</dt><dd>Select and read</dd>
+          <dt>Tap a label</dt><dd>Fly there</dd>
+        </dl>
+      </div>
+      <div class="ctl">
+        <h3>Mouse</h3>
+        <dl>
+          <dt>Drag</dt><dd>Turn around</dd>
+          <dt>Scroll</dt><dd>Zoom across scales</dd>
+          <dt>Right-drag</dt><dd>Pan</dd>
+          <dt>Click</dt><dd>Select and read</dd>
+          <dt>Double-click</dt><dd>Fly there</dd>
+        </dl>
+      </div>
+      <div class="ctl keys">
+        <h3>Keyboard</h3>
+        <dl>
+          <dt><kbd>T</kbd></dt><dd>Start the tour</dd>
+          <dt><kbd>←</kbd><kbd>→</kbd></dt><dd>Tour chapters</dd>
+          <dt><kbd>/</kbd></dt><dd>Search</dd>
+          <dt><kbd>B</kbd></dt><dd>Solar System navigator</dd>
+          <dt><kbd>0</kbd>–<kbd>9</kbd></dt><dd>Sun, planets, Pluto</dd>
+          <dt><kbd>[</kbd><kbd>]</kbd></dt><dd>Moons</dd>
+          <dt><kbd>H</kbd></dt><dd>Home to Earth</dd>
+          <dt><kbd>Esc</kbd></dt><dd>Close</dd>
+          <dt><kbd>L</kbd><kbd>O</kbd></dt><dd>Labels, orbits</dd>
+          <dt><kbd>?</kbd></dt><dd>All the keys</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" style="top: 438mm">
+    <h2>Four labs: change the numbers</h2>
+    <div class="labs">
+      <div class="lab"><b>Orbital debris</b><p>29,408 tracked objects crowd low orbit. Pick a launch policy and watch the next 100 years.</p></div>
+      <div class="lab"><b>Asteroid deflection</b><p>Replay NASA's DART impact, then try to steer an asteroid away from Earth.</p></div>
+      <div class="lab"><b>Habitability</b><p>Could a planet keep liquid water? Change its star and orbit, or explore 6,451 exoplanets.</p></div>
+      <div class="lab"><b>Black hole</b><p>Drop a clock towards Sagittarius A* and watch time slow down.</p></div>
+    </div>
+  </section>
+  <div class="qr" style="top: 438mm">
+    <div class="plate"><img src="assets/qr-site.svg" alt="QR code to the live Cosmos site"></div>
+    <div class="t">Take it home</div>
+    <div class="u" data-site-url></div>
+    <div class="small">Runs in a web browser. No install, no account.</div>
+  </div>
+
+  <p class="credits"><b>Credits.</b> Built for SCI-FORGE 2026. Data shared openly by NASA, JPL, ESA (Gaia, Planck), CelesTrak, USGS Astrogeology, NOAA, the IAU, CDS, the 2MASS Redshift Survey, DESI and many survey teams; every dataset, licence and citation is listed in the app's Sources panel. Built with three.js, astronomy-engine and satellite.js. Type: Bodoni Moda, Mona Sans, JetBrains Mono (SIL Open Font License).</p>
+
+  <div class="footer">
+    <span class="mark">Cosmos</span>
+    <span>Supports UN Sustainable Development Goals 4 (Quality Education) and 17 (Partnerships)</span>
+    <span class="mono" data-site-url></span>
+  </div>
+</div>
+<script>
+  window.posterReady = document.fonts.ready.then(() => Promise.all([...document.images].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }))));
+</script>
+<script src="site.js"></script>
+</body>
+</html>

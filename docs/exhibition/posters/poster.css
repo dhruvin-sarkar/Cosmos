@@ -1,0 +1,163 @@
+/*
+ * Cosmos exhibition posters: shared print system. A2 portrait (420 x 594 mm trim) with 3 mm bleed on every side.
+ * Typography and colour follow docs/design/UI_SYSTEM.md: true black, quiet ink, hairlines, one brass accent.
+ * Voices: Atlas = Bodoni Moda (names, titles), Instrument = Mona Sans (text), Catalogue = JetBrains Mono (figures, ids).
+ * The sheet is 426 x 600 mm; build.mjs prints it either with bleed (426 x 600) or trimmed to exact A2 (420 x 594).
+ */
+@font-face { font-family: 'Bodoni Moda'; font-style: normal; font-weight: 400 900; src: url('assets/fonts/bodoni-moda-latin-opsz-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Bodoni Moda'; font-style: italic; font-weight: 400 900; src: url('assets/fonts/bodoni-moda-latin-opsz-italic.woff2') format('woff2'); }
+@font-face { font-family: 'Mona Sans'; font-style: normal; font-weight: 200 900; font-stretch: 75% 125%; src: url('assets/fonts/mona-sans-latin-wdth-normal.woff2') format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400; src: url('assets/fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 500; src: url('assets/fonts/jetbrains-mono-latin-500-normal.woff2') format('woff2'); }
+
+:root {
+  --bleed: 3mm;
+  --trim-w: 420mm;
+  --trim-h: 594mm;
+  --sheet-w: calc(var(--trim-w) + 2 * var(--bleed));
+  --sheet-h: calc(var(--trim-h) + 2 * var(--bleed));
+  --margin: 20mm; /* safe margin inside the trim */
+  --safe: calc(var(--bleed) + var(--margin));
+
+  --space: #000;
+  --text-1: #e8e8e8;
+  --text-2: #bebebe;
+  --text-3: #9e9e9e;
+  --hair: rgb(255 255 255 / 0.16);
+  --hair-strong: rgb(255 255 255 / 0.3);
+  --hair-bold: rgb(255 255 255 / 0.45);
+  --accent: #e9ca80;
+  --accent-soft: rgb(233 202 128 / 0.16);
+  --accent-line: rgb(233 202 128 / 0.75);
+  --real: #86c7ed;
+  --modified: #fd9c5d;
+  --prov-observed: #86c7ed;
+  --prov-derived: #7fd3bd;
+  --prov-reconstructed: #c3a6ee;
+  --prov-illustrative: #f0a2c6;
+
+  --atlas: 'Bodoni Moda', 'Didot', 'Times New Roman', serif;
+  --instrument: 'Mona Sans', 'Segoe UI', system-ui, sans-serif;
+  --catalogue: 'JetBrains Mono', 'Consolas', monospace;
+}
+
+@page { size: 426mm 600mm; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--space); }
+body {
+  width: var(--sheet-w);
+  height: var(--sheet-h);
+  color: var(--text-1);
+  font-family: var(--instrument);
+  font-size: 7mm; /* about 20 pt */
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums lining-nums;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  text-rendering: geometricPrecision;
+}
+/* Trimmed print (exact A2): build.mjs adds .trimmed and prints a 420 x 594 page. */
+html.trimmed body { width: var(--trim-w); height: var(--trim-h); overflow: hidden; }
+html.trimmed .sheet { margin: calc(-1 * var(--bleed)) 0 0 calc(-1 * var(--bleed)); }
+
+.sheet {
+  position: relative;
+  width: var(--sheet-w);
+  height: var(--sheet-h);
+  overflow: hidden;
+  background: var(--space);
+}
+/* Screen-only trim and safe guides (?guides=1) */
+.guides .sheet::after {
+  content: '';
+  position: absolute;
+  inset: var(--bleed);
+  outline: 0.3mm dashed #f0f;
+  pointer-events: none;
+  z-index: 99;
+}
+.guides .sheet::before {
+  content: '';
+  position: absolute;
+  inset: var(--safe);
+  outline: 0.3mm dashed #0ff;
+  pointer-events: none;
+  z-index: 99;
+}
+
+.safe { position: absolute; inset: var(--safe); }
+
+/* Type voices */
+.atlas { font-family: var(--atlas); font-optical-sizing: auto; font-weight: 400; }
+.mono { font-family: var(--catalogue); font-weight: 400; letter-spacing: 0; }
+.overline {
+  font-family: var(--instrument);
+  font-weight: 560;
+  font-size: 4.6mm;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.lede { font-size: 8.4mm; line-height: 1.38; color: var(--text-1); text-wrap: pretty; }
+.body { font-size: 6.4mm; line-height: 1.5; color: var(--text-2); text-wrap: pretty; }
+.small { font-size: 4.6mm; line-height: 1.45; color: var(--text-3); }
+.fine { font-size: 3.6mm; line-height: 1.45; color: var(--text-3); }
+h1, h2, h3 { font-family: var(--atlas); font-weight: 400; text-wrap: balance; letter-spacing: -0.005em; }
+.accent { color: var(--accent); }
+.rule { height: 0; border-top: 0.35mm solid var(--hair-strong); }
+
+/* Image language: renders sit on true black; edges dissolve into space rather than boxes. */
+.render { position: absolute; display: block; object-fit: cover; }
+.frame {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  border: 0.35mm solid var(--hair);
+}
+.frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.caption { margin-top: 2.2mm; font-size: 4.2mm; line-height: 1.4; color: var(--text-3); }
+.caption b { color: var(--text-2); font-weight: 560; }
+
+/* Provenance marks, as in the inspector (observed / derived / reconstructed / illustrative). */
+.prov { display: inline-flex; align-items: center; gap: 2mm; white-space: nowrap; }
+.prov::before { content: ''; width: 7mm; height: 0; border-top: 0.9mm solid currentColor; }
+.prov.observed { color: var(--prov-observed); }
+.prov.derived { color: var(--prov-derived); }
+.prov.reconstructed { color: var(--prov-reconstructed); }
+.prov.reconstructed::before { border-top-style: dashed; }
+.prov.illustrative { color: var(--prov-illustrative); }
+.prov.illustrative::before { border-top-style: dotted; }
+
+/* Keycaps for the controls guide */
+kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 9mm;
+  height: 9mm;
+  padding: 0 2.2mm;
+  border: 0.4mm solid var(--hair-bold);
+  border-radius: 1.6mm;
+  font-family: var(--catalogue);
+  font-weight: 500;
+  font-size: 4.6mm;
+  color: var(--text-1);
+  line-height: 1;
+}
+
+/* Footer shared by all three posters */
+.footer {
+  position: absolute;
+  left: var(--safe);
+  right: var(--safe);
+  bottom: var(--safe);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10mm;
+  padding-top: 4mm;
+  border-top: 0.35mm solid var(--hair);
+  font-size: 4.2mm;
+  color: var(--text-3);
+}
+.footer .mark { font-family: var(--atlas); font-size: 7mm; color: var(--text-1); }

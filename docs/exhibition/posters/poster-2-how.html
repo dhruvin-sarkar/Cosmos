@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cosmos, poster 2: How do we know?</title>
+<link rel="stylesheet" href="poster.css">
+<style>
+  .head { position: absolute; left: var(--safe); right: var(--safe); top: var(--safe); }
+  .head .row { display: flex; justify-content: space-between; }
+  .title { font-size: 47mm; line-height: 0.98; margin-top: 6mm; letter-spacing: -0.015em; width: 240mm; }
+  .title em { font-style: italic; }
+
+  .intro { position: absolute; left: 266mm; top: 44mm; width: 137mm; }
+  .legendwrap { position: absolute; left: var(--safe); top: 140mm; width: 196mm; }
+  .intro .lede { font-size: 7.6mm; }
+  .legend { margin-top: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4.5mm 8mm; }
+  .legend .prov { font-size: 5.2mm; font-weight: 560; }
+  .legend p { font-size: 4.4mm; line-height: 1.4; color: var(--text-2); margin-top: 1mm; }
+  .inspector { position: absolute; left: 236mm; top: 136mm; width: 167mm; }
+  .inspector .frame { width: 167mm; height: 93.9mm; }
+
+  .section { position: absolute; left: var(--safe); right: var(--safe); }
+  .section h2 { font-size: 13mm; line-height: 1.05; }
+  .section .overline { margin-bottom: 2.5mm; }
+
+  /* Catalogue chart: one series, log scale, recessive grid, every bar direct-labelled with its count. */
+  .chart { position: absolute; left: 0; top: 24mm; width: 250mm; }
+  .chart svg { width: 250mm; height: 106mm; overflow: visible; display: block; }
+  .tiles { position: absolute; left: 266mm; top: 24mm; width: 114mm; display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-top: 0.35mm solid var(--hair); }
+  .tile { padding: 3.2mm 0 3.6mm; border-bottom: 0.35mm solid var(--hair); }
+  .tile:nth-child(odd) { padding-right: 4mm; border-right: 0.35mm solid var(--hair); }
+  .tile:nth-child(even) { padding-left: 5mm; }
+  .tile .v { font-family: var(--atlas); font-size: 15mm; line-height: 1; color: var(--text-1); }
+  .tile .k { font-size: 4.3mm; line-height: 1.3; color: var(--text-2); margin-top: 1.4mm; }
+  .shared { position: absolute; left: 0; right: 0; top: 128mm; font-size: 4.5mm; line-height: 1.5; color: var(--text-3); }
+  .shared b { color: var(--text-2); font-weight: 560; }
+
+  .cards { position: absolute; left: var(--safe); right: var(--safe); top: 426mm; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0 8mm; }
+  .card .frame { height: 52mm; }
+  .card h3 { font-size: 8mm; line-height: 1.08; margin-top: 3.4mm; min-height: 17.3mm; }
+  .card p { font-size: 4.45mm; line-height: 1.42; color: var(--text-2); margin-top: 1.6mm; text-wrap: pretty; }
+  .card .marks { margin-top: 2.4mm; display: flex; flex-wrap: wrap; gap: 1.2mm 5mm; font-size: 3.8mm; font-weight: 560; }
+  .tempchart { height: 52mm; border: 0.35mm solid var(--hair); position: relative; background: #000; }
+  .tempchart svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="head">
+    <div class="row"><span class="overline">Cosmos · 2 of 3</span><span class="overline" style="color:var(--text-3)">SCI-FORGE 2026</span></div>
+    <h1 class="title">How do we <em>know?</em></h1>
+  </div>
+
+  <div class="intro">
+    <p class="lede">Nothing in Cosmos is made up where a measurement exists. Click any object and every value carries a mark that says where it came from, with its source.</p>
+  </div>
+  <div class="legendwrap">
+    <div class="legend">
+      <div><span class="prov observed">Observed</span><p>Measured directly: a position, a mass, a photograph.</p></div>
+      <div><span class="prov derived">Derived</span><p>Computed from measurements by a stated model.</p></div>
+      <div><span class="prov reconstructed">Reconstructed</span><p>Inferred from data, like the Milky Way seen from outside.</p></div>
+      <div><span class="prov illustrative">Illustrative</span><p>Drawn for clarity, like the Oort cloud or a black-hole disc.</p></div>
+    </div>
+    <p class="body" style="margin-top:7mm;font-size:5.2mm">Where nobody has measured, Cosmos says so: the unseen half of Triton, exoplanet surfaces, the Oort cloud. Nobody has photographed the Milky Way from outside, so its shape is a reconstruction from star maps.</p>
+  </div>
+  <figure class="inspector">
+    <div class="frame"><img src="assets/img/ui-earth-inspector.jpg" alt="The Cosmos inspector open on Earth, listing facts with provenance marks"></div>
+    <figcaption class="caption"><b>The inspector.</b> Earth's fact sheet, as a visitor sees it. A missing value reads "Unknown", never zero.</figcaption>
+  </figure>
+
+  <section class="section" style="top: 250mm">
+    <div class="overline">Real catalogues</div>
+    <h2>Every dot is a real object</h2>
+    <div class="chart">
+      <svg id="catalogue" viewBox="0 0 250 106"></svg>
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="v">14</div><div class="k">all-sky maps, radio to gamma rays</div></div>
+      <div class="tile"><div class="v">88</div><div class="k">constellations, IAU lines and boundaries</div></div>
+      <div class="tile"><div class="v">13</div><div class="k">black holes with measured masses</div></div>
+      <div class="tile"><div class="v">12</div><div class="k">spacecraft on their real trajectories</div></div>
+      <div class="tile"><div class="v">76</div><div class="k">versioned datasets, all offline</div></div>
+      <div class="tile"><div class="v">0</div><div class="k">calls to outside servers at the stand</div></div>
+    </div>
+    <p class="shared"><b>Shared openly by:</b> NASA and JPL (Horizons, Small-Body Database, Exoplanet Archive), ESA (Gaia, Planck), CelesTrak, USGS Astrogeology, NOAA, the IAU, CDS (SIMBAD, VizieR), the 2MASS Redshift Survey and DESI, with maps from LRO, MESSENGER, Cassini, Juno, Dawn, New Horizons and the Voyagers. The Sources panel lists the version, licence and citation of every dataset.</p>
+  </section>
+
+  <div class="section" style="top: 416mm"><div class="overline">How the hard parts work</div></div>
+  <div class="cards">
+    <article class="card">
+      <div class="frame"><img src="assets/img/blackhole.jpg" alt="Ray-traced black hole Sagittarius A* in Cosmos" style="object-position: 50% 50%"></div>
+      <h3>Light bent by a black hole</h3>
+      <p>For every pixel near Sagittarius A*, Cosmos traces the light ray backwards through curved spacetime. The dark shadow, about 5.2 times the event-horizon radius across, the thin photon ring and the far side of the disc lifted over the top all come out of the physics.</p>
+      <div class="marks"><span class="prov derived">Light bending</span><span class="prov illustrative">Glowing disc</span></div>
+    </article>
+    <article class="card">
+      <div class="frame"><img src="assets/img/ui-interior-earth.jpg" alt="Cutaway of Earth's interior in Cosmos"></div>
+      <h3>Inside planets, from quakes and gravity</h3>
+      <p>Earthquake waves map Earth's layers: the inner core ends at 1,221.5 km, the outer core at 3,480 km. InSight heard marsquakes for four years; Apollo seismometers found the Moon's small iron core; Juno's gravity map shows Jupiter's core is fuzzy, not a hard ball.</p>
+      <div class="marks"><span class="prov observed">Seismology</span><span class="prov derived">Gravity, spin</span></div>
+    </article>
+    <article class="card">
+      <div class="tempchart"><svg id="temps" viewBox="0 0 88 52"></svg></div>
+      <h3>Star colours from temperature</h3>
+      <p>Each of the 109,389 stars has a colour index from its catalogue. Cosmos turns it into a temperature and draws the colour a glowing body has at that temperature. Brightness is recomputed for wherever you are, from the star's true luminosity and distance.</p>
+      <div class="marks"><span class="prov observed">Colour index</span><span class="prov derived">Temperature, colour</span></div>
+    </article>
+    <article class="card">
+      <div class="frame"><img src="assets/img/cmb.jpg" alt="The Planck map of the cosmic microwave background as a sphere in Cosmos" style="object-position: 50% 50%"></div>
+      <h3>The oldest light, mapped by Planck</h3>
+      <p>The cosmic microwave background left 380,000 years after the Big Bang. Its spots differ by about 1 part in 100,000 from 2.7255 K. Cosmos draws ESA Planck's cleaned map on a sphere at the distance that light has come from: now about 45 billion light-years.</p>
+      <div class="marks"><span class="prov observed">Planck map</span><span class="prov derived">Distance</span></div>
+    </article>
+  </div>
+
+  <div class="footer">
+    <span class="mark">Cosmos</span>
+    <span>Methods and limits for every region: docs/SCIENCE.md · sources: docs/DATA_SOURCES.md</span>
+    <span class="mono" data-site-url></span>
+  </div>
+</div>
+
+<script>
+  // ---- Catalogue counts (docs/EXHIBITION.md "What is in the build"; docs/SCIENCE.md) ----
+  const ROWS = [
+    { k: 'Galaxies of the cosmic web', src: 'DESI DR1 and 2MRS', v: 2.2e6, label: 'about 2.2 million' },
+    { k: 'Stars', src: 'HYG v4.4: Hipparcos, Yale, Gliese', v: 109389 },
+    { k: 'Asteroids', src: 'JPL Small-Body Database', v: 75855 },
+    { k: 'Satellites and debris', src: 'CelesTrak, positions by SGP4', v: 31800, label: 'about 31,800' },
+    { k: 'Beyond Neptune', src: 'JPL Small-Body Database', v: 7301 },
+    { k: 'Exoplanets', src: 'NASA Exoplanet Archive', v: 6451, extra: 'around 4,847 stars' },
+    { k: 'Near-Earth objects', src: 'JPL SBDB and CNEOS', v: 3449 },
+    { k: 'Nearby galaxies', src: 'Karachentsev Local Volume catalogue', v: 869 },
+    { k: 'Globular clusters', src: 'Harris; Baumgardt and Vasiliev', v: 157 },
+  ];
+  {
+    const svg = document.getElementById('catalogue');
+    const NS = 'http://www.w3.org/2000/svg';
+    const add = (tag, a, text) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (text != null) e.textContent = text; svg.appendChild(e); return e; };
+    const X0 = 86, X1 = 226, L0 = 2, L1 = 7; // bars from 10^2 to 10^7
+    const xOf = v => X0 + (Math.log10(v) - L0) / (L1 - L0) * (X1 - X0);
+    const rowH = 10, top = 8;
+    for (let p = L0; p <= L1; p++) {
+      const x = xOf(10 ** p);
+      add('line', { x1: x, y1: top - 3, x2: x, y2: top + ROWS.length * rowH - 2, stroke: 'rgb(255 255 255 / 0.12)', 'stroke-width': 0.25 });
+      const lab = ['100', '1,000', '10,000', '100,000', '1 million', '10 million'][p - L0];
+      add('text', { x, y: top - 4.5, fill: '#9e9e9e', 'font-size': 3.4, 'text-anchor': 'middle', 'font-family': 'JetBrains Mono' }, lab);
+    }
+    ROWS.forEach((r, i) => {
+      const y = top + i * rowH;
+      add('text', { x: 0, y: y + 4.1, fill: '#e8e8e8', 'font-size': 4.9, 'font-family': 'Mona Sans', 'font-weight': 560 }, r.k);
+      add('text', { x: 0, y: y + 8.6, fill: '#9e9e9e', 'font-size': 3.5, 'font-family': 'Mona Sans' }, r.src);
+      const w = xOf(r.v) - X0;
+      // thin bar, square at the baseline, 1 mm rounded data end
+      add('path', { d: `M ${X0} ${y + 1.6} H ${X0 + w - 1} a 1 1 0 0 1 1 1 V ${y + 5.6} a 1 1 0 0 1 -1 1 H ${X0} Z`, fill: '#e9ca80' });
+      add('text', { x: X0 + w + 2.2, y: y + 5.6, fill: '#e8e8e8', 'font-size': 4.4, 'font-family': 'JetBrains Mono', 'font-weight': 500 }, r.label ?? r.v.toLocaleString('en-US'));
+      if (r.extra) add('text', { x: X0 + w + 2.2 + (r.label ?? r.v.toLocaleString('en-US')).length * 2.7 + 2, y: y + 5.6, fill: '#9e9e9e', 'font-size': 3.6, 'font-family': 'Mona Sans' }, r.extra);
+    });
+    add('line', { x1: X0, y1: top - 2, x2: X0, y2: top + ROWS.length * rowH - 2, stroke: 'rgb(255 255 255 / 0.45)', 'stroke-width': 0.3 });
+    add('text', { x: X0, y: top + ROWS.length * rowH + 3.5, fill: '#9e9e9e', 'font-size': 3.4, 'font-family': 'Mona Sans' }, 'Objects drawn in Cosmos (each gridline is ten times more)');
+  }
+
+  // ---- Blackbody colour strip: Planck spectrum x CIE 1931 colour matching (Wyman, Sloan and Shirley 2013 fit) -> sRGB ----
+  {
+    const g = (x, mu, s1, s2) => { const t = (x - mu) / (x < mu ? s1 : s2); return Math.exp(-0.5 * t * t); };
+    const cmf = l => [
+      1.056 * g(l, 599.8, 37.9, 31.0) + 0.362 * g(l, 442.0, 16.0, 26.7) - 0.065 * g(l, 501.1, 20.4, 26.2),
+      0.821 * g(l, 568.8, 46.9, 40.5) + 0.286 * g(l, 530.9, 16.3, 31.1),
+      1.217 * g(l, 437.0, 11.8, 36.0) + 0.681 * g(l, 459.0, 26.0, 13.8),
+    ];
+    const planck = (lnm, T) => { const l = lnm * 1e-9; return 1 / (l ** 5 * (Math.exp(1.4387769e-2 / (l * T)) - 1)); };
+    const enc = c => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055);
+    const colour = T => {
+      let X = 0, Y = 0, Z = 0;
+      for (let l = 380; l <= 780; l += 5) { const p = planck(l, T), [x, y, z] = cmf(l); X += p * x; Y += p * y; Z += p * z; }
+      let r = 3.2406 * X - 1.5372 * Y - 0.4986 * Z, gg = -0.9689 * X + 1.8758 * Y + 0.0415 * Z, b = 0.0557 * X - 0.204 * Y + 1.057 * Z;
+      const m = Math.max(r, gg, b); r = Math.max(0, r / m); gg = Math.max(0, gg / m); b = Math.max(0, b / m);
+      return `rgb(${[r, gg, b].map(c => Math.round(255 * enc(c))).join(' ')})`;
+    };
+    const svg = document.getElementById('temps');
+    const NS = 'http://www.w3.org/2000/svg';
+    const add = (tag, a, text) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (text != null) e.textContent = text; svg.appendChild(e); return e; };
+    const T0 = 2000, T1 = 30000, X0 = 5, X1 = 83;
+    const xOf = T => X0 + (Math.log10(T) - Math.log10(T0)) / (Math.log10(T1) - Math.log10(T0)) * (X1 - X0);
+    const txt = (x, y, size, fill, t, anchor = 'start', fam = 'Mona Sans') => add('text', { x, y, fill, 'font-size': size, 'text-anchor': anchor, 'font-family': fam }, t);
+    txt(X0, 7, 3, '#bebebe', 'Colour of a glowing body at each temperature');
+    for (let i = 0; i <= 80; i++) {
+      const T = T0 * (T1 / T0) ** (i / 80);
+      add('rect', { x: xOf(T), y: 18, width: (X1 - X0) / 80 + 0.1, height: 9, fill: colour(T) });
+    }
+    for (const T of [2000, 5000, 10000, 30000]) {
+      const x = xOf(T);
+      add('line', { x1: x, y1: 27, x2: x, y2: 29, stroke: 'rgb(255 255 255 / 0.5)', 'stroke-width': 0.2 });
+      txt(x, 32.5, 2.3, '#9e9e9e', T.toLocaleString('en-US') + ' K', T === 2000 ? 'start' : T === 30000 ? 'end' : 'middle', 'JetBrains Mono');
+    }
+    // Teff: TRAPPIST-1 2,566 K (Agol et al. 2021); the Sun 5,772 K (IAU 2015 B3)
+    for (const [T, name, ly] of [[2566, 'TRAPPIST-1, 2,566 K', 11.4], [5772, 'the Sun, 5,772 K', 15.2]]) {
+      const x = xOf(T);
+      add('line', { x1: x, y1: ly + 0.9, x2: x, y2: 18, stroke: '#e8e8e8', 'stroke-width': 0.22 });
+      txt(x - 0.6, ly, 2.5, '#e8e8e8', name);
+    }
+    txt(X0, 39, 2.6, '#bebebe', 'Cool red dwarfs');
+    txt(X1, 39, 2.6, '#bebebe', 'Hot blue giants', 'end');
+    txt(X0, 45, 2.15, '#9e9e9e', 'Planck spectrum, CIE 1931 colour matching, sRGB.');
+    txt(X0, 48.3, 2.15, '#9e9e9e', 'Hotter is bluer; no star looks green.');
+  }
+  window.posterReady = document.fonts.ready.then(() => Promise.all([...document.images].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }))));
+</script>
+<script src="site.js"></script>
+</body>
+</html>

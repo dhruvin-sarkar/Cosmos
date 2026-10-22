@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cosmos · SCI-FORGE 2026</title>
+<link rel="stylesheet" href="deck.css">
+</head>
+<body>
+<div id="stage" aria-live="polite">
+
+<!-- 1 · Title -->
+<section class="slide s-title" data-title="Cosmos">
+  <img class="bleed shift-right" src="img/earth.jpg" alt="Earth from space in Cosmos, lit by the Sun, ringed by tracked satellites">
+  <div class="title-block">
+    <p class="eyebrow">SCI-FORGE 2026 · Student science exhibition</p>
+    <h1 class="atlas-hero">Cosmos</h1>
+    <p class="lede big">One continuous flight from the International Space Station to the oldest light in the universe, built from real data and running live in a browser.</p>
+  </div>
+  <p class="foot url">cosmos-astronexus.vercel.app</p>
+  <aside class="notes">Good morning. We built Cosmos: a way to fly, in one unbroken move, from the International Space Station to the oldest light in the universe. Everything you will see today is running live in a browser on that laptop, from real, public data.</aside>
+</section>
+
+<!-- 2 · The problem -->
+<section class="slide s-problem" data-title="The problem">
+  <p class="eyebrow"><span class="n">02</span> The problem</p>
+  <h2>Space covers too many scales to picture.</h2>
+  <div class="problem-stats">
+    <div class="stat"><span class="num">109 m</span><span class="cap">the International Space Station, end to end</span></div>
+    <div class="stat"><span class="num">45 billion ly</span><span class="cap">to the shell of the cosmic microwave background</span></div>
+    <div class="stat accent"><span class="num">≈ 25</span><span class="cap">powers of ten between them. A printed diagram can show about two before things vanish or fall off the page.</span></div>
+  </div>
+  <svg id="ladder" class="ladder" viewBox="0 0 1760 300" role="img" aria-label="Logarithmic distance scale from 100 metres to 10 to the 27 metres"></svg>
+  <p class="foot src">Sizes and distances: NASA fact sheets, IAU 2015, Gaia DR3, Planck 2018, as cited in the app's tour narration.</p>
+  <aside class="notes">The trouble with space is scale. The space station is 109 metres long. The farthest thing we can see, the cosmic microwave background, is about 45 billion light-years away. That is twenty-five powers of ten. A page in a textbook can show maybe two before things shrink to nothing or fall off the edge, so diagrams squash everything together and the feeling of distance is lost.</aside>
+</section>
+
+<!-- 3 · What Cosmos is -->
+<section class="slide s-what" data-title="What Cosmos is">
+  <p class="eyebrow"><span class="n">03</span> What Cosmos is</p>
+  <div class="what-grid">
+    <div class="what-text">
+      <h2 class="tight">A 3D universe explorer with one continuous camera, from Earth orbit to the cosmic microwave background, that puts every object where real data says it is today.</h2>
+      <ul class="facts">
+        <li><b>Real positions, now.</b> Planets and moons from ephemeris formulas; about 31,800 satellites and debris propagated with SGP4 from CelesTrak elements.</li>
+        <li><b>Every value sourced.</b> Click anything: each number is marked observed, derived, reconstructed or illustrative.</li>
+        <li><b>Four labs.</b> Orbital debris, asteroid deflection, habitability, black holes.</li>
+        <li><b>Offline in a browser.</b> 76 datasets on disk, no account, no server.</li>
+      </ul>
+    </div>
+    <figure class="frame hero"><img src="img/app-ui.jpg" alt="The Cosmos interface around Earth, with search, the scale disclosure and the planet bar"><figcaption>The live app at Earth: search at the top, the <span style="color:var(--accent)">Exhibition scale · Enlarged for visibility</span> disclosure beside it, the planet bar and the moons and stations of the body in focus at the bottom, the Cosmic Ruler on the right.</figcaption></figure>
+  </div>
+  <aside class="notes">Cosmos is a 3D explorer that keeps one continuous camera across all of those scales, and puts each object where the data says it is right now: the planets from ephemeris formulas, and 31,800 satellites propagated from this week's orbital elements. Click anything and every number tells you how we know it. It runs offline: all 76 datasets are on the laptop.</aside>
+</section>
+
+<!-- 4 · Journey I -->
+<section class="slide s-journey" data-title="The journey: home to the heliopause">
+  <p class="eyebrow"><span class="n">04</span> The golden journey, part 1</p>
+  <h2>From home to the edge of the Sun's wind</h2>
+  <div class="tiles t3">
+    <figure><img src="img/iss.jpg" alt=""><figcaption><b>International Space Station</b><span>about 400 km up · one orbit every 92 min</span></figcaption></figure>
+    <figure><img src="img/moon.jpg" alt=""><figcaption><b>The Moon</b><span>384,400 km · 1.3 light-seconds</span></figcaption></figure>
+    <figure><img src="img/sun.jpg" alt=""><figcaption><b>The Sun</b><span>1 AU = 149.6 million km · 1.39 million km wide</span></figcaption></figure>
+    <figure><img src="img/jupiter.jpg" alt=""><figcaption><b>Jupiter</b><span>5.20 AU · 11.2 Earths wide</span></figcaption></figure>
+    <figure><img src="img/saturn.jpg" alt=""><figcaption><b>Saturn</b><span>9.54 AU · rings with the Cassini division</span></figcaption></figure>
+    <figure><img src="img/heliosphere.jpg" alt=""><figcaption><b>Looking back from Voyager 1</b><span>172 AU · radio takes 23.9 hours</span></figcaption></figure>
+  </div>
+  <aside class="notes">This is the golden journey: 23 chapters, about nine minutes. We start 400 kilometres up at the space station, step out to the Moon at 384,400 kilometres, then the Sun at one astronomical unit, Jupiter at 5.2 and Saturn at 9.5 AU. Then we look back from Voyager 1, 172 AU out: its radio signals now take almost a full day to reach us.</aside>
+</section>
+
+<!-- 5 · Journey II -->
+<section class="slide s-journey" data-title="The journey: to the oldest light">
+  <p class="eyebrow"><span class="n">05</span> The golden journey, part 2</p>
+  <h2>Past the stars to the oldest light</h2>
+  <div class="tiles t4">
+    <figure><img src="img/oort.jpg" alt=""><figcaption><b>Oort cloud</b><span>up to ~1.6 ly · <i class="prov ill">illustrative</i></span></figcaption></figure>
+    <figure><img src="img/proxima.jpg" alt=""><figcaption><b>Proxima Centauri</b><span>4.25 ly · Voyager 1: 75,000 years</span></figcaption></figure>
+    <figure><img src="img/trappist.jpg" alt=""><figcaption><b>TRAPPIST-1</b><span>40.7 ly · seven rocky planets</span></figcaption></figure>
+    <figure><img src="img/milky-way.jpg" alt=""><figcaption><b>The Milky Way</b><span>Sun 27,000 ly out · <i class="prov rec">reconstructed</i></span></figcaption></figure>
+    <figure><img src="img/black-hole.jpg" alt=""><figcaption><b>Sagittarius A*</b><span>4.3 million Suns · horizon 25 million km</span></figcaption></figure>
+    <figure><img src="img/andromeda.jpg" alt=""><figcaption><b>Andromeda</b><span>2.5 million ly · about a trillion stars</span></figcaption></figure>
+    <figure><img src="img/cosmic-web.jpg" alt=""><figcaption><b>The cosmic web</b><span>2.2 million real galaxies · 6.5 billion ly</span></figcaption></figure>
+    <figure><img src="img/cmb.jpg" alt=""><figcaption><b>Cosmic microwave background</b><span>45 billion ly · light 13.8 billion years old</span></figcaption></figure>
+  </div>
+  <p class="foot">23 chapters · about nine minutes · press <kbd>T</kbd> in the app</p>
+  <aside class="notes">Then we leave. The Oort cloud, which nobody has ever seen, so it is marked illustrative. Proxima Centauri at 4.25 light-years, and TRAPPIST-1 with its seven rocky planets at 41. The Milky Way, with the Sun 27,000 light-years from the centre and a black hole of 4.3 million Suns waiting there. Andromeda at 2.5 million light-years, 2.2 million real galaxies of the cosmic web, and finally the cosmic microwave background: light that has travelled for 13.8 billion years.</aside>
+</section>
+
+<!-- 6 · Science and provenance -->
+<section class="slide s-prov" data-title="Science and provenance">
+  <p class="eyebrow"><span class="n">06</span> Science and provenance</p>
+  <h2>Real catalogues, and an honest label on every number</h2>
+  <div class="prov-grid">
+    <div class="counts">
+      <div><span class="num">31,800</span><span class="cap">tracked satellites and debris</span></div>
+      <div><span class="num">75,855</span><span class="cap">asteroids, plus 3,449 near-Earth objects</span></div>
+      <div><span class="num">109,389</span><span class="cap">stars (HYG v4.4, Gaia)</span></div>
+      <div><span class="num">6,451</span><span class="cap">exoplanets around 4,847 stars</span></div>
+      <div><span class="num">2.2 million</span><span class="cap">galaxies of the cosmic web (2MRS, DESI DR1)</span></div>
+      <div><span class="num">76</span><span class="cap">datasets, each with date, licence and citation</span></div>
+    </div>
+    <div class="marks">
+      <p class="label">Every fact carries one of four marks</p>
+      <div class="mark obs"><i></i><b>Observed</b><span>a measured value from a cited source</span></div>
+      <div class="mark der"><i></i><b>Derived</b><span>computed from observed values with a stated model</span></div>
+      <div class="mark rec"><i></i><b>Reconstructed</b><span>inferred from data, like the Milky Way seen from outside</span></div>
+      <div class="mark ill"><i></i><b>Illustrative</b><span>drawn for clarity: Oort cloud, comet tails, exoplanet surfaces, black-hole discs</span></div>
+      <p class="unknown">A missing value reads <b>Unknown</b>, never 0.</p>
+      <div class="scale-note"><span class="pill">Enlarged for visibility</span><span>Bodies are drawn larger by default (Earth ≈ 448× at 4 AU) and shrink to true size within 40 radii. The label is always on screen; one click shows true scale. Distances are never changed.</span></div>
+    </div>
+  </div>
+  <aside class="notes">We care about how we know. Everything here comes from 76 datasets, each with its date, licence and citation: tens of thousands of satellites and asteroids, over a hundred thousand stars, 2.2 million galaxies. Every value carries one of four marks: observed, derived, reconstructed or illustrative. Missing data says Unknown, never zero. And because a true-size Earth would be invisible from the outer planets, bodies are drawn larger by default. A label says so the whole time, and one click shows true scale.</aside>
+</section>
+
+<!-- 7 · Earth's interior -->
+<section class="slide s-split" data-title="Inside the Earth">
+  <p class="eyebrow"><span class="n">07</span> Deep dive · Inside the Earth</p>
+  <div class="split">
+    <div class="split-text">
+      <h2 class="tight">Mapped by earthquake waves</h2>
+      <p class="lede">The cutaway uses PREM, the Preliminary Reference Earth Model. Shear waves cannot cross the outer core, which is how we know it is liquid.</p>
+      <table class="layers">
+        <thead><tr><th>Layer</th><th>Outer radius</th><th>State</th></tr></thead>
+        <tbody>
+          <tr><td>Crust</td><td>6,371 km</td><td>solid</td></tr>
+          <tr><td>Upper mantle</td><td>6,346.6 km</td><td>solid, slowly flowing</td></tr>
+          <tr><td>Lower mantle</td><td>5,701 km</td><td>solid</td></tr>
+          <tr><td>D″ layer</td><td>3,630 km</td><td>solid</td></tr>
+          <tr class="hl"><td>Outer core</td><td>3,480 km</td><td>liquid iron, 3,800–6,200 K</td></tr>
+          <tr class="hl"><td>Inner core</td><td>1,221.5 km</td><td>solid, 12,760–13,090 kg/m³</td></tr>
+        </tbody>
+      </table>
+      <p class="small">18 bodies · 67 layers · 50 references. Layers thinner than 1.4% of the radius are drawn thicker, and the view says so.</p>
+    </div>
+    <figure class="frame"><img src="img/interior-earth.jpg" alt="Cutaway of Earth in temperature mode with labelled layers"></figure>
+  </div>
+  <aside class="notes">Click inside a world and it opens as a cutaway. Earth's layers come from PREM, the reference model built from earthquake waves: a solid inner core 1,221 kilometres in radius, and a liquid outer core out to 3,480. We know it is liquid because shear waves cannot pass through it. The same view covers 18 bodies and 67 layers, every one cited from 50 references.</aside>
+</section>
+
+<!-- 8 · S2 and Sgr A* -->
+<section class="slide s-split" data-title="S2 and Sagittarius A*">
+  <p class="eyebrow"><span class="n">08</span> Deep dive · The centre of the Galaxy</p>
+  <div class="split">
+    <div class="split-text">
+      <h2 class="tight">A star that weighs a black hole</h2>
+      <p class="lede">The star S2 circles something invisible every 16 years. Only a black hole of 4.3 million Suns fits in the space.</p>
+      <div class="kv">
+        <div><span class="num">16.05 yr</span><span class="cap">orbital period</span></div>
+        <div><span class="num">120 AU</span><span class="cap">closest approach</span></div>
+        <div><span class="num">7,700 km/s</span><span class="cap">2.6% of the speed of light</span></div>
+        <div><span class="num">12′</span><span class="cap">orbit precession per loop (relativity)</span></div>
+        <div><span class="num">≈ 200 km/s</span><span class="cap">redshift at pericentre</span></div>
+        <div><span class="num">2034</span><span class="cap">next pericentre</span></div>
+      </div>
+      <p class="small">GRAVITY Collaboration 2018, 2020, 2024. Discovery: Nobel Prize in Physics 2020 (Genzel, Ghez).</p>
+    </div>
+    <figure class="frame auto"><img src="img/lab-s2.jpg" alt="Black hole lab showing the orbit of S2 around Sagittarius A*"><figcaption>The black hole lab: measured values for Sgr A* on the left, S2 on its GRAVITY 2020 orbit, with the precession drawn 20 times larger so it can be seen.</figcaption></figure>
+  </div>
+  <aside class="notes">At the centre of our galaxy, the star S2 orbits something invisible every 16 years, swinging past at 120 AU and 7,700 kilometres per second, 2.6 percent of the speed of light. Only a black hole of 4.3 million Suns fits. In the black hole lab you can watch the orbit turn by 12 arcminutes each loop, and see S2's light shifted by about 200 kilometres per second at closest approach: the relativity that won the 2020 Nobel Prize. Its next close pass is in 2034.</aside>
+</section>
+
+<!-- 9 · Black-hole lensing -->
+<section class="slide s-bh" data-title="Ray-marched black holes">
+  <img class="bleed" src="img/bh-cygnus.jpg" alt="Cygnus X-1 close-up with a lensed accretion disc">
+  <div class="shade"></div>
+  <div class="overlay-text">
+    <p class="eyebrow"><span class="n">09</span> Deep dive · Black holes</p>
+    <h2 class="tight">Traced, not painted</h2>
+    <p class="lede">The shader marches light rays past the hole and bends the real captured sky behind it.</p>
+    <ul class="facts compact">
+      <li>Shadow, photon ring, secondary images, Einstein rings</li>
+      <li>Approximate Kerr bending when the spin is measured</li>
+      <li>Disc colour from blackbody, Doppler beaming, gravitational redshift</li>
+      <li>13 measured black holes, from Gaia BH1 to M87*</li>
+    </ul>
+    <p class="small">The bending is computed; the disc's look is <i class="prov ill">illustrative</i>. Cost: about 0–4 ms per frame on Balanced.</p>
+  </div>
+  <figure class="inset"><img src="img/bh-einstein.jpg" alt="Einstein ring around Gaia BH1"><figcaption>Gaia BH1: an Einstein ring of background stars</figcaption></figure>
+  <aside class="notes">To show a black hole we do not paint it, we trace light. The shader marches rays past the hole and bends the real sky behind it, which gives the dark shadow, the photon ring and Einstein rings, like this one around Gaia BH1. The glowing disc is illustrative and labelled that way; the bending is computed. All of this costs under four milliseconds a frame on our Balanced setting.</aside>
+</section>
+
+<!-- 10 · Exoplanets and habitability -->
+<section class="slide s-exo" data-title="Exoplanets and habitability">
+  <p class="eyebrow"><span class="n">10</span> Deep dive · Other worlds</p>
+  <h2>Could it keep liquid water?</h2>
+  <div class="exo-grid">
+    <figure class="frame"><img src="img/exo-explorer.jpg" alt="Exoplanet explorer with the mass–radius chart"><figcaption>All 6,451 confirmed planets around 4,847 stars (NASA Exoplanet Archive, 2026-10-16)</figcaption></figure>
+    <figure class="frame"><img src="img/lab-habitability.jpg" alt="Habitability lab for TRAPPIST-1 e"><figcaption>Habitability lab: TRAPPIST-1 e in the conservative habitable zone</figcaption></figure>
+    <div class="exo-facts">
+      <div><span class="num">255 K → 288 K</span><span class="cap">the lab's Earth, without and with its atmosphere</span></div>
+      <div><span class="num">0.95–1.67 AU</span><span class="cap">the Sun's conservative habitable zone (Kopparapu et al. 2014)</span></div>
+      <div><span class="num">14</span><span class="cap">showcase systems drawn on their archive orbits</span></div>
+      <p class="small">Planet surfaces are an <i class="prov ill">artist's impression</i>: no exoplanet has been imaged as a disc.</p>
+    </div>
+  </div>
+  <aside class="notes">We include every one of the 6,451 confirmed exoplanets. The habitability lab asks whether a world could keep liquid water. It reproduces Earth: 255 kelvin without an atmosphere, 288 with one. And it places TRAPPIST-1 e inside its star's conservative habitable zone, as the published studies do. The planet surfaces are artist's impressions, and the app says so.</aside>
+</section>
+
+<!-- 11 · Labs -->
+<section class="slide s-labs" data-title="The labs">
+  <p class="eyebrow"><span class="n">11</span> The labs</p>
+  <h2>Change a variable, watch the result</h2>
+  <div class="labs-grid">
+    <div class="lab">
+      <figure class="frame"><img src="img/lab-debris.jpg" alt="Orbital debris lab growth chart"></figure>
+      <h3>Orbital debris</h3>
+      <p>Starts from the real catalogue: 29,408 tracked objects below 2,000 km. Then launches, drag, removal and collisions run forward 100 years.</p>
+      <div class="result"><div><span class="num mod">≈ 583,000</span><span class="cap">objects by 2126, business as usual</span></div><div><span class="num mod">≈ 25,000</span><span class="cap">if launches stop</span></div></div>
+    </div>
+    <div class="lab">
+      <figure class="frame"><img src="img/lab-dart.jpg" alt="Asteroid deflection lab: DART orbit change"></figure>
+      <h3>Asteroid deflection</h3>
+      <p>Replays NASA's DART impact on Dimorphos (26 September 2022), then lets you defend Earth from a fictional asteroid.</p>
+      <div class="result"><div><span class="num mod">−33.3 min</span><span class="cap">our model's orbit change</span></div><div><span class="num real">−33.0 ± 1.0</span><span class="cap">measured (Thomas et al. 2023)</span></div></div>
+    </div>
+  </div>
+  <p class="foot">Also: the habitability lab (slide 10) and the black hole lab (slide 8). All are teaching models, and they say so.</p>
+  <aside class="notes">Two more labs. The debris lab starts from the real catalogue and shows what policy does over a century: business as usual reaches about 583,000 objects by 2126, while stopping launches leaves about 25,000. The deflection lab replays NASA's DART impact. Our model gives a 33.3 minute change in Dimorphos' orbit; NASA measured 33.0, plus or minus one. These are teaching models, and each one says so on screen.</aside>
+</section>
+
+<!-- 12 · Engineering -->
+<section class="slide s-eng" data-title="Engineering">
+  <p class="eyebrow"><span class="n">12</span> Engineering</p>
+  <h2>25 powers of ten at 60 frames per second</h2>
+  <div class="eng-grid">
+    <div class="eng"><h3>Continuous scale</h3><p class="formula">render = (world − camera) ÷ metres per unit</p><p>Positions stay in 64-bit on the CPU; the camera sits at the origin and the scale runs from 10⁻³ to 10³⁰ m per unit. A logarithmic depth buffer keeps near and far in order.</p></div>
+    <div class="eng"><h3>Texture streaming</h3><p class="big-num">1,155 → 603 MB</p><p>KTX2 GPU-compressed textures under a per-preset VRAM budget, 8K for the body in focus. Frames over 100 ms fell from 33 to 13 on a nine-body tour.</p></div>
+    <div class="eng"><h3>Off the main thread</h3><p class="big-num">643 ms → 0</p><p>Shaders link in the background before first use. SGP4 for 31,800 objects, the 76,000-row asteroid table and Andromeda's star cloud are built in web workers.</p></div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-head"><h3>Frame rate in every chapter of the golden journey</h3><p class="small">Production build, 1920×1080, Ultra, headless Chrome on the stand's RTX 3050 laptop. Dashed line: 60 fps target.</p></div>
+    <svg id="fps" class="fps" viewBox="0 0 1760 310" role="img" aria-label="Bar chart: 22 of 23 chapters at 97 to 100 frames per second; the Orion Arm chapter at 65"></svg>
+  </div>
+  <p class="foot">Vite · React 19 · TypeScript strict · three.js · about 72,000 lines · 635 unit tests checked against published values</p>
+  <aside class="notes">Under the hood: a 32-bit float cannot hold a 109-metre station and a 45-billion-light-year shell, so positions stay in 64-bit, the camera always sits at the origin, and a logarithmic depth buffer keeps near and far in order. Textures stream as compressed KTX2 under a memory budget, which nearly halved video memory, from 1,155 to 603 megabytes. Heavy work runs in background workers. On the stand's RTX 3050 laptop, 22 of the 23 chapters ran at 97 to 100 frames per second, and the slowest at 65.</aside>
+</section>
+
+<!-- 13 · Accessibility and kiosk -->
+<section class="slide s-a11y" data-title="Accessibility and kiosk mode">
+  <p class="eyebrow"><span class="n">13</span> Accessibility and kiosk mode</p>
+  <h2>Built for a crowded exhibition floor</h2>
+  <div class="a11y-grid">
+    <div class="a11y-list">
+      <div><h3>Kiosk start</h3><p><code>?exhibition=1</code> boots with larger type and touch targets, read from 1–2 m on a 1920×1080 touchscreen.</p></div>
+      <div><h3>Reduce motion</h3><p>Camera flights become a short crossfade.</p></div>
+      <div><h3>Adapts to the hardware</h3><p>Auto quality lowers detail to hold 60 fps; Fast, Balanced and Ultra presets.</p></div>
+      <div><h3>Works with no internet</h3><p>No request leaves the laptop; an end-to-end test blocks every outside request while it visits every region, lab and tour.</p></div>
+      <div><h3>Reset between visitors</h3><p><kbd>H</kbd> flies home to Earth, <kbd>Esc</kbd> closes everything, <kbd>Shift</kbd>+<kbd>H</kbd> hides the interface.</p></div>
+    </div>
+    <div class="keys">
+      <p class="label">Everything has a key</p>
+      <div class="keyrow"><kbd>T</kbd><span>golden journey tour</span></div>
+      <div class="keyrow"><kbd>←</kbd><kbd>→</kbd><span>previous / next chapter</span></div>
+      <div class="keyrow"><kbd>1</kbd><span>–</span><kbd>8</kbd><span>fly to a planet</span></div>
+      <div class="keyrow"><kbd>[</kbd><kbd>]</kbd><span>step through its moons</span></div>
+      <div class="keyrow"><kbd>Ctrl</kbd><kbd>K</kbd><span>search anything</span></div>
+      <div class="keyrow"><kbd>B</kbd><span>navigator</span></div>
+      <div class="keyrow"><kbd>N</kbd><span>time to now</span></div>
+      <div class="keyrow"><kbd>?</kbd><span>help</span></div>
+    </div>
+  </div>
+  <aside class="notes">It is built for an exhibition floor. A kiosk address starts it with large type and touch targets. Every chapter, planet and moon has a key, and reduce-motion turns flights into crossfades. Quality adapts to hold 60 frames per second. And it never touches the internet; we have a test that proves it.</aside>
+</section>
+
+<!-- 14 · What we learned -->
+<section class="slide s-learn" data-title="What we learned">
+  <img class="bleed dim" src="img/inner-system.jpg" alt="">
+  <p class="eyebrow"><span class="n">14</span> What we learned</p>
+  <h2>Five things this project taught us</h2>
+  <ol class="lessons">
+    <li><b>Precision is a design problem.</b> One float cannot hold a space station and the edge of the universe; the architecture had to.</li>
+    <li><b>Honesty needs interface, not footnotes.</b> The scale label, the four marks and “Unknown” are on screen, where visitors look.</li>
+    <li><b>Test against published numbers.</b> DART's 33 minutes, S2's 120 AU, PREM's core radii and the habitable zone are all unit tests.</li>
+    <li><b>Measure before optimising.</b> The profiler found a 643 ms stall nobody had noticed.</li>
+    <li><b>Open data makes it possible.</b> NASA, JPL, ESA, USGS, NOAA, CelesTrak, the IAU, CDS and DESI share theirs freely.</li>
+  </ol>
+  <aside class="notes">What did we learn? Precision is a design problem. Honesty needs interface, not footnotes. Test against published numbers: 635 tests check things like the DART result and S2's orbit. Measure before you optimise; the profiler found a stall we never would have guessed. And none of this exists without open data from NASA, ESA, USGS, NOAA, CelesTrak and many survey teams.</aside>
+</section>
+
+<!-- 15 · Thank you -->
+<section class="slide s-thanks" data-title="Thank you">
+  <img class="cmb-arc" src="img/cmb-sphere.jpg" alt="">
+  <div class="thanks-text">
+    <p class="eyebrow">SCI-FORGE 2026</p>
+    <h1 class="atlas-hero thanks">Thank you</h1>
+    <p class="lede big">Fly it yourself, or press <kbd>T</kbd> at our stand.</p>
+    <p class="url-big">cosmos-astronexus.vercel.app</p>
+  </div>
+  <figure class="qr"><img src="img/qr.svg" alt="QR code linking to the Cosmos website"><figcaption>Scan to open Cosmos</figcaption></figure>
+  <aside class="notes">Thank you. Scan the code to fly it yourself on your phone or laptop, or come and press T at our stand. We are happy to take questions.</aside>
+</section>
+
+</div>
+
+<div id="presenter" hidden>
+  <div class="p-current"><div class="p-label">Current</div><div class="p-frame" id="p-current"></div></div>
+  <div class="p-side">
+    <div class="p-label">Next</div><div class="p-frame small" id="p-next"></div>
+    <div class="p-meta"><span id="p-count"></span><span id="p-timer">00:00</span></div>
+    <div class="p-notes" id="p-notes"></div>
+    <p class="p-help">←/→ or click: navigate · P: presenter view · W: open audience window · F: full screen · R: reset timer</p>
+  </div>
+</div>
+<div id="counter" aria-hidden="true"></div>
+<script src="deck.js"></script>
+</body>
+</html>
